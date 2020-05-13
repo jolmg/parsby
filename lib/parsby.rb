@@ -10,6 +10,7 @@ module Parsby
     end
 
     def parse(io)
+      io = StringIO.new io if io.is_a? String
       @parser.call io
     end
   end
