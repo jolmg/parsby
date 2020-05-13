@@ -79,4 +79,18 @@ module Parsby
       end
     end
   end
+
+  def self.many(p)
+    Combinator.new do |io|
+      rs = []
+      while true
+        begin
+          rs << p.parse(io)
+        rescue Error
+          break
+        end
+      end
+      rs
+    end
+  end
 end
