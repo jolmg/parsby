@@ -28,12 +28,7 @@ module Parsby
 
     def parse(io)
       io = StringIO.new io if io.is_a? String
-      begin
-        @parser.call io
-      rescue ExpectationFailed => e
-        e = e.modifying label: @label if @label
-        raise e
-      end
+      @parser.call io
     end
 
     def |(p)
@@ -62,8 +57,14 @@ module Parsby
     end
 
     def %(label)
-      @label = label
-      self
+      Combinator.new do |io|
+        begin
+          parse io
+        rescue ExpectationFailed => e
+          e = e.modifying label: label
+          raise e
+        end
+      end
     end
   end
 
