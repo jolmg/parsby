@@ -90,4 +90,27 @@ class Parsby
       rs
     end
   end
+
+  def self.optional(p)
+    new do |io|
+      begin
+        p.parse io
+      rescue Error
+        nil
+      end
+    end
+  end
+
+  def self.sepBy(p, s)
+    new do |io|
+      begin
+        r = p.parse io
+      rescue Error
+        []
+      else
+        rs = many(s > p).parse io
+        [r] + rs
+      end
+    end
+  end
 end
