@@ -71,7 +71,7 @@ class Parsby
       if a == e
         a
       else
-        a.chars.reverse.each {|ac| io.ungetc ac }
+        a.chars.reverse.each {|ac| io.ungetc ac } if a
         raise ExpectationFailed.new expected: e, actual: a, at: io.pos
       end
     end
