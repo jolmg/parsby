@@ -1,6 +1,6 @@
 require "parsby/version"
 
-module Parsby
+class Parsby
   class Error < StandardError; end
 
   class ExpectationFailed < Error
@@ -20,55 +20,53 @@ module Parsby
     end
   end
 
-  class Combinator
-    def initialize(&b)
-      @parser = b
-    end
+  def initialize(&b)
+    @parser = b
+  end
 
-    def parse(io)
-      io = StringIO.new io if io.is_a? String
-      @parser.call io
-    end
+  def parse(io)
+    io = StringIO.new io if io.is_a? String
+    @parser.call io
+  end
 
-    def |(p)
-      Combinator.new do |io|
-        begin
-          parse io
-        rescue Error
-          p.parse io
-        end
-      end
-    end
-
-    def <(p)
-      Combinator.new do |io|
-        r = parse io
-        p.parse io
-        r
-      end
-    end
-
-    def >(p)
-      Combinator.new do |io|
+  def |(p)
+    Parsby.new do |io|
+      begin
         parse io
+      rescue Error
         p.parse io
       end
     end
+  end
 
-    def %(label)
-      Combinator.new do |io|
-        begin
-          parse io
-        rescue ExpectationFailed => e
-          e = e.modifying label: label
-          raise e
-        end
+  def <(p)
+    Parsby.new do |io|
+      r = parse io
+      p.parse io
+      r
+    end
+  end
+
+  def >(p)
+    Parsby.new do |io|
+      parse io
+      p.parse io
+    end
+  end
+
+  def %(label)
+    Parsby.new do |io|
+      begin
+        parse io
+      rescue ExpectationFailed => e
+        e = e.modifying label: label
+        raise e
       end
     end
   end
 
   def self.string(e)
-    Combinator.new do |io|
+    Parsby.new do |io|
       a = io.read e.length
       if a == e
         a
@@ -80,7 +78,7 @@ module Parsby
   end
 
   def self.many(p)
-    Combinator.new do |io|
+    Parsby.new do |io|
       rs = []
       while true
         begin
