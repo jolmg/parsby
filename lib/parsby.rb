@@ -32,7 +32,7 @@ module Parsby
       if a == e
         a
       else
-        a.chars.each {|ac| io.ungetc ac }
+        a.chars.reverse.each {|ac| io.ungetc ac }
         raise ExpectationFailed.new expected: e, actual: a, at: io.pos
       end
     end
