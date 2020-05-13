@@ -2,7 +2,6 @@ require "parsby/version"
 
 module Parsby
   class Error < StandardError; end
-  # Your code goes here...
 
   class ExpectationFailed < Error
     attr_reader :opts
