@@ -5,13 +5,19 @@ module Parsby
   # Your code goes here...
 
   class ExpectationFailed < Error
-    attr_reader :expected, :actual, :at
+    attr_reader :opts
 
-    def initialize(expected:, actual:, at:)
-      @expected = expected
-      @actual = actual
-      @at = at
-      super "expected #{expected.inspect}, actual #{actual.inspect}, at #{at}"
+    def initialize(opts)
+      @opts = opts
+      super [
+        "expected #{opts[:label] || opts[:expected].inspect}",
+        "actual #{opts[:actual].inspect}",
+        "at #{opts[:at]}",
+      ].join(", ")
+    end
+
+    def modifying(opts)
+      self.class.new self.opts.merge opts
     end
   end
 
@@ -22,7 +28,12 @@ module Parsby
 
     def parse(io)
       io = StringIO.new io if io.is_a? String
-      @parser.call io
+      begin
+        @parser.call io
+      rescue ExpectationFailed => e
+        e = e.modifying label: @label if @label
+        raise e
+      end
     end
 
     def |(p)
@@ -48,6 +59,11 @@ module Parsby
         parse io
         p.parse io
       end
+    end
+
+    def %(label)
+      @label = label
+      self
     end
   end
 
