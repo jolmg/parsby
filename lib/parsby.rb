@@ -4,6 +4,17 @@ module Parsby
   class Error < StandardError; end
   # Your code goes here...
 
+  class ExpectationFailed < Error
+    attr_reader :expected, :actual, :at
+
+    def initialize(expected:, actual:, at:)
+      @expected = expected
+      @actual = actual
+      @at = at
+      super "expected #{expected.inspect}, actual #{actual.inspect}, at #{at}"
+    end
+  end
+
   class Combinator
     def initialize(&b)
       @parser = b
@@ -22,7 +33,7 @@ module Parsby
         a
       else
         a.chars.each {|ac| io.ungetc ac }
-        raise Error
+        raise ExpectationFailed.new expected: e, actual: a, at: io.pos
       end
     end
   end
