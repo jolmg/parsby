@@ -66,7 +66,7 @@ class Parsby
   end
 
   def self.string(e)
-    Parsby.new do |io|
+    new do |io|
       a = io.read e.length
       if a == e
         a
@@ -78,7 +78,7 @@ class Parsby
   end
 
   def self.many(p)
-    Parsby.new do |io|
+    new do |io|
       rs = []
       while true
         begin
