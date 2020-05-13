@@ -24,6 +24,31 @@ module Parsby
       io = StringIO.new io if io.is_a? String
       @parser.call io
     end
+
+    def |(p)
+      Combinator.new do |io|
+        begin
+          parse io
+        rescue Error
+          p.parse io
+        end
+      end
+    end
+
+    def <(p)
+      Combinator.new do |io|
+        r = parse io
+        p.parse io
+        r
+      end
+    end
+
+    def >(p)
+      Combinator.new do |io|
+        parse io
+        p.parse io
+      end
+    end
   end
 
   def self.string(e)
