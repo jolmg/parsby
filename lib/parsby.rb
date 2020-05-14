@@ -60,7 +60,9 @@ class Parsby
 
   def parse(io)
     io = StringIO.new io if io.is_a? String
-    @parser.call io
+    BackedIO.for io do |bio|
+      @parser.call bio
+    end
   end
 
   def |(p)
@@ -161,17 +163,14 @@ class Parsby
   end
 
   def failing(p)
-    Parsby.new do |io|
-      io.start_backup
+    Parsby.new do |bio|
       begin
-        p.parse io
+        p.parse bio
       rescue Error
-        parse io
+        bio.restore
+        parse bio
       else
-        io.restore
         raise Error
-      ensure
-        io.stop_backup
       end
     end
   end
