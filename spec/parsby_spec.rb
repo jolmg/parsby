@@ -71,6 +71,10 @@ RSpec.describe Parsby do
         end
         expect(r.read 3).to eq "foo"
       end
+
+      it "returns the block's return value" do
+        expect(Parsby::BackedIO.for(r) {|br| :x}).to eq :x
+      end
     end
   end
 end
