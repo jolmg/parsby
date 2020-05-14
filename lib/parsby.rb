@@ -146,13 +146,13 @@ class Parsby
     end
   end
 
-  def self.anyChar
+  def self.any_char
     new do |io|
       io.read 1
     end
   end
 
-  def self.sepBy(p, s)
+  def self.sep_by(p, s)
     new do |io|
       begin
         r = p.parse io
