@@ -24,6 +24,6 @@ class CsvParser < Parsby
   end
 
   def self.non_quoted_cell
-    many(except(string(",") | string("\"") | string("\n")))
+    many(anyChar.failing(string(",") | string("\"") | string("\n"))).fmap(&:join)
   end
 end
