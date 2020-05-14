@@ -17,10 +17,8 @@ class CsvParser < Parsby
 
   def self.quoted_cell
     non_quote = many(any_char.failing(string('"'))).fmap(&:join)
-    inner = sep_by(non_quote, string('""'))
-    (string('"') > inner < string('"')).fmap do |r|
-      r.join('"')
-    end
+    inner = sep_by(non_quote, string('""')).fmap {|r| r.join '"' }
+    string('"') > inner < string('"')
   end
 
   def self.non_quoted_cell
