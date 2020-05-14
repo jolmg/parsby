@@ -8,9 +8,11 @@ class Parsby
 
     def initialize(opts)
       @opts = opts
+      expected = opts[:expected]
+      actual = opts[:actual]
       super [
-        "expected #{opts[:label] || opts[:expected].inspect}",
-        "actual #{opts[:actual].inspect}",
+        "expected #{expected.is_a?(Symbol) ? "<#{expected}>" : expected.inspect}",
+        "actual #{actual.is_a?(Symbol) ? "<#{actual}>" : actual.inspect}",
         "at #{opts[:at]}",
       ].join(", ")
     end
@@ -103,7 +105,7 @@ class Parsby
       begin
         parse io
       rescue ExpectationFailed => e
-        e = e.modifying label: label
+        e = e.modifying expected: label.to_sym
         raise e
       end
     end
