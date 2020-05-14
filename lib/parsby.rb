@@ -194,6 +194,9 @@ class Parsby
         bio.restore
         parse bio
       else
+        # XXX: Would be nice if this were more informative. Unfortunately
+        # for that, we need to make p's label accessible despite not having
+        # thrown an error.
         raise Error
       end
     end
