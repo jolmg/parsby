@@ -1,6 +1,8 @@
 require "parsby/version"
 
 class Parsby
+  attr_reader :label
+
   class Error < StandardError; end
 
   class ExpectationFailed < Error
@@ -71,7 +73,14 @@ class Parsby
   def parse(io)
     io = StringIO.new io if io.is_a? String
     BackedIO.for io do |bio|
-      @parser.call bio
+      begin
+        @parser.call bio
+      rescue ExpectationFailed => e
+        if @label
+          e = e.modifying expected: @label.to_sym
+        end
+        raise e
+      end
     end
   end
 
@@ -101,14 +110,7 @@ class Parsby
   end
 
   def %(label)
-    Parsby.new do |io|
-      begin
-        parse io
-      rescue ExpectationFailed => e
-        e = e.modifying expected: label.to_sym
-        raise e
-      end
-    end
+    @label = label.to_sym
   end
 
   def self.string(e)
