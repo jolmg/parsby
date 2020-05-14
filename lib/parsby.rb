@@ -44,6 +44,14 @@ class Parsby
       nil
     end
 
+    def eof?
+      @io.eof?
+    end
+
+    def pos
+      @io.pos
+    end
+
     def read(count)
       @io.read(count).tap {|r| @backup << r unless r.nil? }
     end
