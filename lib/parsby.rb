@@ -23,30 +23,28 @@ class Parsby
   class BackedIO
     attr_reader :backup
 
-    def initialize(io)
+    def initialize(io, &b)
       @io = io
-      @do_backup = false
       @backup = ""
     end
 
-    def start_backup
-      @do_backup = true
-      @backup = ""
-    end
-
-    def stop_backup
-      @do_backup = false
-      @backup
+    def self.for(io, &b)
+      bio = new io
+      begin
+        b.call bio
+      rescue
+        bio.restore
+      end
     end
 
     def restore
-      @backup.chars.reverse.each {|ac| io.ungetc ac } if a
+      @backup.chars.reverse.each {|c| @io.ungetc c }
+      @backup = ""
+      nil
     end
 
     def read(count)
-      r = @io.read count
-      @backup << r if @do_backed
-      r
+      @io.read(count).tap {|r| @backup << r }
     end
   end
 
