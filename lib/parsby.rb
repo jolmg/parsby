@@ -45,7 +45,7 @@ class Parsby
     end
 
     def read(count)
-      @io.read(count).tap {|r| @backup << r }
+      @io.read(count).tap {|r| @backup << r unless r.nil? }
     end
 
     def ungetc(c)
