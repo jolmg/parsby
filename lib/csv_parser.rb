@@ -8,7 +8,7 @@ class CsvParser < Parsby
   end
 
   def self.record
-    sep_by(cell, string(",")) < eol
+    sep_by(cell, string(",")) < (eol | eof)
   end
 
   def self.cell
@@ -21,11 +21,11 @@ class CsvParser < Parsby
     string('"') > inner < string('"')
   end
 
-  def self.eol
-    string("\r\n") | string("\n")
-  end
-
   def self.non_quoted_cell
     many(any_char.failing(string(",") | string("\"") | eol)).fmap(&:join)
+  end
+
+  def self.eol
+    string("\r\n") | string("\n")
   end
 end

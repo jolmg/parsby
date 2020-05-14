@@ -20,6 +20,26 @@ RSpec.describe CsvParser do
       ]
   end
 
+  it "allows last line to not have EOL" do
+    expect(CsvParser.parse <<~CSV.chomp)
+      foo,bar
+      1,2
+    CSV
+      .to eq [
+        ["foo", "bar"],
+        ["1", "2"],
+      ]
+
+    expect(CsvParser.parse <<~CSV.chomp)
+      foo,bar\r
+      1,2
+    CSV
+      .to eq [
+        ["foo", "bar"],
+        ["1", "2"],
+      ]
+  end
+
   it "allows CRLF line terminators" do
     expect(CsvParser.parse <<~CSV)
       foo,bar\r
