@@ -3,6 +3,17 @@ RSpec.describe Parsby do
     expect(Parsby::VERSION).not_to be nil
   end
 
+  describe :parse do
+    it "accepts strings" do
+      expect(Parsby.string("foo").parse "foo").to eq "foo"
+    end
+
+    it "accepts IO objects" do
+      expect(Parsby.string("foo").parse IO.pipe.tap {|(_, w)| w.write "foo"; w.close }.first)
+        .to eq "foo"
+    end
+  end
+
   describe :many do
     it "applies parser repeatedly and returns a list of the results" do
       expect(Parsby.many(Parsby.string("foo")).parse "foofoofoo")
