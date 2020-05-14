@@ -7,7 +7,7 @@ RSpec.describe CsvParser do
     EOF
   end
 
-  it "parsers simple csv files" do
+  it "parses simple csv files" do
     expect(CsvParser.parse <<~CSV)
       foo,bar
       1,2
