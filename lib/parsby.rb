@@ -20,6 +20,36 @@ class Parsby
     end
   end
 
+  class BackedIO
+    attr_reader :backup
+
+    def initialize(io)
+      @io = io
+      @do_backup = false
+      @backup = ""
+    end
+
+    def start_backup
+      @do_backup = true
+      @backup = ""
+    end
+
+    def stop_backup
+      @do_backup = false
+      @backup
+    end
+
+    def restore
+      @backup.chars.reverse.each {|ac| io.ungetc ac } if a
+    end
+
+    def read(count)
+      r = @io.read count
+      @backup << r if @do_backed
+      r
+    end
+  end
+
   def initialize(&b)
     @parser = b
   end
@@ -110,6 +140,34 @@ class Parsby
       else
         rs = many(s > p).parse io
         [r] + rs
+      end
+    end
+  end
+
+  def fmap(&b)
+    Parsby.new do |io|
+      b.call parse io
+    end
+  end
+
+  def self.eof
+    Parsby.new do |io|
+      raise Error unless io.eof?
+    end
+  end
+
+  def failing(p)
+    Parsby.new do |io|
+      io.start_backup
+      begin
+        p.parse io
+      rescue Error
+        parse io
+      else
+        io.restore
+        raise Error
+      ensure
+        io.stop_backup
       end
     end
   end
