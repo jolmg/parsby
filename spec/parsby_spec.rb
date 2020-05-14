@@ -26,6 +26,13 @@ RSpec.describe Parsby do
     end
   end
 
+  describe :any_char do
+    it "raises exception on EOF" do
+      expect { Parsby.any_char.parse "" }
+        .to raise_error Parsby::ExpectationFailed
+    end
+  end
+
   describe Parsby::BackedIO do
     let(:pipe) { IO.pipe }
     let(:r) { pipe[0] }

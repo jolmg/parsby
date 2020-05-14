@@ -150,6 +150,13 @@ class Parsby
 
   def self.any_char
     new do |io|
+      if io.eof?
+        raise ExpectationFailed.new(
+          expected: :any_char,
+          actual: :eof,
+          at: io.pos,
+        )
+      end
       io.read 1
     end
   end
