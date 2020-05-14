@@ -20,6 +20,19 @@ RSpec.describe CsvParser do
       ]
   end
 
+  it "allows CRLF line terminators" do
+    expect(CsvParser.parse <<~CSV)
+      foo,bar\r
+      1,2\r
+      3,4\r
+    CSV
+      .to eq [
+        ["foo", "bar"],
+        ["1", "2"],
+        ["3", "4"],
+      ]
+  end
+
   it "parses not so simple csv files" do
     expect(CsvParser.parse <<~CSV)
       "
