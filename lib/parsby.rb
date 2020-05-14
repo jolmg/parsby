@@ -117,6 +117,7 @@ class Parsby
     new do |io|
       rs = []
       while true
+        break if io.eof?
         begin
           rs << p.parse(io)
         rescue Error
