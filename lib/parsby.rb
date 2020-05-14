@@ -49,6 +49,7 @@ class Parsby
     end
 
     def ungetc(c)
+      @backup.slice! @backup.length - c.length
       @io.ungetc(c)
     end
   end
