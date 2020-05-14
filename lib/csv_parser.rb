@@ -19,13 +19,13 @@ class CsvParser < Parsby
   end
 
   def self.quoted_cell
-    non_quote = many(any_char.failing(string('"'))).fmap(&:join)
+    non_quote = many(any_char.that_fail(string('"'))).fmap(&:join)
     inner = sep_by(non_quote, string('""')).fmap {|r| r.join '"' }
     string('"') > inner < string('"')
   end
 
   def self.non_quoted_cell
-    many(any_char.failing(string(",") | string("\"") | eol)).fmap(&:join)
+    many(any_char.that_fail(string(",") | string("\"") | eol)).fmap(&:join)
   end
 
   def self.eol

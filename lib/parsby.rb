@@ -186,7 +186,7 @@ class Parsby
     end
   end
 
-  def failing(p)
+  def that_fail(p)
     Parsby.new do |bio|
       begin
         p.parse bio
