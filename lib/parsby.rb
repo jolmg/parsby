@@ -34,6 +34,7 @@ class Parsby
         b.call bio
       rescue
         bio.restore
+        raise
       end
     end
 
@@ -45,6 +46,10 @@ class Parsby
 
     def read(count)
       @io.read(count).tap {|r| @backup << r }
+    end
+
+    def ungetc(c)
+      @io.ungetc(c)
     end
   end
 

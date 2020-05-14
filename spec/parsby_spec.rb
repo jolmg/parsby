@@ -20,24 +20,33 @@ RSpec.describe Parsby do
         br.restore
         expect(br.read 6).to eq "foobar"
       end
+
+      it "works on nested instances" do
+        expect(br.read 3).to eq "foo"
+
+        Parsby::BackedIO.for br do |br2|
+          expect(br2.read 3).to eq "bar"
+          br2.restore
+          expect(br2.read 3).to eq "bar"
+          br2.restore
+        end
+
+        expect(br.read 6).to eq "barbaz"
+        br.restore
+        expect(br.read 9).to eq "foobarbaz"
+      end
     end
 
     describe :for do
-      it "works when nested" do
-        Parsby::BackedIO.for r do |br1|
-          expect(br1.read 3).to eq "foo"
-
-          Parsby::BackedIO.for br1 do |br2|
-            expect(br2.read 3).to eq "bar"
-            br2.restore
-            expect(br2.read 3).to eq "bar"
-            br2.restore
+      it "restores on exception" do
+        begin
+          Parsby::BackedIO.for r do |br|
+            expect(br.read 3).to eq "foo"
+            raise
           end
-
-          expect(br1.read 6).to eq "barbaz"
-          br1.restore
-          expect(br1.read 9).to eq "foobarbaz"
+        rescue
         end
+        expect(r.read 3).to eq "foo"
       end
     end
   end
