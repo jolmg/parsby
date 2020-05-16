@@ -68,6 +68,14 @@ RSpec.describe CsvParser do
       ]
   end
 
+  it "accepts an empty CSV" do
+    expect(CsvParser.parse "").to eq []
+  end
+
+  it "correctly interprets an empty line" do
+    expect(CsvParser.parse "\n").to eq [[""]]
+  end
+
   it "does not accept invalid csv at the end (expects EOF)" do
     # If CsvParser didn't expect an EOF, this wouldn't raise an error. It
     # would just return what it could parse at the beginning.
