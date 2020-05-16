@@ -210,15 +210,16 @@ class Parsby
   def that_fail(p)
     Parsby.new do |bio|
       begin
-        p.parse bio
+        r = p.parse bio
       rescue Error
         bio.restore
         parse bio
       else
-        # XXX: Would be nice if this were more informative. Unfortunately
-        # for that, we need to make p's label accessible despite not having
-        # thrown an error.
-        raise Error
+        raise ExpectationFailed.new(
+          expected: "not #{p.label || Token.new("unknown")}",
+          actual: "#{r}",
+          at: bio.pos,
+        )
       end
     end
   end
