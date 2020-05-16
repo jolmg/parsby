@@ -1,9 +1,19 @@
 require "parsby/version"
 
 class Parsby
-  attr_reader :label
-
   class Error < StandardError; end
+
+  class Token
+    attr_reader :name
+
+    def initialize(name)
+      @name = name
+    end
+
+    def to_s
+      "<#{name}>"
+    end
+  end
 
   class ExpectationFailed < Error
     attr_reader :opts
@@ -13,8 +23,8 @@ class Parsby
       expected = opts[:expected]
       actual = opts[:actual]
       super [
-        "expected #{expected.is_a?(Symbol) ? "<#{expected}>" : expected.inspect}",
-        "actual #{actual.is_a?(Symbol) ? "<#{actual}>" : actual.inspect}",
+        "expected #{expected.nil? ? "nil" : expected}",
+        "actual #{actual.nil? ? "nil" : actual}",
         "at #{opts[:at]}",
       ].join(", ")
     end
@@ -66,7 +76,14 @@ class Parsby
     end
   end
 
-  def initialize(&b)
+  attr_reader :label
+
+  def label=(name)
+    @label = name.is_a?(Symbol) ? Token.new(name) : name
+  end
+
+  def initialize(label = nil, &b)
+    self.label = label if label
     @parser = b
   end
 
@@ -109,8 +126,8 @@ class Parsby
     end
   end
 
-  def %(label)
-    @label = label.to_sym
+  def %(name)
+    self.label = name
   end
 
   def self.string(e)
