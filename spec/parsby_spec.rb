@@ -33,6 +33,27 @@ RSpec.describe Parsby do
     end
   end
 
+  describe :string do
+    it "parses the string provided" do
+      expect(Parsby.string("foo").parse("foo")).to eq "foo"
+    end
+    
+    # XXX: Backtracking should be handled BackedIO, but I've implemented
+    # backtracking explicitely for #string (done before BackedIO). Because
+    # of that, I thought this test would fail for restoring twice, but it
+    # doesn't... It doesn't make a difference if #string restores on its
+    # own or not, and I'd like to know why.
+    it "backtracks properly on failure" do
+      s = StringIO.new "barbaz"
+      expect { Parsby.string("foo").parse(s) }.to raise_error Parsby::ExpectationFailed
+      expect(s.read).to eq "barbaz"
+
+      s = StringIO.new "baz"
+      expect { Parsby.string("foobar").parse(s) }.to raise_error Parsby::ExpectationFailed
+      expect(s.read).to eq "baz"
+    end
+  end
+
   describe Parsby::BackedIO do
     let(:pipe) { IO.pipe }
     let(:r) { pipe[0] }
