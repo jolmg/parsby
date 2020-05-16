@@ -20,39 +20,6 @@ RSpec.describe CsvParser do
       ]
   end
 
-  it "allows last line to not have EOL" do
-    expect(CsvParser.parse <<~CSV.chomp)
-      foo,bar
-      1,2
-    CSV
-      .to eq [
-        ["foo", "bar"],
-        ["1", "2"],
-      ]
-
-    expect(CsvParser.parse <<~CSV.chomp)
-      foo,bar\r
-      1,2
-    CSV
-      .to eq [
-        ["foo", "bar"],
-        ["1", "2"],
-      ]
-  end
-
-  it "allows CRLF line terminators" do
-    expect(CsvParser.parse <<~CSV)
-      foo,bar\r
-      1,2\r
-      3,4\r
-    CSV
-      .to eq [
-        ["foo", "bar"],
-        ["1", "2"],
-        ["3", "4"],
-      ]
-  end
-
   it "parses not so simple csv files" do
     expect(CsvParser.parse <<~CSV)
       "
@@ -70,13 +37,43 @@ RSpec.describe CsvParser do
       ]
   end
 
+  it "allows CRLF line terminators" do
+    expect(CsvParser.parse <<~CSV)
+      foo,bar\r
+      1,2\r
+    CSV
+      .to eq [
+        ["foo", "bar"],
+        ["1", "2"],
+      ]
+  end
+
+  it "allows last line to not have line terminator" do
+    expect(CsvParser.parse <<~CSV.chomp)
+      foo,bar
+      1,2
+    CSV
+      .to eq [
+        ["foo", "bar"],
+        ["1", "2"],
+      ]
+
+    expect(CsvParser.parse <<~CSV.chomp)
+      foo,bar\r
+      1,2\r
+    CSV
+      .to eq [
+        ["foo", "bar"],
+        ["1", "2"],
+      ]
+  end
+
   it "does not accept invalid csv at the end (expects EOF)" do
     # If CsvParser didn't expect an EOF, this wouldn't raise an error. It
     # would just return what it could parse at the beginning.
     expect { CsvParser.parse <<~CSV }
       foo,bar
       1,2
-      3,4
       invalid"invalid
     CSV
       .to raise_error Parsby::Error
