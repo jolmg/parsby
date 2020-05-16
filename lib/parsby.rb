@@ -131,7 +131,7 @@ class Parsby
   end
 
   def self.string(e)
-    new do |io|
+    new e.inspect do |io|
       a = io.read e.length
       if a == e
         a
