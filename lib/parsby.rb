@@ -76,7 +76,9 @@ class Parsby
     end
   end
 
-  attr_reader :label
+  def label
+    @label || Token.new("unknown")
+  end
 
   def label=(name)
     @label = name.is_a?(Symbol) ? Token.new(name) : name
@@ -93,6 +95,8 @@ class Parsby
       begin
         @parser.call bio
       rescue ExpectationFailed => e
+        # Use the instance variable instead of the reader since the reader
+        # is set-up to return an unknown token if it's nil.
         if @label
           e = e.modifying expected: @label.to_sym
         end
@@ -216,7 +220,7 @@ class Parsby
         parse bio
       else
         raise ExpectationFailed.new(
-          expected: "not #{p.label || Token.new("unknown")}",
+          expected: "(not #{p.label})",
           actual: "#{r}",
           at: bio.pos,
         )
