@@ -22,11 +22,11 @@ class Parsby
       @opts = opts
       expected = opts[:expected]
       actual = opts[:actual]
-      super [
-        "expected #{expected.nil? ? "nil" : expected}",
-        "actual #{actual.nil? ? "nil" : actual}",
-        "at #{opts[:at]}",
-      ].join(", ")
+      parts = []
+      parts << "expected #{expected}" if expected
+      parts << "actual #{actual}" if actual
+      parts << "at #{opts[:at]}"
+      super parts.join(", ")
     end
 
     def modifying(opts)
@@ -233,8 +233,12 @@ class Parsby
   end
 
   def self.eof
-    Parsby.new do |io|
-      raise Error unless io.eof?
+    Parsby.new :eof do |io|
+      unless io.eof?
+        raise ExpectationFailed.new(
+          at: io.pos,
+        )
+      end
     end
   end
 
