@@ -98,7 +98,7 @@ class Parsby
         # Use the instance variable instead of the reader since the reader
         # is set-up to return an unknown token if it's nil.
         if @label
-          e = e.modifying expected: @label.to_sym
+          e = e.modifying expected: @label
         end
         raise e
       end
