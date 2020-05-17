@@ -106,7 +106,7 @@ class Parsby
   end
 
   def |(p)
-    Parsby.new do |io|
+    Parsby.new "(#{self.label} or #{p.label})" do |io|
       begin
         parse io
       rescue Error
