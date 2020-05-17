@@ -132,6 +132,7 @@ class Parsby
 
   def %(name)
     self.label = name
+    self
   end
 
   def self.string(e)
