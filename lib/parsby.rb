@@ -149,6 +149,24 @@ class Parsby
     end
   end
 
+  def self.char_matching(r)
+    new "char matching #{r.inspect}" do |io|
+      pos = io.pos
+      c = any_char.parse io
+      unless c =~ r
+        raise ExpectationFailed.new(
+          actual: c,
+          at: pos,
+        )
+      end
+      c
+    end
+  end
+
+  def self.number
+    many1(char_matching(/\d/)) % "number"
+  end
+
   def self.many(p)
     new do |io|
       rs = []
@@ -161,6 +179,14 @@ class Parsby
         end
       end
       rs
+    end
+  end
+
+  def self.many1(p)
+    new do |io|
+      r = p.parse io
+      rs = many(p).parse io
+      [r] + rs
     end
   end
 
