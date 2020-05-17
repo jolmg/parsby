@@ -164,7 +164,7 @@ class Parsby
   end
 
   def self.number
-    many1(char_matching(/\d/)) % "number"
+    many_1(char_matching(/\d/)) % "number"
   end
 
   def self.many(p)
@@ -182,7 +182,7 @@ class Parsby
     end
   end
 
-  def self.many1(p)
+  def self.many_1(p)
     new do |io|
       r = p.parse io
       rs = many(p).parse io
