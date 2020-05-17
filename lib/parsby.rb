@@ -216,13 +216,18 @@ class Parsby
   def self.sep_by(p, s)
     new do |io|
       begin
-        r = p.parse io
+        sep_by_1(b, s)
       rescue Error
         []
-      else
-        rs = many(s > p).parse io
-        [r] + rs
       end
+    end
+  end
+
+  def self.sep_by_1(p, s)
+    new do |io|
+      r = p.parse io
+      rs = many(s > b).parse io
+      [r] + rs
     end
   end
 
