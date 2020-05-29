@@ -6,18 +6,6 @@ class Parsby
 
   class Error < StandardError; end
 
-  class Token
-    attr_reader :name
-
-    def initialize(name)
-      @name = name
-    end
-
-    def to_s
-      "<#{name}>"
-    end
-  end
-
   class ExpectationFailed < Error
     attr_reader :opts
 
@@ -37,6 +25,18 @@ class Parsby
     # is lost if we use a new one.
     def modify!(opts)
       self.opts.merge! opts
+    end
+  end
+
+  class Token
+    attr_reader :name
+
+    def initialize(name)
+      @name = name
+    end
+
+    def to_s
+      "<#{name}>"
     end
   end
 
