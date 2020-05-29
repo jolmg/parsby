@@ -20,17 +20,20 @@ class Parsby
 
     def initialize(opts)
       @opts = opts
-      expected = opts[:expected]
-      actual = opts[:actual]
-      parts = []
-      parts << "expected #{expected}" if expected
-      parts << "actual #{actual}" if actual
-      parts << "at #{opts[:at]}"
-      super parts.join(", ")
     end
 
-    def modifying(opts)
-      self.class.new self.opts.merge opts
+    def message
+      parts = []
+      parts << "expected #{opts[:expected]}" if opts[:expected]
+      parts << "actual #{opts[:actual]}" if opts[:actual]
+      parts << "at #{opts[:at]}"
+      parts.join(", ")
+    end
+
+    # I'd rather keep things immutable, but part of the original backtrace
+    # is lost if we use a new one.
+    def modify!(opts)
+      self.opts.merge! opts
     end
   end
 
@@ -98,9 +101,9 @@ class Parsby
         # Use the instance variable instead of the reader since the reader
         # is set-up to return an unknown token if it's nil.
         if @label
-          e = e.modifying expected: @label
+          e.modify! expected: @label
         end
-        raise e
+        raise
       end
     end
   end
