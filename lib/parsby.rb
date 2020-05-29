@@ -165,6 +165,7 @@ class Parsby
   #   Parsby::ExpectationFailed: expected (not "10"), actual 10, at 0
   def that_fail(p)
     Parsby.new do |bio|
+      orig_pos = bio.pos
       begin
         r = p.parse bio
       rescue Error
@@ -174,7 +175,7 @@ class Parsby
         raise ExpectationFailed.new(
           expected: "(not #{p.label})",
           actual: "#{r}",
-          at: bio.pos,
+          at: orig_pos,
         )
       end
     end
