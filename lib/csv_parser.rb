@@ -1,3 +1,5 @@
+require 'parsby'
+
 # This is based on:
 # 
 # RFC 4180: Common Format and MIME Type for Comma-Separated Values (CSV) Files
