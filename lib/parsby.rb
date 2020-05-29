@@ -154,16 +154,16 @@ class Parsby
     end
   end
 
-  # x.that_fail(y) will try y, fail if it succeeds, and parse x if it
+  # x.that_fails(y) will try y, fail if y succeeds, or parse with x if y
   # fails.
   #
   # Example:
   #
-  #   number.that_fail(string("10")).parse "3"
+  #   number.that_fails(string("10")).parse "3"
   #   => 3
-  #   number.that_fail(string("10")).parse "10"
+  #   number.that_fails(string("10")).parse "10"
   #   Parsby::ExpectationFailed: expected (not "10"), actual 10, at 0
-  def that_fail(p)
+  def that_fails(p)
     Parsby.new do |bio|
       orig_pos = bio.pos
       begin
@@ -180,4 +180,6 @@ class Parsby
       end
     end
   end
+
+  alias_method :that_fail, :that_fails
 end
