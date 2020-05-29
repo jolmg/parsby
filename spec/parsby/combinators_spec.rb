@@ -13,6 +13,13 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
+  describe :many_1 do
+    it "fails when parser couldn't be applied even once" do
+      expect { many_1(string("bar")).parse "foofoofoo" }
+        .to raise_error Parsby::ExpectationFailed
+    end
+  end
+
   describe :any_char do
     it "raises exception on EOF" do
       expect { any_char.parse "" }

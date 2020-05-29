@@ -1,17 +1,8 @@
 RSpec.describe Parsby do
+  include Parsby::Combinators
+
   it "has a version number" do
     expect(Parsby::VERSION).not_to be nil
-  end
-
-  describe :parse do
-    it "accepts strings" do
-      expect(Parsby.string("foo").parse "foo").to eq "foo"
-    end
-
-    it "accepts IO objects" do
-      expect(Parsby.string("foo").parse IO.pipe.tap {|(_, w)| w.write "foo"; w.close }.first)
-        .to eq "foo"
-    end
   end
 
   describe Parsby::BackedIO do
@@ -63,6 +54,57 @@ RSpec.describe Parsby do
       it "returns the block's return value" do
         expect(Parsby::BackedIO.for(r) {|br| :x}).to eq :x
       end
+    end
+  end
+
+  describe :parse do
+    it "accepts strings" do
+      expect(string("foo").parse("foo")).to eq "foo"
+    end
+
+    it "accepts IO objects" do
+      expect(string("foo").parse IO.pipe.tap {|(_, w)| w.write "foo"; w.close }.first)
+        .to eq "foo"
+    end
+  end
+
+  describe :| do
+    it "tries second operand if first one fails" do
+      expect((string("foo") | string("bar")).parse "bar").to eq "bar"
+      expect { (string("foo") | string("bar")).parse "baz" }
+        .to raise_error Parsby::ExpectationFailed
+    end
+  end
+
+  describe :< do
+    it "parses left operand then right operand, and returns the result of left" do
+      expect((string("foo") < string("bar")).parse "foobar").to eq "foo"
+    end
+  end
+
+  describe :> do
+    it "parses left operand then right operand, and returns the result of right" do
+      expect((string("foo") > string("bar")).parse "foobar").to eq "bar"
+    end
+  end
+
+  describe :% do
+    it "sets the label of the parser" do
+      expect((string("foo") % "bar").label).to eq "bar"
+    end
+  end
+
+  describe :that_fails do
+    it "tries argument; if it fails, it parses with receiver; if it succeeds, then it fails" do
+      expect(decimal.that_fails(string("10")).parse("34")).to eq 34
+      expect { decimal.that_fails(string("10")).parse("10") }
+        .to raise_error Parsby::ExpectationFailed
+    end
+  end
+
+  describe :fmap do
+    it "permits working with the value \"inside\" the parser, like map does with array" do
+      expect(decimal.fmap {|x| x + 1}.parse("3")).to eq 4
     end
   end
 end
