@@ -18,6 +18,25 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
+  describe :decimal do
+    it "parses decimal numbers" do
+      expect(Parsby.decimal.parse("123")).to eq 123
+    end
+
+    it "does not accept anything other than sign-less positive decimal integers" do
+      expect(Parsby.decimal.parse("123.45")).to eq 123
+      expect { Parsby.decimal.parse("-123") }
+        .to raise_error Parsby::ExpectationFailed
+      expect { Parsby.decimal.parse("+123") }
+        .to raise_error Parsby::ExpectationFailed
+    end
+
+    it "expects at least one decimal digit" do
+      expect { Parsby.decimal.parse("foo") }
+        .to raise_error Parsby::ExpectationFailed
+    end
+  end
+
   describe :string do
     it "parses the string provided" do
       expect(Parsby.string("foo").parse("foo")).to eq "foo"
