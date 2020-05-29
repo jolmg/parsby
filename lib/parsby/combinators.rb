@@ -31,7 +31,7 @@ class Parsby
     end
 
     # Parses a decimal number as matched by \d+.
-    def number
+    def decimal
       many_1(char_matching(/\d/)).fmap {|ds| ds.join.to_i } % "number"
     end
 

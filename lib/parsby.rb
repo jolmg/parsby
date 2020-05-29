@@ -112,7 +112,7 @@ class Parsby
     end
   end
 
-  # x | y tries y if x fails.
+  # <tt>x | y</tt> tries y if x fails.
   def |(p)
     Parsby.new "(#{self.label} or #{p.label})" do |io|
       begin
@@ -147,21 +147,27 @@ class Parsby
   end
 
   # Like map for arrays, this lets you work with the value "inside" the
-  # parser, i.e. the result. decimal.fmap {|x| x + 1}.parse("2") == 3.
+  # parser, i.e. the result.
+  #
+  # Example:
+  #
+  #   decimal.fmap {|x| x + 1}.parse("2")
+  #   => 3
   def fmap(&b)
     Parsby.new do |io|
       b.call parse io
     end
   end
 
-  # x.that_fails(y) will try y, fail if y succeeds, or parse with x if y
+  # <tt>x.that_fails(y)</tt> will try <tt>y</tt>, fail if <tt>y</tt>
+  # succeeds, or parse with <tt>x</tt> if <tt>y</tt>
   # fails.
   #
   # Example:
   #
-  #   number.that_fails(string("10")).parse "3"
+  #   decimal.that_fails(string("10")).parse "3"
   #   => 3
-  #   number.that_fails(string("10")).parse "10"
+  #   decimal.that_fails(string("10")).parse "10"
   #   Parsby::ExpectationFailed: expected (not "10"), actual 10, at 0
   def that_fails(p)
     Parsby.new do |bio|
