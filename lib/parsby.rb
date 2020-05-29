@@ -92,6 +92,7 @@ class Parsby
     @parser = b
   end
 
+  # Parse a String or IO object.
   def parse(io)
     io = StringIO.new io if io.is_a? String
     BackedIO.for io do |bio|
@@ -108,6 +109,7 @@ class Parsby
     end
   end
 
+  # x | y tries y if x fails.
   def |(p)
     Parsby.new "(#{self.label} or #{p.label})" do |io|
       begin
@@ -118,6 +120,7 @@ class Parsby
     end
   end
 
+  # x < y runs parser x then y and returns x.
   def <(p)
     Parsby.new do |io|
       r = parse io
@@ -126,6 +129,7 @@ class Parsby
     end
   end
 
+  # x > y runs parser x then y and returns y.
   def >(p)
     Parsby.new do |io|
       parse io
@@ -133,11 +137,13 @@ class Parsby
     end
   end
 
+  # Set the label and return self.
   def %(name)
     self.label = name
     self
   end
 
+  # Parses the string as literally provided.
   def self.string(e)
     new e.inspect do |io|
       a = io.read e.length
@@ -152,6 +158,7 @@ class Parsby
     end
   end
 
+  # Uses =~ for matching. Only compares one char.
   def self.char_matching(r)
     new "char matching #{r.inspect}" do |io|
       pos = io.pos
@@ -166,10 +173,13 @@ class Parsby
     end
   end
 
+  # Parses a decimal number as matched by \d+.
   def self.number
     many_1(char_matching(/\d/)) % "number"
   end
 
+  # Runs parser until it fails and returns an array of the results. Because
+  # it can return an empty array, this parser can never fail.
   def self.many(p)
     new do |io|
       rs = []
@@ -185,6 +195,7 @@ class Parsby
     end
   end
 
+  # Same as many, but fails if it can't match even once.
   def self.many_1(p)
     new do |io|
       r = p.parse io
@@ -193,6 +204,7 @@ class Parsby
     end
   end
 
+  # Tries the given parser and returns nil if it fails.
   def self.optional(p)
     new do |io|
       begin
@@ -203,6 +215,7 @@ class Parsby
     end
   end
 
+  # Parses any char. Only fails on EOF.
   def self.any_char
     new do |io|
       if io.eof?
@@ -216,6 +229,9 @@ class Parsby
     end
   end
 
+  # Like many, but accepts another parser for separators. It returns a list
+  # of the results of the first argument. Returns an empty list if it
+  # didn't match even once, so it never fails.
   def self.sep_by(p, s)
     new do |io|
       begin
@@ -226,6 +242,7 @@ class Parsby
     end
   end
 
+  # Like sep_by, but fails if it can't match even once.
   def self.sep_by_1(p, s)
     new do |io|
       r = p.parse io
@@ -234,12 +251,15 @@ class Parsby
     end
   end
 
+  # Like map for arrays, this lets you work with the value "inside" the
+  # parser, i.e. the result. decimal.fmap {|x| x + 1}.parse("2") == 3.
   def fmap(&b)
     Parsby.new do |io|
       b.call parse io
     end
   end
 
+  # Matches EOF, fails otherwise. Returns nil.
   def self.eof
     Parsby.new :eof do |io|
       unless io.eof?
@@ -250,6 +270,15 @@ class Parsby
     end
   end
 
+  # x.that_fail(y) will try y, fail if it succeeds, and parse x if it
+  # fails.
+  #
+  # Example:
+  #
+  #   decimal.that_fail(string("10")).parse "3"
+  #   => 3
+  #   decimal.that_fail(string("10")).parse "10"
+  #   => Exception
   def that_fail(p)
     Parsby.new do |bio|
       begin
