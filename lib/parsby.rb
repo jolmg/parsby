@@ -219,7 +219,7 @@ class Parsby
   def self.sep_by(p, s)
     new do |io|
       begin
-        sep_by_1(p, s)
+        sep_by_1(p, s).parse io
       rescue Error
         []
       end
