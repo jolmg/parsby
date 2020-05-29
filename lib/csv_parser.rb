@@ -3,7 +3,9 @@ require 'parsby'
 # This is based on:
 # 
 # RFC 4180: Common Format and MIME Type for Comma-Separated Values (CSV) Files
-class CsvParser < Parsby
+module CsvParser
+  extend Parsby::Combinators
+
   def self.parse(source)
     csv.parse source
   end
