@@ -66,4 +66,24 @@ RSpec.describe Parsby::Combinators do
       expect(s.read).to eq "baz"
     end
   end
+
+  describe :char_matching do
+    it "matches a single char with whatever =~ supports (regexes)" do
+      expect(char_matching(/\A\d\z/).parse("123")).to eq "1"
+    end
+  end
+
+  describe :optional do
+    it "causes parsing errors to be returned as nil results" do
+      expect(optional(string("foo")).parse("foo")).to eq "foo"
+      expect(optional(string("foo")).parse("bar")).to eq nil
+    end
+  end
+
+  describe :eof do
+    it "succeeds only on EOF" do
+      expect(eof.parse("")).to eq nil
+      expect { eof.parse("x") }.to raise_error Parsby::ExpectationFailed
+    end
+  end
 end
