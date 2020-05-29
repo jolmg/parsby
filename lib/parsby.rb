@@ -159,10 +159,10 @@ class Parsby
   #
   # Example:
   #
-  #   decimal.that_fail(string("10")).parse "3"
+  #   number.that_fail(string("10")).parse "3"
   #   => 3
-  #   decimal.that_fail(string("10")).parse "10"
-  #   => Exception
+  #   number.that_fail(string("10")).parse "10"
+  #   Parsby::ExpectationFailed: expected (not "10"), actual 10, at 0
   def that_fail(p)
     Parsby.new do |bio|
       begin
