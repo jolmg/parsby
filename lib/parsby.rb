@@ -167,10 +167,11 @@ class Parsby
     end
   end
 
+  # Peeks to see whether parser would succeed if applied.
   def would_succeed(io)
     begin
       peek io
-    rescue
+    rescue Error
       false
     else
       true

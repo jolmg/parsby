@@ -106,6 +106,13 @@ RSpec.describe Parsby do
     end
   end
 
+  describe :would_succeed do
+    it "peeks to tell whether or not it would succeed" do
+      expect(string("foo").would_succeed("foo")).to eq true
+      expect(string("foo").would_succeed("bar")).to eq false
+    end
+  end
+
   describe :that_fails do
     it "tries argument; if it fails, it parses with receiver; if it succeeds, then it fails" do
       expect(decimal.that_fails(string("10")).parse("34")).to eq 34
