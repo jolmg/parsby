@@ -4,35 +4,36 @@ require 'parsby'
 # 
 # RFC 4180: Common Format and MIME Type for Comma-Separated Values (CSV) Files
 module CsvParser
-  extend Parsby::Combinators
+  include Parsby::Combinators
+  extend self
 
-  def self.parse(source)
+  def parse(source)
     csv.parse source
   end
 
-  def self.csv
+  def csv
     many(record) < eof
   end
 
-  def self.record
+  def record
     sep_by(cell, string(",")) < (eol | eof)
   end
 
-  def self.cell
+  def cell
     quoted_cell | non_quoted_cell
   end
 
-  def self.quoted_cell
+  def quoted_cell
     non_quote = many(any_char.that_fail(string('"'))).fmap(&:join)
     inner = sep_by(non_quote, string('""')).fmap {|r| r.join '"' }
     string('"') > inner < string('"')
   end
 
-  def self.non_quoted_cell
+  def non_quoted_cell
     many(any_char.that_fail(string(",") | string("\"") | eol)).fmap(&:join)
   end
 
-  def self.eol
+  def eol
     string("\r\n") | string("\n")
   end
 end
