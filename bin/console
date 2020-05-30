@@ -7,8 +7,29 @@ require "parsby"
 # with your gem easier. You can also use a different console, if you like.
 
 # (If you use this, don't forget to add pry to your Gemfile!)
-# require "pry"
-# Pry.start
+require "pry"
 
-require "irb"
-IRB.start(__FILE__)
+def to_constant_string(path)
+  path
+    .gsub("/", "::")
+    .gsub(/(\A|(?<=::)|_)./) {|x| x[-1].upcase }
+    .sub(/\.rb\z/, "")
+end
+
+def reload!
+  Dir["lib/**/*"]
+    .map {|p| Pathname.new(p).relative_path_from(Pathname.new("lib/")) }
+    .select {|p| p.to_s =~ /\.rb\z/ && p.to_s != "parsby/version.rb" }
+    .each do |p|
+      const = to_constant_string(p.to_s)
+      unless const =~ /::/ || !Object.const_defined?(const)
+        Object.send(:remove_const, const)
+      end
+    end
+    .each(&method(:load))
+  nil
+end
+
+reload!
+
+Pry.start
