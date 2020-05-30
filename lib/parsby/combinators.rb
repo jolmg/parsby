@@ -144,11 +144,11 @@ class Parsby
       end
     end
 
-    def take_until(p)
+    def take_until(p, with: any_char)
       Parsby.new do |io|
         r = ""
         until p.would_succeed(io)
-          r << any_char.parse(io)
+          r << with.parse(io)
         end
         r
       end

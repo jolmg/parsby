@@ -4,26 +4,43 @@ module ArithmeticParser
   include Parsby::Combinators
   extend self
 
+  BinaryExpression = Struct.new :left, :op, :right
+
   def expression
     whitespace > (binary_expression | decimal) < whitespace
   end
 
-  BinaryExpression = Struct.new :left, :op, :right
+  def parenthetical_expression
+    string("(") > expression < string(")")
+  end
 
-  def binary_expression
-    Parsby.new do |io|
-      left_text = take_until(operator).parse io
-      whitespace.parse io
-      op = operator.parse io
-      whitespace.parse io
-      right_text = take_until(eof).parse io
-      left = expression.parse left_text
-      right = expression.parse right_text
-      BinaryExpression.new left, op, right
+  def parenthetical_text
+    collect \
+      & string("(") \
+      & take_until(string(")"), with: parenthetical_text | any_char) \
+      & string(")")
+  end
+
+  def binary_expression(precedence)
+    (
+      collect \
+        & take_until(choice(operators[precedence]), with: parenthetical_text | any_char) \
+        & choice(operators[precedence]) \
+        & take_until(eof | string(")"), with: parenthetical_text | any_char)
+    ).fmap do |(left_text, op, right_text)|
+      BinaryExpression.new(
+        expression.parse(left_text),
+        op,
+        expression.parse(right_text),
+      )
     end
   end
 
-  def operator
-    string("+") | string("-")
+  def operators
+    [
+      [string("+"), string("-")],
+      [string("*"), string("/")],
+      [string("^")],
+    ]
   end
 end
