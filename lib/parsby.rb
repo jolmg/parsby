@@ -42,6 +42,7 @@ class Parsby
 
   class BackedIO
     def initialize(io, &b)
+      io = StringIO.new io if io.is_a? String
       @io = io
       @backup = ""
     end
@@ -94,7 +95,6 @@ class Parsby
 
   # Parse a String or IO object.
   def parse(io)
-    io = StringIO.new io if io.is_a? String
     BackedIO.for io do |bio|
       begin
         @parser.call bio
