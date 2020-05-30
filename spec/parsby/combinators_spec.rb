@@ -86,4 +86,20 @@ RSpec.describe Parsby::Combinators do
       expect { eof.parse("x") }.to raise_error Parsby::ExpectationFailed
     end
   end
+
+  describe :take_until do
+    it "returns everything until the provided parser matches" do
+      expect(take_until(string("baz")).parse("foobarbaztaz")).to eq "foobar"
+    end
+
+    it "doesn't consume the input that matches the provided parser" do
+      expect(
+        begin
+          s = StringIO.new("foobarbaztaz")
+          take_until(string("baz")).parse(s)
+          s.read
+        end
+      ).to eq "baztaz"
+    end
+  end
 end
