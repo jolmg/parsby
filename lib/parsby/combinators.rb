@@ -46,6 +46,20 @@ class Parsby
       many(choice(*" \t\n\r".chars.map(&method(:string))))
     end
 
+    def pure(x)
+      Parsby.new { x }
+    end
+
+    # This is meant for use with the operator <tt>&</tt>, to start off the
+    # collection array. This is not needed most of the time, but if it's
+    # not used and the first parser returns an array, the results of the
+    # other parsers will be combined with that.
+    #
+    # Example:
+    def collect
+      pure []
+    end
+
     # Runs parser until it fails and returns an array of the results. Because
     # it can return an empty array, this parser can never fail.
     def many(p)
