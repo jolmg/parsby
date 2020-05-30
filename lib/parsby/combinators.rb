@@ -37,6 +37,15 @@ class Parsby
       many_1(char_matching(/\d/)).fmap {|ds| ds.join.to_i } % "number"
     end
 
+    # Tries each argument parser until one succeeds.
+    def choice(*ps)
+      ps.reduce(:|) % "(one of #{ps.map(&:label).join(", ")})"
+    end
+
+    def whitespace
+      many(choice(*" \t\n\r".chars.map(&method(:string))))
+    end
+
     # Runs parser until it fails and returns an array of the results. Because
     # it can return an empty array, this parser can never fail.
     def many(p)
