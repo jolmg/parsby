@@ -39,7 +39,7 @@ class Parsby
 
     # Tries each argument parser until one succeeds.
     def choice(*ps)
-      ps.reduce(:|) % "(one of #{ps.map(&:label).join(", ")})"
+      ps.flatten.reduce(:|) % "(one of #{ps.map(&:label).join(", ")})"
     end
 
     def whitespace
