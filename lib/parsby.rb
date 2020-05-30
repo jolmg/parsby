@@ -56,9 +56,8 @@ class Parsby
       end
     end
 
-    def restore
-      @backup.chars.reverse.each {|c| @io.ungetc c }
-      @backup = ""
+    def restore(n = @backup.length)
+      n.times { @io.ungetc @backup.slice!(-1) }
       nil
     end
 
@@ -154,6 +153,25 @@ class Parsby
   def fmap(&b)
     Parsby.new do |io|
       b.call parse io
+    end
+  end
+
+  def peek(io)
+    orig_pos = io.pos
+    begin
+      parse io
+    ensure
+      io.restore(io.pos - orig_pos)
+    end
+  end
+
+  def would_succeed(io)
+    begin
+      peek io
+    rescue
+      false
+    else
+      true
     end
   end
 

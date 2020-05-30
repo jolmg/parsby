@@ -120,5 +120,15 @@ class Parsby
         end
       end
     end
+
+    def take_until(p)
+      Parsby.new do |io|
+        r = ""
+        until p.would_succeed(io)
+          r << any_char.parse(io)
+        end
+        r
+      end
+    end
   end
 end
