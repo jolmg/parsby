@@ -6,8 +6,12 @@ module ArithmeticParser
 
   BinaryExpression = Struct.new :left, :op, :right
 
-  def expression
-    whitespace > (binary_expression | decimal) < whitespace
+  def expression(precedence = 0)
+    whitespace_surrounded(choice(
+      parenthetical_expression,
+      binary_expression(precedence),
+      decimal,
+    ))
   end
 
   def parenthetical_expression
@@ -21,7 +25,7 @@ module ArithmeticParser
       & string(")")
   end
 
-  def binary_expression(precedence)
+  def binary_expression(precedence = 0)
     (
       collect \
         & take_until(choice(operators[precedence]), with: parenthetical_text | any_char) \
@@ -29,9 +33,9 @@ module ArithmeticParser
         & take_until(eof | string(")"), with: parenthetical_text | any_char)
     ).fmap do |(left_text, op, right_text)|
       BinaryExpression.new(
-        expression.parse(left_text),
+        expression(precedence + 1).parse(left_text),
         op,
-        expression.parse(right_text),
+        expression(precedence + 1).parse(right_text),
       )
     end
   end

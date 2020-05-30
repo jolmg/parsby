@@ -46,6 +46,14 @@ class Parsby
       many(choice(*" \t\n\r".chars.map(&method(:string))))
     end
 
+    def bracketed_with(left, right, p)
+      left > p < right
+    end
+
+    def whitespace_surrounded(p)
+      whitespace > p < whitespace
+    end
+
     def pure(x)
       Parsby.new { x }
     end
