@@ -114,7 +114,7 @@ RSpec.describe Parsby do
   end
 
   describe :that_fails do
-    it "tries argument; if it fails, it parses with receiver; if it succeeds, then it fails" do
+    it "tries parser argument; if argument fails, it parses with receiver; if argument succeeds, then it fails" do
       expect(decimal.that_fails(string("10")).parse("34")).to eq 34
       expect { decimal.that_fails(string("10")).parse("10") }
         .to raise_error Parsby::ExpectationFailed
