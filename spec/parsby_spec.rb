@@ -68,6 +68,18 @@ RSpec.describe Parsby do
     end
   end
 
+  describe :peek do
+    it "works like parse, but without consuming the input" do
+      expect(
+        begin
+          s = StringIO.new "123"
+          r = decimal.peek s
+          [r, s.read]
+        end
+      ).to eq [123, "123"]
+    end
+  end
+
   describe :| do
     it "tries second operand if first one fails" do
       expect((string("foo") | string("bar")).parse "bar").to eq "bar"
@@ -91,18 +103,6 @@ RSpec.describe Parsby do
   describe :% do
     it "sets the label of the parser" do
       expect((string("foo") % "bar").label).to eq "bar"
-    end
-  end
-
-  describe :peek do
-    it "works like parse, but without consuming the input" do
-      expect(
-        begin
-          s = StringIO.new "123"
-          r = decimal.peek s
-          [r, s.read]
-        end
-      ).to eq [123, "123"]
     end
   end
 
