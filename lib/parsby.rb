@@ -41,8 +41,6 @@ class Parsby
   end
 
   class BackedIO
-    attr_reader :backup
-
     def initialize(io, &b)
       @io = io
       @backup = ""
