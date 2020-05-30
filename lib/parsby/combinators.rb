@@ -1,5 +1,7 @@
 class Parsby
   module Combinators
+    extend self
+
     # Parses the string as literally provided.
     def string(e)
       Parsby.new e.inspect do |io|
