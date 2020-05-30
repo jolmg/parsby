@@ -94,6 +94,18 @@ RSpec.describe Parsby do
     end
   end
 
+  describe :peek do
+    it "works like parse, but without consuming the input" do
+      expect(
+        begin
+          s = StringIO.new "123"
+          r = decimal.peek s
+          [r, s.read]
+        end
+      ).to eq [123, "123"]
+    end
+  end
+
   describe :that_fails do
     it "tries argument; if it fails, it parses with receiver; if it succeeds, then it fails" do
       expect(decimal.that_fails(string("10")).parse("34")).to eq 34

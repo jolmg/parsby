@@ -109,6 +109,17 @@ class Parsby
     end
   end
 
+  def peek(io)
+    BackedIO.for(io) do |bio|
+      orig_pos = bio.pos
+      begin
+        parse bio
+      ensure
+        bio.restore
+      end
+    end
+  end
+
   # <tt>x | y</tt> tries y if x fails.
   def |(p)
     Parsby.new "(#{self.label} or #{p.label})" do |io|
@@ -153,15 +164,6 @@ class Parsby
   def fmap(&b)
     Parsby.new do |io|
       b.call parse io
-    end
-  end
-
-  def peek(io)
-    orig_pos = io.pos
-    begin
-      parse io
-    ensure
-      io.restore(io.pos - orig_pos)
     end
   end
 
