@@ -88,9 +88,14 @@ class Parsby
     @label = name.is_a?(Symbol) ? Token.new(name) : name
   end
 
-  def initialize(label = nil, &b)
+  def initialize(label = nil, ignore: false, &b)
     self.label = label if label
+    @ignore = ignore
     @parser = b
+  end
+
+  def ignore?
+    @ignore ||= false
   end
 
   # Parse a String or IO object.
@@ -145,6 +150,20 @@ class Parsby
     Parsby.new do |io|
       parse io
       p.parse io
+    end
+  end
+
+  def -@
+    self.class.new(ignore: true) {|io| parse io }
+  end
+
+  def &(p)
+    Parsby.new do |io|
+      x = parse io
+      y = p.parse io
+      r = x.is_a?(Array) ? x : ignore? ? [] : [x]
+      r += [y] unless p.ignore?
+      r
     end
   end
 
