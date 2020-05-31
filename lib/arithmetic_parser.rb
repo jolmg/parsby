@@ -19,10 +19,12 @@ module ArithmeticParser
   end
 
   def parenthetical_text
-    collect \
-      & string("(") \
-      & take_until(string(")"), with: parenthetical_text | any_char) \
-      & string(")")
+    (
+      collect \
+        & string("(") \
+        & take_until(string(")"), with: parenthetical_text | any_char) \
+        & string(")")
+    ).fmap(&:join)
   end
 
   def binary_expression(precedence = 0)
