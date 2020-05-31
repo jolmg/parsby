@@ -57,6 +57,22 @@ RSpec.describe Parsby do
     end
   end
 
+  describe "#initialize" do
+    it "accepts optional label as argument" do
+      expect(Parsby.new("foo").label).to eq "foo"
+    end
+
+    it "when label is not provided, it's an unknown token" do
+      expect(Parsby.new.label.class).to eq Parsby::Token
+      expect(Parsby.new.label.name).to eq "unknown"
+    end
+
+    it "takes block that provides a BackedIO as argument, and which result is the result of #parse" do
+      expect(Parsby.new {|io| io.class}.parse "foo").to eq Parsby::BackedIO
+      expect(Parsby.new {|io| io.read(2) }.parse "foo").to eq "fo"
+    end
+  end
+
   describe "#parse" do
     it "accepts strings" do
       expect(string("foo").parse("foo")).to eq "foo"
@@ -77,6 +93,35 @@ RSpec.describe Parsby do
           [r, s.read]
         end
       ).to eq [123, "123"]
+    end
+  end
+
+  describe "#ignore?" do
+    it "set for parsers returned by #-@" do
+      expect(string("foo")).not_to satisfy(&:ignore?)
+      expect(-string("foo")).to satisfy(&:ignore?)
+      expect(
+        begin
+          p = string("foo")
+          -p
+          p
+        end
+      ).not_to satisfy(&:ignore?)
+    end
+  end
+
+  describe "#-@" do
+    it "causes & to not include the result of this parser" do
+      expect((-string("foo") & string("bar")).parse "foobar").to eq ["bar"]
+      expect((string("foo") & -string("bar")).parse "foobar").to eq ["foo"]
+    end
+  end
+
+  describe "#&" do
+    it "parses both operands and combines their results in an array" do
+      expect((string("foo") & string("bar")).parse "foobar").to eq ["foo", "bar"]
+      expect((many(string("foo")) & many(string("bar"))).parse "foofoobarbar")
+        .to eq ["foo", "foo", ["bar", "bar"]]
     end
   end
 

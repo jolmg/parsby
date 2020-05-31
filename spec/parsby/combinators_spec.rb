@@ -73,10 +73,91 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
+  describe "#whitespace" do
+    it "parses continuous whitespace (' ', '\\t', '\\r', '\\n')" do
+      expect(whitespace.parse " \r\n\tfoo").to eq " \r\n\t"
+      expect(whitespace.parse "foo").to eq ""
+    end
+  end
+
+  describe "#sep_by_1" do
+    it "is like sep_by, but fails if it can't match even once" do
+      expect(sep_by_1(string("foo"), string(", ")).parse "foo, foo, foo")
+        .to eq ["foo", "foo", "foo"]
+      expect(sep_by_1(string("foo"), string(", ")).parse "foo")
+        .to eq ["foo"]
+      expect { sep_by_1(string("foo"), string(", ")).parse "bar, bar, bar" }
+        .to raise_error Parsby::ExpectationFailed
+    end
+  end
+
+  describe "#sep_by" do
+    it "is like many, but allowing you to specify a separating parser" do
+      expect(sep_by(string("foo"), string(", ")).parse "foo, foo, foo")
+        .to eq ["foo", "foo", "foo"]
+      expect(sep_by(string("foo"), string(", ")).parse "foo")
+        .to eq ["foo"]
+      expect(sep_by(string("foo"), string(", ")).parse "bar, bar, bar")
+        .to eq []
+    end
+  end
+
+  describe "#collect" do
+    it "is meant to start collecting for & for when first parser returns array" do
+      expect((collect & string("foo") & string("bar")).parse "foobar").to eq ["foo", "bar"]
+      expect((collect & many(string("foo")) & many(string("bar"))).parse "foofoobarbar")
+        .to eq [["foo", "foo"], ["bar", "bar"]]
+    end
+  end
+
   describe "#optional" do
     it "causes parsing errors to be returned as nil results" do
       expect(optional(string("foo")).parse("foo")).to eq "foo"
       expect(optional(string("foo")).parse("bar")).to eq nil
+    end
+  end
+
+  describe "#pure" do
+    it "results in provided value without consuming input" do
+      expect(pure("foo").parse "bar").to eq "foo"
+    end
+
+    it "doesn't consume input" do
+      s = StringIO.new "bar"
+      expect { pure("foo").parse s rescue nil }.not_to change { s.pos }
+    end
+  end
+
+  describe "#fail" do
+    it "returns parser that always fails" do
+      expect { fail.parse "foo" }.to raise_error Parsby::ExpectationFailed
+    end
+
+    it "doesn't consume input" do
+      s = StringIO.new "foo"
+      expect { fail.parse s rescue nil }.not_to change { s.pos }
+    end
+  end
+
+  describe "#choice" do
+    it "tries each parser until one succeeds" do
+      expect(choice(string("foo"), string("bar")).parse "bar").to eq "bar"
+    end
+
+    it "accepts multiple arguments or array arguments" do
+      expect(choice(string("foo"), string("bar")).parse "bar").to eq "bar"
+      expect(choice([string("foo"), string("bar")]).parse "bar").to eq "bar"
+      expect(choice([string("foo")], [string("bar")]).parse "bar").to eq "bar"
+    end
+
+    it "always fails parsing when given empty list" do
+      expect { choice([]).parse "bar" }.to raise_error Parsby::ExpectationFailed
+    end
+  end
+
+  describe "#between" do
+    it "(open, close, p) parses open, then p, then close, and returns the result of p" do
+      expect(between(string("{{"), string("}}"), string("foo")).parse "{{foo}}").to eq "foo"
     end
   end
 
