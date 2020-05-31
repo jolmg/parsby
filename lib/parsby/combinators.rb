@@ -47,7 +47,8 @@ class Parsby
     # Tries each provided parser until one succeeds. Providing an empty
     # list causes parser to always fail, like how [].any? is false.
     def choice(*ps)
-      ps.flatten.reduce(fail, :|) % "(one of #{ps.map(&:label).join(", ")})"
+      ps = ps.flatten
+      ps.reduce(fail, :|) % "(one of #{ps.map(&:label).join(", ")})"
     end
 
     # Parses continuous whitespace (" ", "\t", "\n", "\r")
