@@ -1,0 +1,30 @@
+#!/bin/bash
+
+exec find lib -type f -name \*.rb -exec awk '
+  {
+    if (/^\s*(class|module)\>/) {
+      class_module = !def_seen && class_module ? class_module "\n" : ""
+      class_module = class_module $0
+      def_seen = 0
+    } else {
+      def_seen = 1
+    }
+  }
+
+  /^\s*def / && !in_comment {
+    if (class_module) {
+      print class_module
+      class_module = ""
+    }
+    print
+    at_least_one_missing = 1
+  }
+
+  {
+    in_comment = /^\s*#/
+  }
+
+  END {
+    exit at_least_one_missing
+  }
+' {} +
