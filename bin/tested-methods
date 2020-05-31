@@ -26,4 +26,4 @@ grep -REh '^\s*(RSpec\.)?describe\s*([A-Z]|"[#.])' spec | awk '
     match($0, /^\s*(RSpec\.)?describe\s*(["'\''])([#.].+)["'\'']/, matches)
     print ctx matches[3]
   }
-'
+' | sort
