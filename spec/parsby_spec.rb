@@ -15,7 +15,7 @@ RSpec.describe Parsby do
       w.write "foobarbaz"
     end
 
-    describe :restore do
+    describe "#restore" do
       it "restores what was read" do
         expect(br.read 1).to eq "f"
         expect(br.read 2).to eq "oo"
@@ -39,7 +39,7 @@ RSpec.describe Parsby do
       end
     end
 
-    describe :for do
+    describe ".for" do
       it "restores on exception" do
         begin
           Parsby::BackedIO.for r do |br|
@@ -57,7 +57,7 @@ RSpec.describe Parsby do
     end
   end
 
-  describe :parse do
+  describe "#parse" do
     it "accepts strings" do
       expect(string("foo").parse("foo")).to eq "foo"
     end
@@ -68,7 +68,7 @@ RSpec.describe Parsby do
     end
   end
 
-  describe :peek do
+  describe "#peek" do
     it "works like parse, but without consuming the input" do
       expect(
         begin
@@ -80,7 +80,7 @@ RSpec.describe Parsby do
     end
   end
 
-  describe :| do
+  describe "#|" do
     it "tries second operand if first one fails" do
       expect((string("foo") | string("bar")).parse "bar").to eq "bar"
       expect { (string("foo") | string("bar")).parse "baz" }
@@ -88,32 +88,32 @@ RSpec.describe Parsby do
     end
   end
 
-  describe :< do
+  describe "#<" do
     it "parses left operand then right operand, and returns the result of left" do
       expect((string("foo") < string("bar")).parse "foobar").to eq "foo"
     end
   end
 
-  describe :> do
+  describe "#>" do
     it "parses left operand then right operand, and returns the result of right" do
       expect((string("foo") > string("bar")).parse "foobar").to eq "bar"
     end
   end
 
-  describe :% do
+  describe "#%" do
     it "sets the label of the parser" do
       expect((string("foo") % "bar").label).to eq "bar"
     end
   end
 
-  describe :would_succeed do
+  describe "#would_succeed" do
     it "peeks to tell whether or not it would succeed" do
       expect(string("foo").would_succeed("foo")).to eq true
       expect(string("foo").would_succeed("bar")).to eq false
     end
   end
 
-  describe :that_fails do
+  describe "#that_fails" do
     it "tries parser argument; if argument fails, it parses with receiver; if argument succeeds, then it fails" do
       expect(decimal.that_fails(string("10")).parse("34")).to eq 34
       expect { decimal.that_fails(string("10")).parse("10") }
@@ -121,7 +121,7 @@ RSpec.describe Parsby do
     end
   end
 
-  describe :fmap do
+  describe "#fmap" do
     it "permits working with the value \"inside\" the parser, like map does with array" do
       expect(decimal.fmap {|x| x + 1}.parse("3")).to eq 4
     end
