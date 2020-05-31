@@ -37,9 +37,17 @@ class Parsby
       many_1(char_matching(/\d/)).fmap {|ds| ds.join.to_i } % "number"
     end
 
-    # Tries each argument parser until one succeeds.
+    # Parser that always fails without consuming input. We use it for at
+    # least <tt>choice</tt>, for when it's supplied an empty list. It
+    # corresponds with mzero in Haskell's Parsec.
+    def fail
+      Parsby.new {|io| raise ExpectationFailed.new at: io.pos }
+    end
+
+    # Tries each provided parser until one succeeds. Providing an empty
+    # list causes parser to always fail, like how [].any? is false.
     def choice(*ps)
-      ps.flatten.reduce(:|) % "(one of #{ps.map(&:label).join(", ")})"
+      ps.flatten.reduce(fail, :|) % "(one of #{ps.map(&:label).join(", ")})"
     end
 
     def whitespace
