@@ -50,8 +50,9 @@ class Parsby
       ps.flatten.reduce(fail, :|) % "(one of #{ps.map(&:label).join(", ")})"
     end
 
+    # Parses continuous whitespace (" ", "\t", "\n", "\r")
     def whitespace
-      many(choice(*" \t\n\r".chars.map(&method(:string))))
+      many(choice(*" \t\n\r".chars.map(&method(:string)))).fmap(&:join)
     end
 
     def bracketed_with(left, right, p)
