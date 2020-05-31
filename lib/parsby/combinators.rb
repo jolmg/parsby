@@ -61,16 +61,27 @@ class Parsby
       left > p < right
     end
 
+    # Parser that returns provided value without consuming any input. This
+    # is used at least with <tt>collect</tt>.
     def pure(x)
       Parsby.new { x }
     end
 
     # This is meant for use with the operator <tt>&</tt>, to start off the
-    # collection array. This is not needed most of the time, but if it's
-    # not used and the first parser returns an array, the results of the
-    # other parsers will be combined with that.
+    # collection array. This is technically redundant most of the time, but
+    # if it's not used and the first parser returns an array, the results
+    # of the other parsers will be combined with that.
     #
     # Example:
+    #
+    #   (string("foo") & string("bar")).parse "foobar"
+    #   => ["foo", "bar"]
+    #   (collect & string("foo") & string("bar")).parse "foobar"
+    #   => ["foo", "bar"]
+    #   (many(string("foo")) & many(string("bar"))).parse "foofoobarbar"
+    #   => ["foo", "foo", ["bar", "bar"]]
+    #   (collect & many(string("foo")) & many(string("bar"))).parse "foofoobarbar"
+    #   => [["foo", "foo"], ["bar", "bar"]]
     def collect
       pure []
     end
