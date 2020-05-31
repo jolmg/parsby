@@ -29,7 +29,7 @@ module ArithmeticParser
     (
       collect \
         & take_until(choice(operators[precedence]), with: parenthetical_text | any_char) \
-        & choice(operators[precedence]) \
+        & choice(operators[precedence] || []) \
         & take_until(eof | string(")"), with: parenthetical_text | any_char)
     ).fmap do |(left_text, op, right_text)|
       BinaryExpression.new(
