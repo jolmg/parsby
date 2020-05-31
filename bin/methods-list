@@ -16,23 +16,6 @@ grep -REh '^\s*(class|module|def|end)\b' lib | awk '
     }
   }
 
-  /^\s*end/ {
-    indent_level = get_indent_level()
-    matches_one = 0
-    for (i in context) {
-      if (i == indent_level) {
-        matches_one = 1
-      }
-    }
-    if (matches_one) {
-      for (i in context) {
-        if (i >= indent_level) {
-          delete context[i]
-        }
-      }
-    }
-  }
-
   /^\s*def\>/ {
     indent_level = get_indent_level()
     first = 1
