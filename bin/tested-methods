@@ -1,0 +1,29 @@
+#!/bin/bash
+
+grep -REh '^\s*(RSpec\.)?describe\s*([A-Z]|"[#.])' spec | awk '
+  function get_indent_level() {
+    return match($0, "[^[:blank:]]") - 1
+  }
+
+  /^\s*(RSpec\.)?describe\s*[A-Z]/ {
+    match($0, /^\s*(RSpec\.)?describe\s*([^[:blank:]]+)/, matches)
+    indent_level = get_indent_level()
+    context[indent_level] = matches[2]
+    for (i in context) {
+      if (i > indent_level) {
+        delete context[i]
+      }
+    }
+  }
+
+  /^\s*(RSpec\.)?describe\s*["'\''][#.]/ {
+    indent_level = get_indent_level()
+    for (i in context) {
+      if (i < indent_level) {
+        ctx = context[i]
+      }
+    }
+    match($0, /^\s*(RSpec\.)?describe\s*(["'\''])([#.].+)["'\'']/, matches)
+    print ctx matches[3]
+  }
+'
