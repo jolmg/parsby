@@ -7,7 +7,7 @@ module ArithmeticParser
   BinaryExpression = Struct.new :left, :op, :right
 
   def expression(precedence = 0)
-    whitespace_surrounded(choice(
+    between(whitespace, whitespace, choice(
       parenthetical_expression,
       binary_expression(precedence),
       decimal,

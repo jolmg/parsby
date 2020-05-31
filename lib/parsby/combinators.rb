@@ -55,12 +55,10 @@ class Parsby
       many(choice(*" \t\n\r".chars.map(&method(:string)))).fmap(&:join)
     end
 
-    def bracketed_with(left, right, p)
+    # Convinient substitute of <tt>left > p < right</tt> for when
+    # <tt>p</tt> is large to write.
+    def between(left, right, p)
       left > p < right
-    end
-
-    def whitespace_surrounded(p)
-      whitespace > p < whitespace
     end
 
     def pure(x)
