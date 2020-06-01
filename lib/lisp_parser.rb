@@ -23,7 +23,9 @@ module LispParser
   end
 
   def list
-    string("(") > whitespace > inner_list < whitespace < string(")") % Parsby::Token.new("list")
+    Parsby::Token.new("list") % (
+      string("(") > whitespace > inner_list < whitespace < string(")")
+    )
   end
 
   def atom
