@@ -38,6 +38,10 @@ class Parsby
     def to_s
       "<#{name}>"
     end
+
+    def %(p)
+      p % self
+    end
   end
 
   class BackedIO

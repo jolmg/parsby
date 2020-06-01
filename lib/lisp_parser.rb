@@ -47,7 +47,7 @@ module LispParser
   end
 
   def lisp_string
-    between(string('"'), string('"'),
+    Parsby::Token.new("string") % between(string('"'), string('"'),
       many(
         any_char.that_fails(string("\\") | string('"')) \
         | escape_sequence
@@ -56,7 +56,7 @@ module LispParser
   end
 
   def number
-    (
+    Parsby::Token.new("number") % (
       collect \
         & optional(string("-") | string("+")) \
         & decimal \
