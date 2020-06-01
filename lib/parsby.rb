@@ -153,6 +153,18 @@ class Parsby
     end
   end
 
+  # p * n, runs parser p n times, grouping results in an array.
+  def *(n)
+    Parsby.new do |io|
+      n.times.map { parse io }
+    end
+  end
+
+  # Like &, but joins results with + and isn't affected by ignore flag.
+  def +(p)
+    (collect & self & p).fmap {|(x, y)| x + y }
+  end
+
   def -@
     self.class.new(ignore: true) {|io| parse io }
   end
