@@ -5,12 +5,21 @@ module LispParser
   extend self
 
   def sexp
-    whitespace > (atom | list)
+    whitespace > (abbrev | atom | list)
   end
 
   def whitespace_1
     # allow comments
     many_1(super | string(";") + many_join(any_char.that_fails(string("\n")))).fmap(&:join)
+  end
+
+  def abbrev
+    choice(
+      string("'") > lazy { sexp }.fmap {|s| [:quote, [s, nil]]},
+      string("`") > lazy { sexp }.fmap {|s| [:quasiquote, [s, nil]]},
+      string(",@") > lazy { sexp }.fmap {|s| [:"unquote-splicing", [s, nil]]},
+      string(",") > lazy { sexp }.fmap {|s| [:unquote, [s, nil]]},
+    )
   end
 
   def list
@@ -25,7 +34,7 @@ module LispParser
         & lazy { sexp } \
         & ((whitespace > string(".") > whitespace > lazy { sexp }) \
             | optional(whitespace > lazy { inner_list }))
-    ) | pure([])
+    ) | pure(nil)
   end
 
   def atom
