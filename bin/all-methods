@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This lists all instance and class methods defined in the project. It's
+# used along with the script tested-methods in a test in projects_spec.rb
+# to ensure test-coverage.
+
 grep -REh '^\s*(class|module|def|end)\b' lib | awk '
   function get_indent_level() {
     return match($0, "[^[:blank:]]") - 1

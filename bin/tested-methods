@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# This lists all tested instance and class methods defined in the project.
+# It's used along with the script all-methods in a test in projects_spec.rb
+# to ensure test-coverage.
+#
+# It depends on rspec contexts being done in a specific format, and
+# properly indented. The format can be exemplified by:
+#
+#   RSpec.describe Foo do
+#     describe Foo::Bar do
+#       describe "#foo" do
+#         ...
+#       end
+#       describe ".bar" do
+#         ...
+#       end
+#     end
+#   end
+
 grep -REh '^\s*(RSpec\.)?describe\s*([A-Z]|"[#.])' spec | awk '
   function get_indent_level() {
     return match($0, "[^[:blank:]]") - 1

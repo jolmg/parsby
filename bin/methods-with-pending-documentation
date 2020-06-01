@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# This script lists the methods that aren't immediately preceded by a
+# comment. The output is empty and the exit status is successful if they
+# all have a comment.
+#
+# This is used in a test in project_spec.rb to ensure documentation
+# coverage.
+
 exec find lib -type f -name \*.rb -exec awk '
   {
     if (/^\s*(class|module)\>/) {
