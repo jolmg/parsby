@@ -76,6 +76,10 @@ class Parsby
       Parsby.new { x }
     end
 
+    def lazy(&b)
+      Parsby.new {|io| b.call.parse io }
+    end
+
     # This is meant for use with the operator <tt>&</tt>, to start off the
     # collection array. This is technically redundant most of the time, but
     # if it's not used and the first parser returns an array, the results

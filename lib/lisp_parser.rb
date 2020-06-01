@@ -13,17 +13,21 @@ module LispParser
     many_1(super | string(";") + many_join(any_char.that_fails(string("\n")))).fmap(&:join)
   end
 
+  def inner_list
+    (
+      collect \
+        & lazy { sexp } \
+        & ((whitespace > string(".") > whitespace > lazy { sexp }) \
+            | optional(whitespace > lazy { inner_list }))
+    ) | pure([])
+  end
+
   def list
-    between(string("(") > whitespace, whitespace < string(")"),
-      sep_by(sexp, whitespace)
-    )
+    string("(") > whitespace > inner_list < whitespace < string(")") % Parsby::Token.new("list")
   end
 
   def atom
-    number | lisp_string | symbol
-  end
-
-  def symbol
+    number | lisp_string
   end
 
   def hex_digit
