@@ -117,6 +117,10 @@ class Parsby
       end
     end
 
+    def many_join(p)
+      many(p).fmap(&:join)
+    end
+
     # Tries the given parser and returns nil if it fails.
     def optional(p)
       Parsby.new do |io|
