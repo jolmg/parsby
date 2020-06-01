@@ -26,8 +26,7 @@ def reload!
         Object.send(:remove_const, const)
       end
     end
-    # Load everything only after having removed everything.
-    .each(&method(:load))
+    .each(&method(:load)) # Load everything only after having removed everything.
 
   include Parsby::Combinators
   nil
