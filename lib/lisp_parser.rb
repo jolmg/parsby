@@ -5,7 +5,7 @@ module LispParser
   extend self
 
   def sexp
-    whitespace > (abbrev | atom | list)
+    whitespace > (atom | list)
   end
 
   def whitespace
