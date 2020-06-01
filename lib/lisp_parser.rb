@@ -8,9 +8,9 @@ module LispParser
     whitespace > (atom | list)
   end
 
-  def whitespace
+  def whitespace_1
     # allow comments
-    many_join(whitespace_1 | string(";") + many_join(any_char.that_fails(string("\n"))))
+    many_1(super | string(";") + many_join(any_char.that_fails(string("\n")))).fmap(&:join)
   end
 
   def list
