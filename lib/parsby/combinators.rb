@@ -66,6 +66,10 @@ class Parsby
       left > p < right
     end
 
+    def peek(p)
+      Parsby.new {|io| p.peek io }
+    end
+
     # Parser that returns provided value without consuming any input. This
     # is used at least with <tt>collect</tt>.
     def pure(x)
