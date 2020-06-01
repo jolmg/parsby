@@ -166,7 +166,7 @@ class Parsby
 
   # Like &, but joins results with + and isn't affected by ignore flag.
   def +(p)
-    (collect & self & p).fmap {|(x, y)| x + y }
+    (Parsby.collect & self & p).fmap {|(x, y)| x + y }
   end
 
   # Returns a parser that's to be ignored by &.
