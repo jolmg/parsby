@@ -2,6 +2,7 @@ require "bundler/setup"
 require "parsby"
 require "csv_parser"
 require "arithmetic_parser"
+require "lisp_parser"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
