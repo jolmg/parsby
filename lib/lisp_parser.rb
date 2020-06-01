@@ -4,8 +4,12 @@ module LispParser
   include Parsby::Combinators
   extend self
 
+  def sexp_sequence
+    many(whitespace > sexp) < eof
+  end
+
   def sexp
-    whitespace > (abbrev | atom | list)
+    abbrev | atom | list
   end
 
   def whitespace_1
