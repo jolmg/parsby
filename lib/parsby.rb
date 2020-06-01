@@ -165,10 +165,12 @@ class Parsby
     (collect & self & p).fmap {|(x, y)| x + y }
   end
 
+  # Returns a parser that's to be ignored by &.
   def -@
     self.class.new(ignore: true) {|io| parse io }
   end
 
+  # Groups results in an array.
   def &(p)
     Parsby.new do |io|
       x = parse io
