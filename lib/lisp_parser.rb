@@ -29,7 +29,19 @@ module LispParser
   end
 
   def atom
-    number | lisp_string
+    number | lisp_string | symbol
+  end
+
+  def symbol
+    many_1_join(choice(
+      [
+        *('a'..'z'),
+        *('A'..'Z'),
+        *('0'..'9'),
+        # Got list from R6RS
+        *%w(! $ % & * + - . / : < = > ? @ ^ _ ~),
+      ].map {|c| string c}
+    )).fmap(&:to_sym)
   end
 
   def hex_digit

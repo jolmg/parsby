@@ -125,6 +125,10 @@ class Parsby
       end
     end
 
+    def many_1_join(p)
+      many_1(p).fmap(&:join)
+    end
+
     def many_join(p)
       many(p).fmap(&:join)
     end
