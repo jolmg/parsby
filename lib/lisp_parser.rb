@@ -5,7 +5,7 @@ module LispParser
   extend self
 
   def sexp_sequence
-    many(whitespace > sexp) < eof
+    many(whitespace > sexp) < whitespace < eof
   end
 
   def sexp
