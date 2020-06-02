@@ -16,7 +16,7 @@ class Parsby
     def message
       parts = []
       parts << "expected #{opts[:expected]}" if opts[:expected]
-      parts << "actual #{opts[:actual]}" if opts[:actual]
+      parts << "actual #{opts[:actual].inspect}" if opts[:actual]
       parts << "at #{opts[:at]}"
       parts.join(", ")
     end
