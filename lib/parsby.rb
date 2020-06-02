@@ -66,12 +66,8 @@ class Parsby
       nil
     end
 
-    def eof?
-      @io.eof?
-    end
-
-    def pos
-      @io.pos
+    def method_missing(m, *args, &b)
+      @io.send(m, *args, &b)
     end
 
     def read(count)
