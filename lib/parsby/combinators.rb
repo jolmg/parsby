@@ -180,6 +180,7 @@ class Parsby
         unless io.eof?
           raise ExpectationFailed.new(
             at: io.pos,
+            actual: (whitespace > many_join(char_matching(/\S/))).peek(io),
           )
         end
       end
