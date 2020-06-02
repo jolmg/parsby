@@ -34,12 +34,12 @@ module LispParser
   end
 
   def inner_list
-    (
+    (peek(string(")")) > pure(nil)) | (
       collect \
         & lazy { sexp } \
         & ((whitespace > string(".") > whitespace > lazy { sexp }) \
             | optional(whitespace > lazy { inner_list }))
-    ) | pure(nil)
+    )
   end
 
   def atom
