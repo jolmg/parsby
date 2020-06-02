@@ -12,8 +12,9 @@ module LispParser
     abbrev | atom | list
   end
 
+  # Add comments to definition of whitespace. whitespace is defined using
+  # whitespace_1, so we cover both with this.
   def whitespace_1
-    # allow comments
     many_1(super | string(";") + many_join(any_char.that_fails(string("\n")))).fmap(&:join)
   end
 
