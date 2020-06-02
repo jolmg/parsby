@@ -73,7 +73,7 @@ module LispParser
       string("n") > pure("\n"),
       string("t") > pure("\t"),
       string("r") > pure("\r"),
-      string("x") > (hex_digit & hex_digit)
+      string("x") > (hex_digit * 2)
         .fmap {|(d1, d2)| (d1 + d2).to_i(16).chr },
       string("\\"),
     ])
