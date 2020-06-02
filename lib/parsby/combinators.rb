@@ -162,13 +162,7 @@ class Parsby
     # of the results of the first argument. Returns an empty list if it
     # didn't match even once, so it never fails.
     def sep_by(p, s)
-      Parsby.new do |io|
-        begin
-          sep_by_1(p, s).parse io
-        rescue Error
-          []
-        end
-      end
+      sep_by_1(p, s) | pure([])
     end
 
     # Like sep_by, but fails if it can't match even once.
