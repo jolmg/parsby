@@ -69,6 +69,7 @@ module LispParser
 
   def escape_sequence
     string("\\") > choice([
+      string("\"") > pure("\""),
       string("n") > pure("\n"),
       string("t") > pure("\t"),
       string("r") > pure("\r"),
