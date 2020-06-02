@@ -9,7 +9,7 @@ require "parsby"
 # (If you use this, don't forget to add pry to your Gemfile!)
 require "pry"
 
-def to_constant_string(path)
+def to_constant_representation(path)
   path
     .gsub("/", "::")
     .gsub(/(\A|(?<=::)|_)./) {|x| x[-1].upcase }
@@ -21,7 +21,9 @@ def reload!
     .map {|p| Pathname.new(p).relative_path_from(Pathname.new("lib/")) }
     .select {|p| p.to_s =~ /\.rb\z/ && p.to_s != "parsby/version.rb" }
     .each do |p|
-      const = to_constant_string(p.to_s)
+      const = to_constant_representation(p.to_s)
+      # Don't bother removing children constants, since we'll remove the
+      # parents.
       unless const =~ /::/ || !Object.const_defined?(const)
         Object.send(:remove_const, const)
       end
