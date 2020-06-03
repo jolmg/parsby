@@ -9,9 +9,6 @@ class Parsby
         if a == e
           a
         else
-          # XXX: #parse of this instance will already recover from BackedIO's
-          # backup. Isn't this causing restoration to be done twice?
-          a.chars.reverse.each {|ac| io.ungetc ac } if a
           raise ExpectationFailed.new expected: e, actual: a, at: io.pos
         end
       end
