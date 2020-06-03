@@ -54,8 +54,8 @@ module LispParser
         *('a'..'z'),
         *('A'..'Z'),
         *('0'..'9'),
-        # Got list from R6RS
-        *%w(! $ % & * + - . / : < = > ? @ ^ _ ~),
+        # Got list from R6RS; removed '.' for simplicity.
+        *%w(! $ % & * + - / : < = > ? @ ^ _ ~),
       ].map {|c| string c}
     )).fmap(&:to_sym)
   end

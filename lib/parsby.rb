@@ -45,7 +45,7 @@ class Parsby
   end
 
   class BackedIO
-    def initialize(io, &b)
+    def initialize(io)
       io = StringIO.new io if io.is_a? String
       @io = io
       @backup = ""
@@ -116,7 +116,6 @@ class Parsby
 
   def peek(io)
     BackedIO.for(io) do |bio|
-      orig_pos = bio.pos
       begin
         parse bio
       ensure
