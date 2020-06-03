@@ -57,7 +57,7 @@ class Parsby
     # Parses string of 1 or more continuous whitespace characters (" ",
     # "\t", "\n", "\r")
     def whitespace_1
-      many_1(choice(*" \t\n\r".chars.map(&method(:string)))).fmap(&:join)
+      join(many_1(choice(*" \t\n\r".chars.map(&method(:string)))))
     end
 
     # Convinient substitute of <tt>left > p < right</tt> for when

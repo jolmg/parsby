@@ -16,7 +16,7 @@ module Parsby::Example
     # Add comments to definition of whitespace. whitespace is defined using
     # whitespace_1, so we cover both with this.
     def whitespace_1
-      many_1(super | string(";") + join(many(any_char.that_fails(string("\n"))))).fmap(&:join)
+      join(many_1(super | string(";") + join(many(any_char.that_fails(string("\n"))))))
     end
 
     def abbrev
@@ -84,10 +84,10 @@ module Parsby::Example
 
     def lisp_string
       Parsby::Token.new("string") % between(string('"'), string('"'),
-        many(
+        join(many(
           any_char.that_fails(string("\\") | string('"')) \
           | escape_sequence
-        ).fmap(&:join)
+        ))
       )
     end
 

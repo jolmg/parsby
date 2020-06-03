@@ -20,12 +20,12 @@ module Parsby::Example
     end
 
     def parenthetical_text
-      (
+      join(
         collect \
           & string("(") \
           & take_until(string(")"), with: parenthetical_text | any_char) \
           & string(")")
-      ).fmap(&:join)
+      )
     end
 
     def binary_expression(precedence = 0)

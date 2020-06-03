@@ -25,13 +25,13 @@ module Parsby::Example
     end
 
     def quoted_cell
-      non_quote = many(any_char.that_fail(string('"'))).fmap(&:join)
+      non_quote = join(many(any_char.that_fail(string('"'))))
       inner = sep_by(non_quote, string('""')).fmap {|r| r.join '"' }
       string('"') > inner < string('"')
     end
 
     def non_quoted_cell
-      many(any_char.that_fail(string(",") | string("\"") | eol)).fmap(&:join)
+      join(many(any_char.that_fail(string(",") | string("\"") | eol)))
     end
 
     def eol
