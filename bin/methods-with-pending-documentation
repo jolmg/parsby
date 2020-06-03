@@ -7,7 +7,7 @@
 # This is used in a test in project_spec.rb to ensure documentation
 # coverage.
 
-exec find lib -type f -name \*.rb -exec awk '
+exec find lib -type f -name \*.rb ! -path lib/parsby/example/\* -exec awk '
   {
     if (/^\s*(class|module)\>/) {
       class_module = !def_seen && class_module ? class_module "\n" : ""
