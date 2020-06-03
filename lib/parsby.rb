@@ -84,10 +84,13 @@ class Parsby
       nil
     end
 
+    # This is to provide transparent delegation to methods of underlying
+    # IO.
     def method_missing(m, *args, &b)
       @io.send(m, *args, &b)
     end
 
+    # Reads from underlying IO and backs it up.
     def read(count)
       @io.read(count).tap {|r| @backup << r unless r.nil? }
     end
