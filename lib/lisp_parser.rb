@@ -28,9 +28,11 @@ module LispParser
   end
 
   def list
-    Parsby::Token.new("list") % (
-      string("(") > whitespace > inner_list < whitespace < string(")")
-    )
+    Parsby.new :list do |io|
+      braces = {"(" => ")", "[" => "]"}
+      opening_brace = choice(braces.keys.map {|c| string c}).parse io
+      (whitespace > inner_list < whitespace < string(braces[opening_brace])).parse io
+    end
   end
 
   def inner_list
