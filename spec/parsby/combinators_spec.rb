@@ -106,13 +106,6 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
-  describe "#many_join" do
-    it "is like #many, but joins the results" do
-      expect(many_join(string("foo") < string(";")).parse("foo;foo;"))
-        .to eq "foofoo"
-    end
-  end
-
   describe "#peek" do
     it "makes a parser not consume input" do
       expect(StringIO.new("foobar").tap {|io| peek(string("foo")).parse(io) }.read(6))
@@ -120,12 +113,10 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
-  describe "#many_1_join" do
-    it "is like #many_join, but fails when it doesn't match even once" do
-      expect(many_1_join(string("foo") < string(";")).parse("foo;foo;"))
+  describe "#join" do
+    it "joins the resulting array of the provided parser" do
+      expect(join(many(string("foo") < string(";"))).parse("foo;foo;"))
         .to eq "foofoo"
-      expect { many_1_join(string("foo") < string(";")).parse("foo") }
-        .to raise_error Parsby::ExpectationFailed
     end
   end
 

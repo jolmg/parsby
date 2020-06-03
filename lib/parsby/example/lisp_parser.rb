@@ -16,7 +16,7 @@ module Parsby::Example
     # Add comments to definition of whitespace. whitespace is defined using
     # whitespace_1, so we cover both with this.
     def whitespace_1
-      many_1(super | string(";") + many_join(any_char.that_fails(string("\n")))).fmap(&:join)
+      many_1(super | string(";") + join(many(any_char.that_fails(string("\n"))))).fmap(&:join)
     end
 
     def abbrev
@@ -50,7 +50,7 @@ module Parsby::Example
     end
 
     def symbol
-      many_1_join(choice(
+      join(many_1(choice(
         [
           *('a'..'z'),
           *('A'..'Z'),
@@ -58,7 +58,7 @@ module Parsby::Example
           # Got list from R6RS; removed '.' for simplicity.
           *%w(! $ % & * + - / : < = > ? @ ^ _ ~),
         ].map {|c| string c}
-      )).fmap(&:to_sym)
+      ))).fmap(&:to_sym)
     end
 
     def hex_digit

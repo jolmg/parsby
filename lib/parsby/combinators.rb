@@ -129,14 +129,9 @@ class Parsby
       end
     end
 
-    # Same as many_1, but joins the result with Array#join.
-    def many_1_join(p)
-      many_1(p).fmap(&:join)
-    end
-
-    # Same as many, but joins the result with Array#join.
-    def many_join(p)
-      many(p).fmap(&:join)
+    # Join the Array result of p.
+    def join(p)
+      p.fmap(&:join)
     end
 
     # Tries the given parser and returns nil if it fails.
@@ -186,7 +181,7 @@ class Parsby
         unless io.eof?
           raise ExpectationFailed.new(
             at: io.pos,
-            actual: (whitespace > many_join(char_matching(/\S/))).peek(io),
+            actual: (whitespace > join(many(char_matching(/\S/)))).peek(io),
           )
         end
       end
