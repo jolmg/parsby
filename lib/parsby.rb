@@ -39,6 +39,11 @@ class Parsby
       "<#{name}>"
     end
 
+    # Compare tokens
+    def ==(t)
+      t.is_a?(self.class) && t.name == name
+    end
+
     def %(p)
       p % self
     end

@@ -49,6 +49,12 @@ RSpec.describe Parsby do
       end
     end
 
+    describe "#==" do
+      it "compares tokens" do
+        expect(Parsby::Token.new("foo")).to eq Parsby::Token.new("foo")
+      end
+    end
+
     describe "#%" do
       it "is the flipped version of Parsby's" do
         expect((Parsby::Token.new("foo") % string("foo")).label.to_s)
