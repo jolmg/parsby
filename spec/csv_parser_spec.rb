@@ -86,4 +86,36 @@ RSpec.describe CsvParser do
     CSV
       .to raise_error Parsby::Error
   end
+
+  describe "#cell" do
+    it "parses quoted or unquoted cells"
+  end
+
+  describe "#csv" do
+    it "parses a csv whole"
+    it "expects eof"
+  end
+
+  describe "#eol" do
+    it "allows either LF or CRLF line terminators"
+  end
+
+  describe "#parse" do
+    it "entrypoint that delegates to #csv"
+  end
+
+  describe "#record" do
+    it "parses a single record"
+    it "fails on invalid syntax"
+  end
+
+  describe "#quoted_cell" do
+    it "can contain field separators inside"
+    it "can span multiple lines"
+    it "releases escaped double-quotes"
+  end
+
+  describe "#non_quoted_cell" do
+    it "stops on field separator or double-quotes"
+  end
 end

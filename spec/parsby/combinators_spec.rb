@@ -73,10 +73,59 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
+  describe "#whitespace_1" do
+    it "like whitespace, but raises error when it doesn't match even once" do
+      expect(whitespace_1.parse " \tfoo").to eq " \t"
+      expect { whitespace_1.parse "foo" }.to raise_error Parsby::ExpectationFailed
+    end
+  end
+
   describe "#whitespace" do
     it "parses continuous whitespace (' ', '\\t', '\\r', '\\n')" do
       expect(whitespace.parse " \r\n\tfoo").to eq " \r\n\t"
       expect(whitespace.parse "foo").to eq ""
+    end
+  end
+
+  describe "#lazy" do
+    it "delays parser construction until parsing time" do
+      expect(lazy { raise }).to be_a Parsby
+      expect { lazy { raise }.parse("foo") }.to raise_error RuntimeError
+    end
+
+    it "allows for recursive parser expressions avoiding stack-overflow" do
+      expect(
+        Module.new do
+          extend Parsby::Combinators
+
+          def self.parenthesis
+            string("(") & optional(lazy { parenthesis }) & string(")")
+          end
+        end.parenthesis.parse("(())")
+      ).to eq ["(", ["(", nil, ")"], ")"]
+    end
+  end
+
+  describe "#many_join" do
+    it "is like #many, but joins the results" do
+      expect(many_join(string("foo") < string(";")).parse("foo;foo;"))
+        .to eq "foofoo"
+    end
+  end
+
+  describe "#peek" do
+    it "makes a parser not consume input" do
+      expect(StringIO.new("foobar").tap {|io| peek(string("foo")).parse(io) }.read(6))
+        .to eq "foobar"
+    end
+  end
+
+  describe "#many_1_join" do
+    it "is like #many_join, but fails when it doesn't match even once" do
+      expect(many_1_join(string("foo") < string(";")).parse("foo;foo;"))
+        .to eq "foofoo"
+      expect { many_1_join(string("foo") < string(";")).parse("foo") }
+        .to raise_error Parsby::ExpectationFailed
     end
   end
 
