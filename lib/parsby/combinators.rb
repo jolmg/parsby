@@ -203,6 +203,7 @@ class Parsby
       end
     end
 
+    # Makes a token with the given name.
     def token(name)
       Parsby::Token.new name
     end

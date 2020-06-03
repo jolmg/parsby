@@ -9,10 +9,14 @@ class Parsby
   class ExpectationFailed < Error
     attr_reader :opts
 
+    # Makes an exception with the optional keyword arguments :expected,
+    # :actual, and manditory :at.
     def initialize(opts)
       @opts = opts
     end
 
+    # Renders the exception message using the options :expected, :actual,
+    # and :at. :action is #inspect'ed before interpolation.
     def message
       parts = []
       parts << "expected #{opts[:expected]}" if opts[:expected]
@@ -31,10 +35,12 @@ class Parsby
   class Token
     attr_reader :name
 
+    # Makes a token with the given name.
     def initialize(name)
       @name = name
     end
 
+    # Renders token name by surrounding it in angle brackets.
     def to_s
       "<#{name}>"
     end
@@ -44,18 +50,24 @@ class Parsby
       t.is_a?(self.class) && t.name == name
     end
 
+    # Flipped version of Parsby#%, so you can specify the token of a parser
+    # at the beginning of a parser expression.
     def %(p)
       p % self
     end
   end
 
   class BackedIO
+    # Initializes a BackedIO out of the provided IO object or String. The
+    # String will be turned into an IO using StringIO.
     def initialize(io)
       io = StringIO.new io if io.is_a? String
       @io = io
       @backup = ""
     end
 
+    # Makes a new BackedIO out of the provided IO, calls the provided
+    # blocked and restores the IO on an exception.
     def self.for(io, &b)
       bio = new io
       begin
@@ -66,6 +78,7 @@ class Parsby
       end
     end
 
+    # Restore n chars from the backup.
     def restore(n = @backup.length)
       n.times { ungetc @backup[-1] }
       nil
@@ -79,26 +92,41 @@ class Parsby
       @io.read(count).tap {|r| @backup << r unless r.nil? }
     end
 
+    # Pass to underlying IO's ungetc and discard a part of the same length
+    # from the backup. As specified with different IO classes, the argument
+    # should be a single character. To restore from the backup, use
+    # #restore.
     def ungetc(c)
+      # Though c is supposed to be a single character, as specified by the
+      # ungetc of different IO objects, let's not assume that when
+      # adjusting the backup.
       @backup.slice! @backup.length - c.length
       @io.ungetc(c)
     end
   end
 
+  # The parser's label. It's an "unknown" token by default.
   def label
     @label ||= Token.new("unknown")
   end
 
+  # Assign label to parser. If given a symbol, it'll be turned into a
+  # Parsby::Token.
   def label=(name)
     @label = name.is_a?(Symbol) ? Token.new(name) : name
   end
 
+  # Initialize parser with optional label argument, and parsing block. The
+  # parsing block is given an IO as argument, and its result is the result
+  # when parsing.
   def initialize(label = nil, ignore: false, &b)
     self.label = label if label
     @ignore = ignore
     @parser = b
   end
 
+  # Indicates whether parser is to be ignored when aggregating results with
+  # Parsby#&.
   def ignore?
     @ignore ||= false
   end
@@ -119,6 +147,7 @@ class Parsby
     end
   end
 
+  # Turns parser into one that doesn't consume input.
   def peek(io)
     BackedIO.for(io) do |bio|
       begin
