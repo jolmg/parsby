@@ -62,7 +62,7 @@ class Parsby
     end
 
     def restore(n = @backup.length)
-      n.times { @io.ungetc @backup.slice!(-1) }
+      n.times { ungetc @backup[-1] }
       nil
     end
 
