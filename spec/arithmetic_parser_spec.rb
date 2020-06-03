@@ -1,4 +1,4 @@
-RSpec.describe ArithmeticParser do
+RSpec.describe Parsby::Example::ArithmeticParser do
   describe "#expression" do
     it "parses simple sums"
     it "understands parenthesis"

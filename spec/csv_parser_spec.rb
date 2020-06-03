@@ -1,4 +1,4 @@
-RSpec.describe CsvParser do
+RSpec.describe Parsby::Example::CsvParser do
   let :simple_csv do
     <<~EOF
       foo,bar
@@ -8,7 +8,7 @@ RSpec.describe CsvParser do
   end
 
   it "parses simple csv files" do
-    expect(CsvParser.parse <<~CSV)
+    expect(Parsby::Example::CsvParser.parse <<~CSV)
       foo,bar
       1,2
       3,4
@@ -21,7 +21,7 @@ RSpec.describe CsvParser do
   end
 
   it "parses not so simple csv files" do
-    expect(CsvParser.parse <<~CSV)
+    expect(Parsby::Example::CsvParser.parse <<~CSV)
       "
       foo","bar
       "
@@ -38,7 +38,7 @@ RSpec.describe CsvParser do
   end
 
   it "allows CRLF line terminators" do
-    expect(CsvParser.parse <<~CSV)
+    expect(Parsby::Example::CsvParser.parse <<~CSV)
       foo,bar\r
       1,2\r
     CSV
@@ -49,7 +49,7 @@ RSpec.describe CsvParser do
   end
 
   it "allows last line to not have line terminator" do
-    expect(CsvParser.parse <<~CSV.chomp)
+    expect(Parsby::Example::CsvParser.parse <<~CSV.chomp)
       foo,bar
       1,2
     CSV
@@ -58,7 +58,7 @@ RSpec.describe CsvParser do
         ["1", "2"],
       ]
 
-    expect(CsvParser.parse <<~CSV.chomp)
+    expect(Parsby::Example::CsvParser.parse <<~CSV.chomp)
       foo,bar\r
       1,2\r
     CSV
@@ -69,17 +69,17 @@ RSpec.describe CsvParser do
   end
 
   it "accepts an empty CSV" do
-    expect(CsvParser.parse "").to eq []
+    expect(Parsby::Example::CsvParser.parse "").to eq []
   end
 
   it "correctly interprets an empty line" do
-    expect(CsvParser.parse "\n").to eq [[""]]
+    expect(Parsby::Example::CsvParser.parse "\n").to eq [[""]]
   end
 
   it "does not accept invalid csv at the end (expects EOF)" do
-    # If CsvParser didn't expect an EOF, this wouldn't raise an error. It
+    # If Parsby::Example::CsvParser didn't expect an EOF, this wouldn't raise an error. It
     # would just return what it could parse at the beginning.
-    expect { CsvParser.parse <<~CSV }
+    expect { Parsby::Example::CsvParser.parse <<~CSV }
       foo,bar
       1,2
       invalid"invalid
