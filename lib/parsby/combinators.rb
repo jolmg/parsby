@@ -205,5 +205,9 @@ class Parsby
         r
       end
     end
+
+    def token(name)
+      Parsby::Token.new name
+    end
   end
 end
