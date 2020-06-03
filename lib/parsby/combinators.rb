@@ -51,11 +51,14 @@ class Parsby
       ps.reduce(fail, :|) % "(one of #{ps.map(&:label).join(", ")})"
     end
 
-    # Parses continuous whitespace (" ", "\t", "\n", "\r")
+    # Parses string of 0 or more continuous whitespace characters (" ",
+    # "\t", "\n", "\r")
     def whitespace
       whitespace_1 | pure("")
     end
 
+    # Parses string of 1 or more continuous whitespace characters (" ",
+    # "\t", "\n", "\r")
     def whitespace_1
       many_1(choice(*" \t\n\r".chars.map(&method(:string)))).fmap(&:join)
     end
@@ -66,6 +69,7 @@ class Parsby
       left > p < right
     end
 
+    # Turns parser into one that doesn't consume input.
     def peek(p)
       Parsby.new {|io| p.peek io }
     end
@@ -76,6 +80,9 @@ class Parsby
       Parsby.new { x }
     end
 
+    # Delays construction of parser until parsing-time. This allows one to
+    # construct recursive parsers, which would otherwise result in a
+    # stack-overflow in construction-time.
     def lazy(&b)
       Parsby.new {|io| b.call.parse io }
     end
@@ -125,10 +132,12 @@ class Parsby
       end
     end
 
+    # Same as many_1, but joins the result with Array#join.
     def many_1_join(p)
       many_1(p).fmap(&:join)
     end
 
+    # Same as many, but joins the result with Array#join.
     def many_join(p)
       many(p).fmap(&:join)
     end
@@ -186,6 +195,7 @@ class Parsby
       end
     end
 
+    # Take characters until p matches.
     def take_until(p, with: any_char)
       Parsby.new do |io|
         r = ""
