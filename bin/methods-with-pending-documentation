@@ -7,23 +7,35 @@
 # This is used in a test in project_spec.rb to ensure documentation
 # coverage.
 
-exec find lib -type f -name \*.rb ! -path lib/parsby/example/\* -exec awk '
-  {
-    if (/^\s*(class|module)\>/) {
-      class_module = !def_seen && class_module ? class_module "\n" : ""
-      class_module = class_module $0
-      def_seen = 0
-    } else {
-      def_seen = 1
+find lib -type f -name \*.rb ! -path lib/parsby/example/\* \
+| xargs grep -REh '^\s*(#|(class|module|def|end)\b)' \
+| awk '
+  function get_indent_level() {
+    return match($0, "[^[:blank:]]") - 1
+  }
+
+  /^\s*(module|class)\>/ {
+    match($0, /^\s*(class|module)\s*([^[:blank:]]+)/, matches)
+    indent_level = get_indent_level()
+    context[indent_level] = matches[2]
+    for (i in context) {
+      if (i > indent_level) {
+        delete context[i]
+      }
     }
   }
 
-  /^\s*def / && !prev_line_is_comment {
-    if (class_module) {
-      print class_module
-      class_module = ""
+  /^\s*def\>/ && !prev_line_is_comment {
+    indent_level = get_indent_level()
+    first = 1
+    for (i in context) {
+      if (i < indent_level) {
+        printf(first ? "%s" : "::%s", context[i])
+        first = 0
+      }
     }
-    print
+    match($0, /^\s*(def)\s*(self\.)?([^([:blank:]]+)/, matches)
+    print (matches[2] ? "." : "#") matches[3]
     at_least_one_missing = 1
   }
 
@@ -34,4 +46,4 @@ exec find lib -type f -name \*.rb ! -path lib/parsby/example/\* -exec awk '
   END {
     exit at_least_one_missing
   }
-' {} +
+'
