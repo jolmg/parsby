@@ -18,7 +18,7 @@ exec find lib -type f -name \*.rb ! -path lib/parsby/example/\* -exec awk '
     }
   }
 
-  /^\s*def / && !in_comment {
+  /^\s*def / && !prev_line_is_comment {
     if (class_module) {
       print class_module
       class_module = ""
@@ -28,7 +28,7 @@ exec find lib -type f -name \*.rb ! -path lib/parsby/example/\* -exec awk '
   }
 
   {
-    in_comment = /^\s*#/
+    prev_line_is_comment = /^\s*#/
   }
 
   END {
