@@ -81,7 +81,7 @@ class Parsby
   end
 
   def label
-    @label || Token.new("unknown")
+    @label ||= Token.new("unknown")
   end
 
   def label=(name)
