@@ -20,7 +20,13 @@ module Parsby::Example
     # Add comments to definition of whitespace. whitespace is defined using
     # whitespace_1, so we cover both with this.
     def whitespace_1
-      join(many_1(super | string(";") + join(many(any_char.that_fails(string("\n"))))))
+      join(many_1(super | comment))
+    end
+
+    def comment
+      string(";") \
+        + join(many(any_char.that_fails(string("\n")))) \
+        + (string("\n") | (eof > pure("")))
     end
 
     def abbrev
