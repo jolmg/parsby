@@ -5,6 +5,10 @@ module Parsby::Example
     include Parsby::Combinators
     extend self
 
+    def parse(io)
+      sexp_sequence.parse io
+    end
+
     def sexp_sequence
       many(whitespace > sexp) < whitespace < eof
     end
