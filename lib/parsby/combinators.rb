@@ -171,6 +171,10 @@ class Parsby
       end
     end
 
+    def parsby(*args, &b)
+      Parsby.new(*args, &b)
+    end
+
     # Matches EOF, fails otherwise. Returns nil.
     def eof
       Parsby.new :eof do |io|
