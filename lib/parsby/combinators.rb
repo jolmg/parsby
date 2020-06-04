@@ -171,6 +171,7 @@ class Parsby
       end
     end
 
+    # The same as Parsby.new, just shorter and without capitals.
     def parsby(*args, &b)
       Parsby.new(*args, &b)
     end
