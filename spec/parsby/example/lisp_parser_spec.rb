@@ -2,62 +2,24 @@ RSpec.describe Parsby::Example::LispParser do
   include Parsby::Example::LispParser
 
   describe "#sexp_sequence" do
-    it "parses different expressions" do
+    it "parses multiple expressions with whitespace before, after and in-between" do
       expect(sexp_sequence.parse(<<~EOF))
+
         ;; Pair
         (foo . bar)
+
+        (foo bar)
+
+        -123.456
+
+        "foo bar"
+
       EOF
         .to eq [
           [:foo, :bar],
-        ]
-      expect(sexp_sequence.parse(<<~EOF))
-        ;; A list
-        (+ foo bar)
-      EOF
-        .to eq [
-          [:+, [:foo, [:bar, nil]]],
-        ]
-      expect(sexp_sequence.parse(<<~EOF))
-        ;; Same list as pairs
-        (+ . (foo . (bar . ())))
-      EOF
-        .to eq [
-          [:+, [:foo, [:bar, nil]]],
-        ]
-      expect(sexp_sequence.parse(<<~EOF))
-        ;; List with pair end
-        (foo bar . baz)
-      EOF
-        .to eq [
-          [:foo, [:bar, :baz]],
-        ]
-      expect(sexp_sequence.parse(<<~EOF))
-        ;; Quote abbreviation
-        'foo
-      EOF
-        .to eq [
-          [:quote, [:foo, nil]]
-        ]
-      expect(sexp_sequence.parse(<<~EOF))
-        ;; Quasiquote and unquote abbreviations
-        `(foo ,bar)
-      EOF
-        .to eq [
-          [:quasiquote, [[:foo, [[:unquote, [:bar, nil]], nil]], nil]]
-        ]
-      expect(sexp_sequence.parse(<<~EOF))
-        ;; Numbers
-        -123.456
-      EOF
-        .to eq [
+          [:foo, [:bar, nil]],
           -123.456,
-        ]
-      expect(sexp_sequence.parse(<<~EOF))
-        ;; Strings
-        "stri\\"ng\\n \\xfff"
-      EOF
-        .to eq [
-          "stri\"ng\n \xFFf".force_encoding("BINARY"),
+          "foo bar",
         ]
     end
   end
