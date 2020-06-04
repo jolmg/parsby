@@ -224,6 +224,19 @@ class Parsby
     end
   end
 
+  # Allows you to modify the exception to add information when defining the
+  # parser via combinators.
+  def mod_expectation_failed(&b)
+    Parsby.new do |io|
+      begin
+        parse io
+      rescue ExpectationFailed => e
+        b.call e
+        raise
+      end
+    end
+  end
+
   # Peeks to see whether parser would succeed if applied.
   def would_succeed(io)
     begin
