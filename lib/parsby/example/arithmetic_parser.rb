@@ -16,7 +16,7 @@ module Parsby::Example
     end
 
     def parenthetical_expression
-      string("(") > expression < string(")")
+      string("(") > lazy { expression } < string(")")
     end
 
     def parenthetical_text
