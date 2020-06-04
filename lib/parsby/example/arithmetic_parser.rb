@@ -5,8 +5,6 @@ module Parsby::Example
     include Parsby::Combinators
     extend self
 
-    BinaryExpression = Struct.new :left, :op, :right
-
     def parse(io)
       (expression < eof).parse io
     end
@@ -41,7 +39,7 @@ module Parsby::Example
           << parsby(&:pos) \
           << join(many((parenthetical_text | any_char).that_fail(eof | string(")"))))
       ).fmap do |(left_pos, left_text, op, right_pos, right_text)|
-        BinaryExpression.new(
+        [
           expression(precedence + 1)
             .on_catch {|e| e.modify! at: e.opts[:at] + left_pos}
             .parse(left_text),
@@ -49,7 +47,7 @@ module Parsby::Example
           (expression(precedence) < eof)
             .on_catch {|e| e.modify! at: e.opts[:at] + right_pos}
             .parse(right_text),
-        )
+        ]
       end
     end
 
