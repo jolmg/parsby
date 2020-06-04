@@ -42,7 +42,7 @@ module Parsby::Example
             .on_catch {|e| e.modify! at: e.opts[:at] + left_pos}
             .parse(left_text),
           op,
-          expression(precedence + 1)
+          expression(precedence)
             .on_catch {|e| e.modify! at: e.opts[:at] + right_pos}
             .parse(right_text),
         )
