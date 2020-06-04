@@ -160,6 +160,44 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
+  describe "#empty" do
+    it "results in an empty list" do
+      expect(empty.parse "foo").to eq []
+    end
+
+    it "doesn't consume input" do
+      expect(
+        begin
+          s = StringIO.new "foo"
+          r = empty.parse s
+          [s.read, r]
+        end
+      ).to eq ["foo", []]
+    end
+  end
+
+  describe "#single" do
+    it "wraps result of provided parser into an array" do
+      expect(single(string("foo")).parse "foo").to eq ["foo"]
+    end
+  end
+
+  describe "#group" do
+    it "groups results of array into a list" do
+      expect(group(many(string("foo")), string("bar")).parse "foofoobar")
+        .to eq [["foo", "foo"], "bar"]
+    end
+  end
+
+  describe "#parsby" do
+    it "is the same as Parsby.new" do
+      expect(parsby("foo") { "bar" })
+        .to be_a(Parsby)
+        .and satisfy {|p| p.label == "foo" }
+        .and satisfy {|p| p.parse("") == "bar" }
+    end
+  end
+
   describe "#pure" do
     it "results in provided value without consuming input" do
       expect(pure("foo").parse "bar").to eq "foo"
