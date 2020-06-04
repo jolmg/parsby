@@ -48,9 +48,9 @@ module Parsby::Example
 
     def inner_list
       (peek(string(")")) > pure(nil)) | (
-        collect \
-          & lazy { sexp } \
-          & ((whitespace > string(".") > whitespace > lazy { sexp }) \
+        empty \
+          << lazy { sexp } \
+          << ((whitespace > string(".") > whitespace > lazy { sexp }) \
               | optional(whitespace > lazy { inner_list }))
       )
     end
@@ -103,10 +103,10 @@ module Parsby::Example
 
     def number
       Parsby::Token.new("number") % (
-        collect \
-          & optional(string("-") | string("+")) \
-          & decimal \
-          & optional(string(".") & optional(decimal))
+        empty \
+          << optional(string("-") | string("+")) \
+          << decimal \
+          << optional(empty << string(".") << optional(decimal))
       ).fmap do |(sign, whole_part, (_, fractional_part))|
         n = whole_part
         n += (fractional_part || 0).to_f / 10 ** fractional_part.to_s.length

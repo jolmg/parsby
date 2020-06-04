@@ -99,7 +99,10 @@ RSpec.describe Parsby::Combinators do
           extend Parsby::Combinators
 
           def self.parenthesis
-            string("(") & optional(lazy { parenthesis }) & string(")")
+            empty \
+              << string("(") \
+              << optional(lazy { parenthesis }) \
+              << string(")")
           end
         end.parenthesis.parse("(())")
       ).to eq ["(", ["(", nil, ")"], ")"]
@@ -144,8 +147,8 @@ RSpec.describe Parsby::Combinators do
 
   describe "#collect" do
     it "is meant to start collecting for & for when first parser returns array" do
-      expect((collect & string("foo") & string("bar")).parse "foobar").to eq ["foo", "bar"]
-      expect((collect & many(string("foo")) & many(string("bar"))).parse "foofoobarbar")
+      expect((empty << string("foo") << string("bar")).parse "foobar").to eq ["foo", "bar"]
+      expect((empty << many(string("foo")) << many(string("bar"))).parse "foofoobarbar")
         .to eq [["foo", "foo"], ["bar", "bar"]]
     end
   end
