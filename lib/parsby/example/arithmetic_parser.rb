@@ -21,19 +21,19 @@ module Parsby::Example
 
     def parenthetical_text
       join(
-        collect \
-          & string("(") \
-          & take_until(string(")"), with: parenthetical_text | any_char) \
-          & string(")")
+        empty \
+          << string("(") \
+          << join(many((lazy { parenthetical_text } | any_char).that_fail(string(")")))) \
+          << string(")")
       )
     end
 
     def binary_expression(precedence = 0)
       (
-        collect \
-          & take_until(choice(operators[precedence]), with: parenthetical_text | any_char) \
-          & choice(operators[precedence] || []) \
-          & take_until(eof | string(")"), with: parenthetical_text | any_char)
+        empty \
+          << join(many((parenthetical_text | any_char).that_fail(choice(operators[precedence])))) \
+          << choice(operators[precedence] || []) \
+          << join(many((parenthetical_text | any_char).that_fail(eof | string(")"))))
       ).fmap do |(left_text, op, right_text)|
         BinaryExpression.new(
           expression(precedence + 1).parse(left_text),
