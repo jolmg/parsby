@@ -94,6 +94,19 @@ class Parsby
       pure []
     end
 
+    # Groups results into an array.
+    def group(*ps)
+      ps = ps.flatten
+      ps.reduce(empty, :<<)
+    end
+
+    # Wraps result in a list. This is to be able to do
+    #
+    #   single(...) + many(...)
+    def single(p)
+      p.fmap {|x| [x]}
+    end
+
     # Runs parser until it fails and returns an array of the results. Because
     # it can return an empty array, this parser can never fail.
     def many(p)
