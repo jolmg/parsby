@@ -126,11 +126,7 @@ class Parsby
 
     # Same as many, but fails if it can't match even once.
     def many_1(p)
-      Parsby.new do |io|
-        r = p.parse io
-        rs = many(p).parse io
-        [r] + rs
-      end
+      single(p) + many(p)
     end
 
     # Join the Array result of p.
