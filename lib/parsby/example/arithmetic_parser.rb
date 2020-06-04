@@ -39,11 +39,11 @@ module Parsby::Example
       ).fmap do |(left_pos, left_text, op, right_pos, right_text)|
         BinaryExpression.new(
           expression(precedence + 1)
-            .mod_expectation_failed {|e| e.modify! at: e.opts[:at] + left_pos}
+            .on_catch {|e| e.modify! at: e.opts[:at] + left_pos}
             .parse(left_text),
           op,
           expression(precedence + 1)
-            .mod_expectation_failed {|e| e.modify! at: e.opts[:at] + right_pos}
+            .on_catch {|e| e.modify! at: e.opts[:at] + right_pos}
             .parse(right_text),
         )
       end

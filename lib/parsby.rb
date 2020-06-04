@@ -226,7 +226,7 @@ class Parsby
 
   # Allows you to modify the exception to add information when defining the
   # parser via combinators.
-  def mod_expectation_failed(&b)
+  def on_catch(&b)
     Parsby.new do |io|
       begin
         parse io

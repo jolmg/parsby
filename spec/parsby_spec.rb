@@ -283,6 +283,19 @@ RSpec.describe Parsby do
     end
   end
 
+  describe "#on_catch" do
+    it "runs block when catching ExpectationFailed, allowing one to modify the exception" do
+      expect(
+        begin
+          string("foo").on_catch {|e| e.modify! at: e.opts[:at] + 100}.parse "fox"
+        rescue Parsby::ExpectationFailed => e
+          e.opts[:at]
+        end
+      )
+        .to eq 103
+    end
+  end
+
   describe "#that_fails" do
     it "tries parser argument; if argument fails, it parses with receiver; if argument succeeds, then it fails" do
       expect(decimal.that_fails(string("10")).parse("34")).to eq 34
