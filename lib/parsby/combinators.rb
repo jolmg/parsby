@@ -71,8 +71,7 @@ class Parsby
       Parsby.new {|io| p.peek io }
     end
 
-    # Parser that returns provided value without consuming any input. This
-    # is used at least with <tt>collect</tt>.
+    # Parser that returns provided value without consuming any input.
     def pure(x)
       Parsby.new { x }
     end
@@ -84,22 +83,14 @@ class Parsby
       Parsby.new {|io| b.call.parse io }
     end
 
-    # This is meant for use with the operator <tt>&</tt>, to start off the
-    # collection array. This is technically redundant most of the time, but
-    # if it's not used and the first parser returns an array, the results
-    # of the other parsers will be combined with that.
+    # Results in empty array without consuming input. This is meant to be
+    # used to start off use of <<.
     #
     # Example:
     #
-    #   (string("foo") & string("bar")).parse "foobar"
+    #   (empty << string("foo") << string("bar")).parse "foobar"
     #   => ["foo", "bar"]
-    #   (collect & string("foo") & string("bar")).parse "foobar"
-    #   => ["foo", "bar"]
-    #   (many(string("foo")) & many(string("bar"))).parse "foofoobarbar"
-    #   => ["foo", "foo", ["bar", "bar"]]
-    #   (collect & many(string("foo")) & many(string("bar"))).parse "foofoobarbar"
-    #   => [["foo", "foo"], ["bar", "bar"]]
-    def collect
+    def empty
       pure []
     end
 
