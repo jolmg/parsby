@@ -37,7 +37,7 @@ class Parsby
     # Parser that always fails without consuming input. We use it for at
     # least <tt>choice</tt>, for when it's supplied an empty list. It
     # corresponds with mzero in Haskell's Parsec.
-    def fail
+    def unparseable
       Parsby.new {|io| raise ExpectationFailed.new at: io.pos }
     end
 
@@ -45,7 +45,7 @@ class Parsby
     # list causes parser to always fail, like how [].any? is false.
     def choice(*ps)
       ps = ps.flatten
-      ps.reduce(fail, :|) % "(one of #{ps.map(&:label).join(", ")})"
+      ps.reduce(unparseable, :|) % "(one of #{ps.map(&:label).join(", ")})"
     end
 
     # Parses string of 0 or more continuous whitespace characters (" ",

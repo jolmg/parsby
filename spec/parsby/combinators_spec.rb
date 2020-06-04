@@ -209,14 +209,14 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
-  describe "#fail" do
+  describe "#unparseable" do
     it "returns parser that always fails" do
-      expect { fail.parse "foo" }.to raise_error Parsby::ExpectationFailed
+      expect { unparseable.parse "foo" }.to raise_error Parsby::ExpectationFailed
     end
 
     it "doesn't consume input" do
       s = StringIO.new "foo"
-      expect { fail.parse s rescue nil }.not_to change { s.pos }
+      expect { unparseable.parse s rescue nil }.not_to change { s.pos }
     end
   end
 
