@@ -110,7 +110,7 @@ class Parsby
 
   # The parser's label. It's an "unknown" token by default.
   def label
-    @label ||= Token.new("unknown")
+    @label || Token.new("unknown")
   end
 
   # Assign label to parser. If given a symbol, it'll be turned into a
