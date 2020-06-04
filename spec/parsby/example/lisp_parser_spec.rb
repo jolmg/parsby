@@ -1,6 +1,20 @@
 RSpec.describe Parsby::Example::LispParser do
   include Parsby::Example::LispParser
 
+  describe "#parse" do
+    it "is the entrypoint of the module that parses sexp sequences" do
+      expect(parse <<~EOF)
+        ;; a comment
+        (foo . bar)
+        (foo bar)
+      EOF
+        .to eq [
+          [:foo, :bar],
+          [:foo, [:bar, nil]],
+        ]
+    end
+  end
+
   describe "#sexp_sequence" do
     it "parses multiple expressions with whitespace before, after and in-between" do
       expect(sexp_sequence.parse(<<~EOF))
@@ -21,6 +35,16 @@ RSpec.describe Parsby::Example::LispParser do
           -123.456,
           "foo bar",
         ]
+    end
+  end
+
+  describe "#comment" do
+    it "parses a single line comment terminated at newline" do
+      expect(comment.parse "; foo\n; bar\n").to eq "; foo\n"
+    end
+
+    it "accepts being terminated by eof" do
+      expect(comment.parse "; foo").to eq "; foo"
     end
   end
 
