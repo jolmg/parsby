@@ -7,6 +7,10 @@ module Parsby::Example
 
     BinaryExpression = Struct.new :left, :op, :right
 
+    def parse(io)
+      (expression < eof).parse io
+    end
+
     def expression(precedence = 0)
       between(whitespace, whitespace, choice(
         parenthetical_expression,
@@ -42,7 +46,7 @@ module Parsby::Example
             .on_catch {|e| e.modify! at: e.opts[:at] + left_pos}
             .parse(left_text),
           op,
-          expression(precedence)
+          (expression(precedence) < eof)
             .on_catch {|e| e.modify! at: e.opts[:at] + right_pos}
             .parse(right_text),
         )
