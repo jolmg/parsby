@@ -122,16 +122,9 @@ class Parsby
   # Initialize parser with optional label argument, and parsing block. The
   # parsing block is given an IO as argument, and its result is the result
   # when parsing.
-  def initialize(label = nil, ignore: false, &b)
+  def initialize(label = nil, &b)
     self.label = label if label
-    @ignore = ignore
     @parser = b
-  end
-
-  # Indicates whether parser is to be ignored when aggregating results with
-  # Parsby#&.
-  def ignore?
-    @ignore ||= false
   end
 
   # Parse a String or IO object.

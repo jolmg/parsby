@@ -202,20 +202,6 @@ RSpec.describe Parsby do
     end
   end
 
-  describe "#ignore?" do
-    it "set for parsers returned by #-@" do
-      expect(string("foo")).not_to satisfy(&:ignore?)
-      expect(-string("foo")).to satisfy(&:ignore?)
-      expect(
-        begin
-          p = string("foo")
-          -p
-          p
-        end
-      ).not_to satisfy(&:ignore?)
-    end
-  end
-
   describe "#label=" do
     it "assigns strings as is" do
       expect(Parsby.new.tap {|p| p.label = "foo"}.label.to_s).to eq "foo"
