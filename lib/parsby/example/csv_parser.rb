@@ -8,8 +8,8 @@ module Parsby::Example
     include Parsby::Combinators
     extend self
 
-    def parse(source)
-      csv.parse source
+    def parse(io)
+      csv.parse io
     end
 
     def csv
