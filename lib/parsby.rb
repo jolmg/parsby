@@ -91,8 +91,8 @@ class Parsby
     end
 
     # Reads from underlying IO and backs it up.
-    def read(count)
-      @io.read(count).tap {|r| @backup << r unless r.nil? }
+    def read(*args)
+      @io.read(*args).tap {|r| @backup << r unless r.nil? }
     end
 
     # Pass to underlying IO's ungetc and discard a part of the same length
