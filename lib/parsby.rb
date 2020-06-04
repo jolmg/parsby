@@ -189,24 +189,19 @@ class Parsby
     end
   end
 
-  # Like &, but joins results with + and isn't affected by ignore flag.
+  # x + y does + on the results of x and y. This is mostly meant to be used
+  # with arrays, but it would work with numbers and strings too.
   def +(p)
-    (Parsby.collect & self & p).fmap {|(x, y)| x + y }
+    (Parsby.empty << self << p).fmap {|(x, y)| x + y }
   end
 
-  # Returns a parser that's to be ignored by &.
-  def -@
-    self.class.new(ignore: true) {|io| parse io }
-  end
-
-  # Groups results in an array.
-  def &(p)
+  # xs << x appends result of parser x to list result of parser xs.
+  def <<(p)
     Parsby.new do |io|
       x = parse io
       y = p.parse io
-      r = x.is_a?(Array) ? x : ignore? ? [] : [x]
-      r += [y] unless p.ignore?
-      r
+      # like x << y, but without modifying x.
+      x + [y]
     end
   end
 
