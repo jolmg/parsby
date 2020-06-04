@@ -129,6 +129,18 @@ class Parsby
       single(p) + many(p)
     end
 
+    # Like many, but accepts another parser for separators. It returns a list
+    # of the results of the first argument. Returns an empty list if it
+    # didn't match even once, so it never fails.
+    def sep_by(p, s)
+      sep_by_1(p, s) | empty
+    end
+
+    # Like sep_by, but fails if it can't match even once.
+    def sep_by_1(p, s)
+      single(p) + many(s > p)
+    end
+
     # Join the Array result of p.
     def join(p)
       p.fmap(&:join)
@@ -156,22 +168,6 @@ class Parsby
           )
         end
         io.read 1
-      end
-    end
-
-    # Like many, but accepts another parser for separators. It returns a list
-    # of the results of the first argument. Returns an empty list if it
-    # didn't match even once, so it never fails.
-    def sep_by(p, s)
-      sep_by_1(p, s) | pure([])
-    end
-
-    # Like sep_by, but fails if it can't match even once.
-    def sep_by_1(p, s)
-      Parsby.new do |io|
-        r = p.parse io
-        rs = many(s > p).parse io
-        [r] + rs
       end
     end
 
