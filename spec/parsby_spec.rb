@@ -229,24 +229,16 @@ RSpec.describe Parsby do
     end
   end
 
+  describe "#<<" do
+    it "appends right operand to list result of left operand" do
+      expect((many(string("foo")) << string("bar")).parse "foofoobar")
+        .to eq ["foo", "foo", "bar"]
+    end
+  end
+
   describe "#+" do
-    it "like &, but joins the results with +" do
+    it "joins the results with +" do
       expect((string("foo") + string("bar")).parse "foobar").to eq "foobar"
-    end
-  end
-
-  describe "#-@" do
-    it "causes & to not include the result of this parser" do
-      expect((-string("foo") & string("bar")).parse "foobar").to eq ["bar"]
-      expect((string("foo") & -string("bar")).parse "foobar").to eq ["foo"]
-    end
-  end
-
-  describe "#&" do
-    it "parses both operands and combines their results in an array" do
-      expect((string("foo") & string("bar")).parse "foobar").to eq ["foo", "bar"]
-      expect((many(string("foo")) & many(string("bar"))).parse "foofoobarbar")
-        .to eq ["foo", "foo", ["bar", "bar"]]
     end
   end
 
