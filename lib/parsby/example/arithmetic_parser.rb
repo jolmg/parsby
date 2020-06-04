@@ -10,7 +10,7 @@ module Parsby::Example
     def expression(precedence = 0)
       between(whitespace, whitespace, choice(
         parenthetical_expression,
-        binary_expression(precedence),
+        *(precedence...operators.length).map {|preced| binary_expression(preced)},
         decimal,
       ))
     end
