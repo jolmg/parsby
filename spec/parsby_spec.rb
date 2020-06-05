@@ -121,6 +121,99 @@ RSpec.describe Parsby do
       end
     end
 
+    describe "#back_context" do
+      it "gets text from current position backward until first of newline, BOF, or MAX_CONTEXT" do
+        expect(
+          Parsby::BackedIO
+            .new("foo\nbar")
+            .tap {|io| io.read 3 }
+            .back_context
+        ).to eq "foo"
+
+        expect(
+          Parsby::BackedIO
+            .new("foo\nbar")
+            .tap {|io| io.read 4 }
+            .back_context
+        ).to eq ""
+
+        expect(
+          Parsby::BackedIO
+            .new("foo\nbar")
+            .tap {|io| io.read }
+            .back_context
+        ).to eq "bar"
+
+        expect(
+          Parsby::BackedIO
+            .new("foobar")
+            .back_context
+        ).to eq ""
+
+        expect(
+          Parsby::BackedIO
+            .new("x" * (Parsby::BackedIO::MAX_CONTEXT + 5))
+            .tap {|io| io.read }
+            .back_context
+            .length
+        ).to eq(Parsby::BackedIO::MAX_CONTEXT)
+      end
+    end
+
+    describe "#forward_context" do
+      it "gets text from current position forward until first of newline, EOF, or MAX_CONTEXT" do
+        expect(
+          Parsby::BackedIO
+            .new("foobar\n")
+            .tap {|io| io.read 3 }
+            .forward_context
+        ).to eq "bar"
+
+        expect(
+          Parsby::BackedIO
+            .new("foobar")
+            .tap {|io| io.read 3 }
+            .forward_context
+        ).to eq "bar"
+
+        expect(
+          Parsby::BackedIO
+            .new("x" * (Parsby::BackedIO::MAX_CONTEXT + 5))
+            .tap {|io| io.read 3 }
+            .forward_context
+            .length
+        ).to eq(Parsby::BackedIO::MAX_CONTEXT)
+      end
+    end
+
+    describe "#current_line" do
+      it "returns current line, without consuming input" do
+        expect(
+          begin
+            s = Parsby::BackedIO.new "foo\nbar baz\n"
+            s.read(7)
+            [s.current_line, s.read]
+          end
+        ).to eq ["bar baz", " baz\n"]
+
+        expect(
+          begin
+            s = Parsby::BackedIO.new "foo\nbar baz\n"
+            s.read(4)
+            [s.current_line, s.read]
+          end
+        ).to eq ["bar baz", "bar baz\n"]
+
+        expect(
+          begin
+            s = Parsby::BackedIO.new "foo\nbar baz\n"
+            s.read(3)
+            [s.current_line, s.read]
+          end
+        ).to eq ["foo", "\nbar baz\n"]
+      end
+    end
+
     describe "#restore" do
       it "restores what was read" do
         expect(br.read 1).to eq "f"

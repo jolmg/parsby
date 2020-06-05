@@ -78,6 +78,31 @@ class Parsby
       end
     end
 
+    MAX_CONTEXT = 50
+
+    def back_context
+      @backup[/((?<=\A|\n).{0,#{MAX_CONTEXT}}|.{#{MAX_CONTEXT}})\z/]
+    end
+
+    def forward_context
+      BackedIO.for(self) do |bio|
+        begin
+          r = ""
+          begin
+            x = bio.read(1)
+            r << x.to_s
+          end while x != "\n" && !x.nil? && r.length < MAX_CONTEXT
+          r.chomp
+        ensure
+          bio.restore
+        end
+      end
+    end
+
+    def current_line
+      back_context + forward_context
+    end
+
     # Restore n chars from the backup.
     def restore(n = @backup.length)
       n.times { ungetc @backup[-1] }
