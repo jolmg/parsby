@@ -1,4 +1,5 @@
 require "bundler/setup"
+require "pry"
 require "parsby"
 require "parsby/example/csv_parser"
 require "parsby/example/arithmetic_parser"
