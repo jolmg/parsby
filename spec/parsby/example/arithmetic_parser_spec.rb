@@ -1,4 +1,8 @@
 RSpec.describe Parsby::Example::ArithmeticParser do
+  describe "#parse" do
+    it "reads until eof"
+  end
+
   describe "#expression" do
     it "parses simple sums"
     it "understands parenthesis"
