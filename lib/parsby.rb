@@ -133,7 +133,8 @@ class Parsby
     end
 
     def back_context
-      @backup[/((?<=\A|\n).{0,#{MAX_CONTEXT}}|.{#{MAX_CONTEXT}})\z/]
+      @backup[/(?<=\A|\n).{0,#{MAX_CONTEXT}}\z/] \
+      || "...#{@backup[/.{#{MAX_CONTEXT}}\z/]}"
     end
 
     def forward_context
