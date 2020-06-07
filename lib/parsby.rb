@@ -29,12 +29,14 @@ class Parsby
   end
 
   class ExpectationFailed < Error
-    attr_reader :opts
+    attr_accessor :at, :expected, :actual
 
     # Makes an exception with the optional keyword arguments :expected,
     # :actual, and manditory :at.
-    def initialize(opts)
-      @opts = opts
+    def initialize(at: nil, expected: nil, actual: nil)
+      @at = at
+      @expected = Array(expected)
+      @actual = actual
     end
 
     # Renders the exception message using the options :expected, :actual,
@@ -47,10 +49,23 @@ class Parsby
       parts.join(", ")
     end
 
+    def opts
+      h = { at: at }
+      h[:actual] = actual if actual
+      h[:expected] = expected.last if expected
+      h
+    end
+
+    def opts=(at: at, expected: expected, actual: actual)
+      @at = at
+      @expected += Array(expected)
+      @actual = actual
+    end
+
     # I'd rather keep things immutable, but part of the original backtrace
     # is lost if we use a new one.
     def modify!(opts)
-      self.opts.merge! opts
+      self.opts = self.opts.merge opts
     end
   end
 
