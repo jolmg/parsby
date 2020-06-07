@@ -31,10 +31,10 @@ RSpec.describe Parsby do
       end
     end
 
-    # Just to quiet the project test checking for coverage. These will be
-    # removed soon.
-    describe "#opts"
-    describe "#opts="
+    # Just to quiet the project test checking for coverage. They'll raise
+    # exceptions when we remove the methods, which should be soon.
+    describe("#opts") { it { Parsby::ExpectationFailed.new.opts } }
+    describe("#opts=") { it { Parsby::ExpectationFailed.new.opts = {} } }
 
     describe "#message" do
       it "uses opts to display the user message" do
