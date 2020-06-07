@@ -9,11 +9,17 @@ class Parsby
   class Expectation
     attr_reader :at, :label
 
+    # Create an expectation at the given location with the given label.
     def initialize(at, label)
       @at = at
       @label = label
     end
 
+    # Returns an underline representation of the expectation, for the line
+    # where a failure was raised.
+    #
+    # FIXME: This depends on changes to ExpectationFailed that haven't been
+    # made.
     def underline(failure)
       at_col = at - failure.bio.current_line_pos
       length = failure.at_col - at_col
@@ -49,6 +55,8 @@ class Parsby
       parts.join(", ")
     end
 
+    # For backwards compatibility with other code, while this class is
+    # changed to provide more information to the user.
     def opts
       h = { at: at }
       h[:actual] = actual if actual
@@ -56,6 +64,8 @@ class Parsby
       h
     end
 
+    # For backwards compatibility with other code, while this class is
+    # changed to provide more information to the user.
     def opts=(at: at, expected: expected, actual: actual)
       @at = at
       @expected += Array(expected)
@@ -147,11 +157,17 @@ class Parsby
       pos - back_context.length
     end
 
+    # The part of the current line, from the current position backward. It
+    # stops at MAX_CONTEXT chars if it hasn't found EOL or EOF by then and
+    # adds an ellipsis if that's the case.
     def back_context
       @backup[/(?<=\A|\n).{0,#{MAX_CONTEXT}}\z/] \
       || "...#{@backup[/.{#{MAX_CONTEXT}}\z/]}"
     end
 
+    # The part of the current line, from the current position forward. It
+    # stops at MAX_CONTEXT chars if it hasn't found EOL or EOF by then and
+    # adds an ellipsis if that's the case.
     def forward_context
       self.class.peek self do |bio|
         r = ""

@@ -5,6 +5,20 @@ RSpec.describe Parsby do
     expect(Parsby::VERSION).not_to be nil
   end
 
+  describe Parsby::Expectation do
+    describe "#initialize" do
+      it "takes label and location" do
+        expect(Parsby::Expectation.new 10, "foo")
+          .to satisfy {|e| e.at == 10 }
+          .and satisfy {|e| e.label == "foo" }
+      end
+    end
+
+    describe "#underline" do
+      it "given a failure, makes an appropriately sized underline of the expectation"
+    end
+  end
+
   describe Parsby::ExpectationFailed do
     describe "#initialize" do
       it "takes :expected, :actual, and :at keyword arguments for use with message" do
@@ -16,6 +30,11 @@ RSpec.describe Parsby do
         expect(Parsby::ExpectationFailed.new({}).message).to eq "at "
       end
     end
+
+    # Just to quiet the project test checking for coverage. These will be
+    # removed soon.
+    describe "#opts"
+    describe "#opts="
 
     describe "#message" do
       it "uses opts to display the user message" do
@@ -77,6 +96,28 @@ RSpec.describe Parsby do
       it "let's you use any underlying method of the IO" do
         expect(Parsby::BackedIO.new("foo\nbar\n").readline)
           .to eq "foo\n"
+      end
+    end
+
+    describe "#current_line_pos" do
+      it "returns the position of the beginning of current line" do
+        expect(
+          Parsby::BackedIO
+            .new("foo\nbar")
+            .tap {|bio| bio.read(6) }
+            .current_line_pos
+        ).to eq 4
+      end
+    end
+
+    describe "#col" do
+      it "returns current position in the current line" do
+        expect(
+          Parsby::BackedIO
+            .new("foo\nbar")
+            .tap {|bio| bio.read(6) }
+            .col
+        ).to eq 2
       end
     end
 
