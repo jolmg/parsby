@@ -130,6 +130,20 @@ RSpec.describe Parsby do
       end
     end
 
+    describe "#peek" do
+      it "is like #read, but restores what it reads" do
+        expect(
+          begin
+            io = Parsby::BackedIO.new "foobar"
+            r1 = io.read 3
+            p = io.peek 3
+            r2 = io.read 3
+            [r1, p, r2]
+          end
+        ).to eq ["foo", "bar", "bar"]
+      end
+    end
+
     describe "#initialize" do
       it "accepts a string as argument, turning it into a StringIO" do
         expect(Parsby::BackedIO.new("foo").instance_eval { @io })
