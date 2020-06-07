@@ -6,6 +6,28 @@ class Parsby
 
   class Error < StandardError; end
 
+  class Expectation
+    attr_reader :at, :label
+
+    def initialize(at, label)
+      @at = at
+      @label = label
+    end
+
+    def underline(failure)
+      at_col = at - failure.bio.current_line_pos
+      length = failure.at_col - at_col
+      case length
+      when 1
+        "V"
+      when 2
+        "\\/"
+      else
+        "\\#{"-" * (length - 2)}/"
+      end
+    end
+  end
+
   class ExpectationFailed < Error
     attr_reader :opts
 
