@@ -78,6 +78,25 @@ class Parsby
       end
     end
 
+    # Similar to BackedIO.for, but it always restores the IO, even when
+    # there's no exception.
+    def self.peek(io, &b)
+      self.for io do |bio|
+        begin
+          b.call bio
+        ensure
+          bio.restore
+        end
+      end
+    end
+
+    # Like #read, but without consuming.
+    def peek(*args)
+      self.class.peek self do |bio|
+        bio.read(*args)
+      end
+    end
+
     MAX_CONTEXT = 50
 
     def back_context
@@ -85,17 +104,13 @@ class Parsby
     end
 
     def forward_context
-      BackedIO.for(self) do |bio|
+      self.class.peek self do |bio|
+        r = ""
         begin
-          r = ""
-          begin
-            x = bio.read(1)
-            r << x.to_s
-          end while x != "\n" && !x.nil? && r.length < MAX_CONTEXT
-          r.chomp
-        ensure
-          bio.restore
-        end
+          x = bio.read(1)
+          r << x.to_s
+        end while x != "\n" && !x.nil? && r.length < MAX_CONTEXT
+        r.chomp
       end
     end
 
