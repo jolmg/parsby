@@ -156,7 +156,7 @@ RSpec.describe Parsby do
             .tap {|io| io.read }
             .back_context
             .length
-        ).to eq(Parsby::BackedIO::MAX_CONTEXT)
+        ).to eq(Parsby::BackedIO::MAX_CONTEXT + 3)
       end
     end
 
@@ -182,7 +182,7 @@ RSpec.describe Parsby do
             .tap {|io| io.read 3 }
             .forward_context
             .length
-        ).to eq(Parsby::BackedIO::MAX_CONTEXT)
+        ).to eq(Parsby::BackedIO::MAX_CONTEXT + 3)
       end
     end
 
