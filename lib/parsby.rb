@@ -104,6 +104,12 @@ class Parsby
       back_context.length
     end
 
+    # pos == current_line_pos + col. This is needed to convert a pos to a
+    # col, to display a cursor given an Expectation#at.
+    def current_line_pos
+      pos - back_context.length
+    end
+
     def back_context
       @backup[/((?<=\A|\n).{0,#{MAX_CONTEXT}}|.{#{MAX_CONTEXT}})\z/]
     end
