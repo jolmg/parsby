@@ -119,6 +119,9 @@ class Parsby
       end
     end
 
+    # Returns current (chomped) line, including what's to come from #read,
+    # without consuming input. It has a max length of MAX_CONTEXT on each
+    # side of current position.
     def current_line
       back_context + forward_context
     end
