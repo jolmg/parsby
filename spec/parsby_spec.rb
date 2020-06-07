@@ -114,6 +114,22 @@ RSpec.describe Parsby do
       end
     end
 
+    describe ".peek" do
+      it "is like .for, but restores the IO even if there weren't an error" do
+        expect(
+          begin
+            io = StringIO.new "foobar"
+            io.read(3)
+            x = Parsby::BackedIO.peek io do |bio|
+              bio.read
+            end
+            y = io.read
+            [x, y]
+          end
+        ).to eq ["bar", "bar"]
+      end
+    end
+
     describe "#initialize" do
       it "accepts a string as argument, turning it into a StringIO" do
         expect(Parsby::BackedIO.new("foo").instance_eval { @io })
