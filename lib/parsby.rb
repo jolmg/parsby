@@ -121,7 +121,7 @@ class Parsby
           x = bio.read(1)
           r << x.to_s
         end while x != "\n" && !x.nil? && r.length < MAX_CONTEXT
-        r.chomp
+        "#{r.chomp}#{"..." if r.length == MAX_CONTEXT}"
       end
     end
 
