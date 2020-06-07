@@ -99,6 +99,11 @@ class Parsby
 
     MAX_CONTEXT = 50
 
+    # Position in current_line. current_line[col] == peek(1)
+    def col
+      back_context.length
+    end
+
     def back_context
       @backup[/((?<=\A|\n).{0,#{MAX_CONTEXT}}|.{#{MAX_CONTEXT}})\z/]
     end
