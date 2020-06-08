@@ -132,7 +132,7 @@ class Parsby
 
     # For backwards compatibility with other code, while this class is
     # changed to provide more information to the user.
-    def opts=(at: at, expected: expected, actual: actual)
+    def opts=(at: @at, expected: @expected, actual: @actual)
       @at = at
       @expected += Array(expected)
       @actual = actual
