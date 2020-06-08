@@ -159,6 +159,7 @@ class Parsby
     # stops at MAX_CONTEXT chars if it hasn't found EOL or EOF by then and
     # adds an ellipsis if that's the case.
     def back_context
+      return @io.back_context if @io.is_a? BackedIO
       @backup[/(?<=\A|\n).*\z/]
     end
 

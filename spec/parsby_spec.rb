@@ -221,6 +221,18 @@ RSpec.describe Parsby do
             .back_context
         ).to eq ""
       end
+
+      it "delegates to inner BackedIO if available for more backup" do
+        expect(
+          begin
+            inner = Parsby::BackedIO.new "foobarbaz"
+            inner.read(3)
+            outer = Parsby::BackedIO.new inner
+            outer.read(3)
+            outer.back_context
+          end
+        ).to eq "foobar"
+      end
     end
 
     describe "#forward_context" do
