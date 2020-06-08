@@ -9,7 +9,7 @@ class Parsby
         if a == e
           a
         else
-          raise ExpectationFailed.new expected: e, actual: a, at: io.pos
+          raise ExpectationFailed2.new io
         end
       end
     end
@@ -180,10 +180,7 @@ class Parsby
     def eof
       Parsby.new :eof do |io|
         unless io.eof?
-          raise ExpectationFailed.new(
-            at: io.pos,
-            actual: (whitespace > join(many(char_matching(/\S/)))).peek(io),
-          )
+          raise ExpectationFailed2.new io
         end
       end
     end
