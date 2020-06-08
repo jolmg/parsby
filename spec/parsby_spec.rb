@@ -244,6 +244,59 @@ RSpec.describe Parsby do
       end
     end
 
+    describe "#grand_backup" do
+      it "returns the backup of the innermost BackedIO" do
+        expect(
+          Parsby::BackedIO
+            .new(
+              Parsby::BackedIO
+                .new("foobarbaz")
+                .tap {|bio| bio.read(3) }
+            )
+            .tap {|bio| bio.read(3) }
+            .grand_backup
+        ).to eq "foobar"
+      end
+    end
+
+    def piped(s, &b)
+      r, w = IO.pipe
+      w.write s
+      w.close
+      begin
+        b.call r
+      ensure
+        r.close
+      end
+    end
+
+    describe "#pos" do
+      it "delegates to inner io" do
+        io = StringIO.new "foo"
+        bio = Parsby::BackedIO.new io
+        expect(io).to receive(:pos)
+        bio.pos
+      end
+
+      it "doesn't use grand_backup when it doesn't need to" do
+        io = StringIO.new "foo"
+        bio = Parsby::BackedIO.new io
+        expect(bio).to_not receive(:grand_backup)
+        bio.pos
+      end
+
+      it "uses grand_backup when using the io's pos fails for being a pipe" do
+        piped "foo" do |io|
+          bio = Parsby::BackedIO.new io
+          allow(io).to receive(:pos) { raise Errno::ESPIPE }
+          allow(bio).to receive(:grand_backup) { "foo" }
+          expect(io).to receive(:pos)
+          expect(bio).to receive(:grand_backup)
+          bio.pos
+        end
+      end
+    end
+
     describe "#col" do
       it "returns current position in the current line" do
         expect(

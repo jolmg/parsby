@@ -210,6 +210,20 @@ class Parsby
       end
     end
 
+    # Returns the backup from the innermost BackedIO
+    def grand_backup
+      return @io.grand_backup if @io.is_a? BackedIO
+      @backup
+    end
+
+    # Delegates pos to inner io, and works around pipes' inability to
+    # return pos by getting the length of the innermost BackedIO.
+    def pos
+      @io.pos
+    rescue Errno::ESPIPE
+      grand_backup.length
+    end
+
     # Position in current_line. current_line[col] == peek(1). This is
     # 0-indexed.
     def col
