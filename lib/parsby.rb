@@ -93,7 +93,7 @@ class Parsby
       failures.each do |f|
         r << " " * (INDENTATION + [f.starts_at_col(@backed_io.current_line_pos), 0].max)
         r << f.underline(@backed_io.current_line_pos)
-        r << " " + f.label
+        r << " expected: #{f.label}"
         r << "\n"
       end
       r
