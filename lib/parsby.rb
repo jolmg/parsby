@@ -36,9 +36,6 @@ class Parsby
 
     # Returns an underline representation of the expectation, for the line
     # where a failure was raised.
-    #
-    # FIXME: This depends on changes to ExpectationFailed that haven't been
-    # made.
     def underline(current_line_pos)
       if ends_at_col(current_line_pos) < 0
         # Range is completely out of here. This is possible if we do
@@ -97,51 +94,6 @@ class Parsby
         r << "\n"
       end
       r
-    end
-  end
-
-  class ExpectationFailed < Error
-    attr_accessor :at, :expected, :actual
-
-    # Makes an exception with the optional keyword arguments :expected,
-    # :actual, and manditory :at.
-    def initialize(at: nil, expected: nil, actual: nil)
-      @at = at
-      @expected = Array(expected)
-      @actual = actual
-    end
-
-    # Renders the exception message using the options :expected, :actual,
-    # and :at. :action is #inspect'ed before interpolation.
-    def message
-      parts = []
-      parts << "expected #{opts[:expected]}" if opts[:expected]
-      parts << "actual #{opts[:actual].inspect}" if opts[:actual]
-      parts << "at #{opts[:at]}"
-      parts.join(", ")
-    end
-
-    # For backwards compatibility with other code, while this class is
-    # changed to provide more information to the user.
-    def opts
-      h = { at: at }
-      h[:actual] = actual if actual
-      h[:expected] = expected.last if expected
-      h
-    end
-
-    # For backwards compatibility with other code, while this class is
-    # changed to provide more information to the user.
-    def opts=(at: @at, expected: @expected, actual: @actual)
-      @at = at
-      @expected += Array(expected)
-      @actual = actual
-    end
-
-    # I'd rather keep things immutable, but part of the original backtrace
-    # is lost if we use a new one.
-    def modify!(opts)
-      self.opts = self.opts.merge opts
     end
   end
 
@@ -328,13 +280,6 @@ class Parsby
       rescue ExpectationFailed2 => e
         ending_pos = bio.pos
         e.failures << Failure.new(starting_pos, ending_pos, label)
-        raise
-      rescue ExpectationFailed => e
-        # Use the instance variable instead of the reader since the reader
-        # is set-up to return an unknown token if it's nil.
-        if @label
-          e.modify! expected: @label
-        end
         raise
       end
     end

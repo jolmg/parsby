@@ -126,42 +126,6 @@ RSpec.describe Parsby do
     end
   end
 
-  describe Parsby::ExpectationFailed do
-    describe "#initialize" do
-      it "takes :expected, :actual, and :at keyword arguments for use with message" do
-        expect(Parsby::ExpectationFailed.new(expected: "foo", actual: "bar", at: 10).opts)
-          .to eq expected: "foo", actual: "bar", at: 10
-      end
-
-      it "only at argument is required" do
-        expect(Parsby::ExpectationFailed.new({}).message).to eq "at "
-      end
-    end
-
-    # Just to quiet the project test checking for coverage. They'll raise
-    # exceptions when we remove the methods, which should be soon.
-    describe("#opts") { it { Parsby::ExpectationFailed.new.opts } }
-    describe("#opts=") { it { Parsby::ExpectationFailed.new.opts = {} } }
-
-    describe "#message" do
-      it "uses opts to display the user message" do
-        expect(Parsby::ExpectationFailed.new(expected: "foo", actual: "bar", at: 10).message)
-          .to eq "expected foo, actual \"bar\", at 10"
-      end
-    end
-
-    describe "#modify!" do
-      it "modifies the arguments of the exception" do
-        expect(
-          Parsby::ExpectationFailed
-            .new(expected: "foo", actual: "bar", at: 10)
-            .tap {|e| e.modify! actual: "taz" }
-            .message
-        ).to eq "expected foo, actual \"taz\", at 10"
-      end
-    end
-  end
-
   describe Parsby::Token do
     describe "#to_s" do
       it "wraps name in angle brackets" do
