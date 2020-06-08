@@ -114,8 +114,8 @@ RSpec.describe Parsby do
       it "returns current position in the current line" do
         expect(
           Parsby::BackedIO
-            .new("foo\nbar")
-            .tap {|bio| bio.read(6) }
+            .new("foo\nbar\nbaz")
+            .tap {|bio| bio.read(10) }
             .col
         ).to eq 2
       end
