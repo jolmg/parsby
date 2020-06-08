@@ -63,10 +63,6 @@ class Parsby
     end
   end
 
-  # This will eventually replace ExpectationFailed. The difference will be
-  # that instead of displaying a pos, a word for actual, and one expected
-  # token, we'll print the current line, and display a list of embedded
-  # expecteds, like a backtrace.
   class ExpectationFailed < Error
     attr_reader :failures
 
@@ -399,7 +395,9 @@ class Parsby
   #   decimal.that_fails(string("10")).parse "3"
   #   => 3
   #   decimal.that_fails(string("10")).parse "10"
-  #   Parsby::ExpectationFailed: expected (not "10"), actual 10, at 0
+  #   Parsby::ExpectationFailed: line 1:
+  #     10
+  #     \/ expected: (not "10")
   def that_fails(p)
     Parsby.new "(not #{p.label})" do |bio|
       orig_pos = bio.pos
