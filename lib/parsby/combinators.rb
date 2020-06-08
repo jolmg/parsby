@@ -14,6 +14,7 @@ class Parsby
       end
     end
 
+    # Same as <tt>p * n</tt>
     def count(n, p)
       p * n
     end
@@ -24,10 +25,7 @@ class Parsby
         pos = io.pos
         c = any_char.parse io
         unless c =~ r
-          raise ExpectationFailed.new(
-            actual: c,
-            at: pos,
-          )
+          raise ExpectationFailed2.new io
         end
         c
       end
@@ -42,7 +40,7 @@ class Parsby
     # least <tt>choice</tt>, for when it's supplied an empty list. It
     # corresponds with mzero in Haskell's Parsec.
     def unparseable
-      Parsby.new {|io| raise ExpectationFailed.new at: io.pos }
+      Parsby.new {|io| raise ExpectationFailed2.new io }
     end
 
     # Tries each provided parser until one succeeds. Providing an empty
@@ -165,11 +163,7 @@ class Parsby
     def any_char
       Parsby.new do |io|
         if io.eof?
-          raise ExpectationFailed.new(
-            expected: :any_char,
-            actual: :eof,
-            at: io.pos,
-          )
+          raise ExpectationFailed2.new io
         end
         io.read 1
       end

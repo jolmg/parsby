@@ -41,11 +41,21 @@ module Parsby::Example
       ).fmap do |(left_pos, left_text, op, right_pos, right_text)|
         [
           expression(precedence + 1)
-            .on_catch {|e| e.modify! at: e.opts[:at] + left_pos}
+            .on_catch do |e|
+              e.failures.each do |f|
+                f.starts_at += right_pos
+                f.ends_at += right_pos
+              end
+            end
             .parse(left_text),
           op,
           (expression(precedence) < eof)
-            .on_catch {|e| e.modify! at: e.opts[:at] + right_pos}
+            .on_catch do |e|
+              e.failures.each do |f|
+                f.starts_at += right_pos
+                f.ends_at += right_pos
+              end
+            end
             .parse(right_text),
         ]
       end

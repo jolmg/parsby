@@ -90,8 +90,8 @@ RSpec.describe Parsby::Example::LispParser do
     end
  
     it "doesn't accept lists that mix parentheses and brackets" do
-      expect { list.parse "(foo]" }.to raise_error Parsby::ExpectationFailed
-      expect { list.parse "[foo)" }.to raise_error Parsby::ExpectationFailed
+      expect { list.parse "(foo]" }.to raise_error Parsby::ExpectationFailed2
+      expect { list.parse "[foo)" }.to raise_error Parsby::ExpectationFailed2
     end
 
     it "interprets the empty list as nil ('cause they're equivalent in lisp)" do
@@ -128,15 +128,15 @@ RSpec.describe Parsby::Example::LispParser do
     end
 
     it "doesn't accept character symbols (potentially) used for syntax" do
-      expect { symbol.parse ")" }.to raise_error Parsby::ExpectationFailed
-      expect { symbol.parse "(" }.to raise_error Parsby::ExpectationFailed
-      expect { symbol.parse "." }.to raise_error Parsby::ExpectationFailed
-      expect { symbol.parse "'" }.to raise_error Parsby::ExpectationFailed
-      expect { symbol.parse "," }.to raise_error Parsby::ExpectationFailed
-      expect { symbol.parse "`" }.to raise_error Parsby::ExpectationFailed
-      expect { symbol.parse '"' }.to raise_error Parsby::ExpectationFailed
-      expect { symbol.parse "[" }.to raise_error Parsby::ExpectationFailed
-      expect { symbol.parse "]" }.to raise_error Parsby::ExpectationFailed
+      expect { symbol.parse ")" }.to raise_error Parsby::ExpectationFailed2
+      expect { symbol.parse "(" }.to raise_error Parsby::ExpectationFailed2
+      expect { symbol.parse "." }.to raise_error Parsby::ExpectationFailed2
+      expect { symbol.parse "'" }.to raise_error Parsby::ExpectationFailed2
+      expect { symbol.parse "," }.to raise_error Parsby::ExpectationFailed2
+      expect { symbol.parse "`" }.to raise_error Parsby::ExpectationFailed2
+      expect { symbol.parse '"' }.to raise_error Parsby::ExpectationFailed2
+      expect { symbol.parse "[" }.to raise_error Parsby::ExpectationFailed2
+      expect { symbol.parse "]" }.to raise_error Parsby::ExpectationFailed2
     end
   end
 

@@ -16,14 +16,14 @@ RSpec.describe Parsby::Combinators do
   describe "#many_1" do
     it "fails when parser couldn't be applied even once" do
       expect { many_1(string("bar")).parse "foofoofoo" }
-        .to raise_error Parsby::ExpectationFailed
+        .to raise_error Parsby::ExpectationFailed2
     end
   end
 
   describe "#any_char" do
     it "raises exception on EOF" do
       expect { any_char.parse "" }
-        .to raise_error Parsby::ExpectationFailed
+        .to raise_error Parsby::ExpectationFailed2
     end
   end
 
@@ -35,14 +35,14 @@ RSpec.describe Parsby::Combinators do
     it "does not accept anything other than sign-less positive decimal integers" do
       expect(decimal.parse("123.45")).to eq 123
       expect { decimal.parse("-123") }
-        .to raise_error Parsby::ExpectationFailed
+        .to raise_error Parsby::ExpectationFailed2
       expect { decimal.parse("+123") }
-        .to raise_error Parsby::ExpectationFailed
+        .to raise_error Parsby::ExpectationFailed2
     end
 
     it "expects at least one decimal digit" do
       expect { decimal.parse("foo") }
-        .to raise_error Parsby::ExpectationFailed
+        .to raise_error Parsby::ExpectationFailed2
     end
   end
 
@@ -58,11 +58,11 @@ RSpec.describe Parsby::Combinators do
     # own or not, and I'd like to know why.
     it "backtracks properly on failure" do
       s = StringIO.new "barbaz"
-      expect { string("foo").parse(s) }.to raise_error Parsby::ExpectationFailed
+      expect { string("foo").parse(s) }.to raise_error Parsby::ExpectationFailed2
       expect(s.read).to eq "barbaz"
 
       s = StringIO.new "baz"
-      expect { string("foobar").parse(s) }.to raise_error Parsby::ExpectationFailed
+      expect { string("foobar").parse(s) }.to raise_error Parsby::ExpectationFailed2
       expect(s.read).to eq "baz"
     end
   end
@@ -76,7 +76,7 @@ RSpec.describe Parsby::Combinators do
   describe "#whitespace_1" do
     it "like whitespace, but raises error when it doesn't match even once" do
       expect(whitespace_1.parse " \tfoo").to eq " \t"
-      expect { whitespace_1.parse "foo" }.to raise_error Parsby::ExpectationFailed
+      expect { whitespace_1.parse "foo" }.to raise_error Parsby::ExpectationFailed2
     end
   end
 
@@ -130,7 +130,7 @@ RSpec.describe Parsby::Combinators do
       expect(sep_by_1(string("foo"), string(", ")).parse "foo")
         .to eq ["foo"]
       expect { sep_by_1(string("foo"), string(", ")).parse "bar, bar, bar" }
-        .to raise_error Parsby::ExpectationFailed
+        .to raise_error Parsby::ExpectationFailed2
     end
   end
 
@@ -211,7 +211,7 @@ RSpec.describe Parsby::Combinators do
 
   describe "#unparseable" do
     it "returns parser that always fails" do
-      expect { unparseable.parse "foo" }.to raise_error Parsby::ExpectationFailed
+      expect { unparseable.parse "foo" }.to raise_error Parsby::ExpectationFailed2
     end
 
     it "doesn't consume input" do
@@ -232,7 +232,7 @@ RSpec.describe Parsby::Combinators do
     end
 
     it "always fails parsing when given empty list" do
-      expect { choice([]).parse "bar" }.to raise_error Parsby::ExpectationFailed
+      expect { choice([]).parse "bar" }.to raise_error Parsby::ExpectationFailed2
     end
   end
 
@@ -242,10 +242,19 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
+  describe "#count" do
+    it "expects parser p to parse n times" do
+      expect(count(2, string("foo")).parse("foofoofoo"))
+        .to eq ["foo", "foo"]
+      expect { count(2, string("foo")).parse "foo" }
+        .to raise_error Parsby::ExpectationFailed2
+    end
+  end
+
   describe "#eof" do
     it "succeeds only on EOF" do
       expect(eof.parse("")).to eq nil
-      expect { eof.parse("x") }.to raise_error Parsby::ExpectationFailed
+      expect { eof.parse("x") }.to raise_error Parsby::ExpectationFailed2
     end
   end
 

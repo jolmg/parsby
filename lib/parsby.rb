@@ -7,7 +7,7 @@ class Parsby
   class Error < StandardError; end
 
   class Failure
-    attr_reader :starts_at, :ends_at, :label
+    attr_accessor :starts_at, :ends_at, :label
 
     # Initialize failure with starting position, ending position, and
     # label of what was expected.
@@ -427,7 +427,7 @@ class Parsby
     Parsby.new do |io|
       begin
         parse io
-      rescue ExpectationFailed => e
+      rescue Error => e
         b.call e
         raise
       end
@@ -456,7 +456,7 @@ class Parsby
   #   decimal.that_fails(string("10")).parse "10"
   #   Parsby::ExpectationFailed: expected (not "10"), actual 10, at 0
   def that_fails(p)
-    Parsby.new do |bio|
+    Parsby.new "(not #{p.label})" do |bio|
       orig_pos = bio.pos
       begin
         r = p.parse bio
@@ -464,11 +464,7 @@ class Parsby
         bio.restore
         parse bio
       else
-        raise ExpectationFailed.new(
-          expected: "(not #{p.label})",
-          actual: "#{r}",
-          at: orig_pos,
-        )
+        raise ExpectationFailed2.new bio
       end
     end
   end
