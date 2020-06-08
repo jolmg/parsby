@@ -144,8 +144,6 @@ class Parsby
       end
     end
 
-    MAX_CONTEXT = 50
-
     # Position in current_line. current_line[col] == peek(1)
     def col
       back_context.length
@@ -161,8 +159,7 @@ class Parsby
     # stops at MAX_CONTEXT chars if it hasn't found EOL or EOF by then and
     # adds an ellipsis if that's the case.
     def back_context
-      @backup[/(?<=\A|\n).{0,#{MAX_CONTEXT}}\z/] \
-      || "...#{@backup[/.{#{MAX_CONTEXT}}\z/]}"
+      @backup[/(?<=\A|\n).*\z/]
     end
 
     # The part of the current line, from the current position forward. It
@@ -174,8 +171,8 @@ class Parsby
         begin
           x = bio.read(1)
           r << x.to_s
-        end while x != "\n" && !x.nil? && r.length < MAX_CONTEXT
-        "#{r.chomp}#{"..." if r.length == MAX_CONTEXT}"
+        end while x != "\n" && !x.nil?
+        r.chomp
       end
     end
 

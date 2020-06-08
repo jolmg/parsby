@@ -193,7 +193,7 @@ RSpec.describe Parsby do
     end
 
     describe "#back_context" do
-      it "gets text from current position backward until first of newline, BOF, or MAX_CONTEXT" do
+      it "gets text from current position backward until first of newline, BOF" do
         expect(
           Parsby::BackedIO
             .new("foo\nbar")
@@ -220,19 +220,11 @@ RSpec.describe Parsby do
             .new("foobar")
             .back_context
         ).to eq ""
-
-        expect(
-          Parsby::BackedIO
-            .new("x" * (Parsby::BackedIO::MAX_CONTEXT + 5))
-            .tap {|io| io.read }
-            .back_context
-            .length
-        ).to eq(Parsby::BackedIO::MAX_CONTEXT + 3)
       end
     end
 
     describe "#forward_context" do
-      it "gets text from current position forward until first of newline, EOF, or MAX_CONTEXT" do
+      it "gets text from current position forward until first of newline, EOF" do
         expect(
           Parsby::BackedIO
             .new("foobar\n")
@@ -246,14 +238,6 @@ RSpec.describe Parsby do
             .tap {|io| io.read 3 }
             .forward_context
         ).to eq "bar"
-
-        expect(
-          Parsby::BackedIO
-            .new("x" * (Parsby::BackedIO::MAX_CONTEXT + 5))
-            .tap {|io| io.read 3 }
-            .forward_context
-            .length
-        ).to eq(Parsby::BackedIO::MAX_CONTEXT + 3)
       end
     end
 
