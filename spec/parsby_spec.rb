@@ -120,6 +120,33 @@ RSpec.describe Parsby do
       end
     end
 
+    describe "#line_number" do
+      it "starts at 1" do
+        expect(Parsby::BackedIO.new("foo").line_number).to eq 1
+      end
+
+      it "returns the number of the current line" do
+        expect(
+          Parsby::BackedIO
+            .new("\nfoo\n\nbar")
+            .tap {|bio| bio.read(8)}
+            .line_number
+        ).to eq 4
+      end
+
+      it "takes into account that it may need the additional backup inner BackedIOs" do
+        expect(
+          Parsby::BackedIO
+            .new(
+              Parsby::BackedIO
+                .new("\nfoo\n\nbar")
+                .tap {|bio| bio.read(8)}
+            )
+            .line_number
+        ).to eq 4
+      end
+    end
+
     describe "#current_line_pos" do
       it "returns the position of the beginning of current line" do
         expect(

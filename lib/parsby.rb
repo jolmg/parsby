@@ -161,9 +161,20 @@ class Parsby
       end
     end
 
-    # Position in current_line. current_line[col] == peek(1)
+    # Position in current_line. current_line[col] == peek(1). This is
+    # 0-indexed.
     def col
       back_context.length
+    end
+
+    # Returns line number of current line. This is 1-indexed.
+    def line_number
+      return @io.line_number if @io.is_a? BackedIO
+      count = 1
+      @backup.each_char do |c|
+        count += 1 if c == "\n"
+      end
+      count
     end
 
     # pos == current_line_pos + col. This is needed to convert a pos to a
