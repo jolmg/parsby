@@ -75,11 +75,11 @@ RSpec.describe Parsby do
     end
   end
 
-  describe Parsby::ExpectationFailed2 do
+  describe Parsby::ExpectationFailed do
     describe "#initialize" do
       it "can be provided just an BackedIO, leaving the expectations list as empty" do
         expect(
-          Parsby::ExpectationFailed2
+          Parsby::ExpectationFailed
             .new(Parsby::BackedIO.new("foobar"))
             .failures
         ).to eq []
@@ -87,7 +87,7 @@ RSpec.describe Parsby do
 
       it "accepts an expectation to start up the expectations list" do
         expect(
-          Parsby::ExpectationFailed2
+          Parsby::ExpectationFailed
             .new(Parsby::BackedIO.new("foo"), Parsby::Failure.new(2, 4, "bar"))
             .failures
             .first
@@ -99,7 +99,7 @@ RSpec.describe Parsby do
     describe "#message" do
       it "displays the current line and the list of expectations as underlined ranges" do
         expect(
-          Parsby::ExpectationFailed2
+          Parsby::ExpectationFailed
             .new(
               Parsby::BackedIO
                 .new("taz\nfoo bar foo bax foo")
@@ -536,7 +536,7 @@ RSpec.describe Parsby do
 
     it "fails if it can't parse the number of times specified" do
       expect { (string("foo") * 3).parse "foofoo" }
-        .to raise_error Parsby::ExpectationFailed2
+        .to raise_error Parsby::ExpectationFailed
     end
   end
 
@@ -557,7 +557,7 @@ RSpec.describe Parsby do
     it "tries second operand if first one fails" do
       expect((string("foo") | string("bar")).parse "bar").to eq "bar"
       expect { (string("foo") | string("bar")).parse "baz" }
-        .to raise_error Parsby::ExpectationFailed2
+        .to raise_error Parsby::ExpectationFailed
     end
   end
 
@@ -587,13 +587,13 @@ RSpec.describe Parsby do
   end
 
   describe "#on_catch" do
-    it "runs block when catching ExpectationFailed2, allowing one to modify the exception" do
+    it "runs block when catching ExpectationFailed, allowing one to modify the exception" do
       expect(
         begin
           string("foo")
             .on_catch {|e| e.failures.first.ends_at += 100 }
             .parse "fox"
-        rescue Parsby::ExpectationFailed2 => e
+        rescue Parsby::ExpectationFailed => e
           e.failures.first.ends_at
         end
       ).to eq 103
@@ -604,7 +604,7 @@ RSpec.describe Parsby do
     it "tries parser argument; if argument fails, it parses with receiver; if argument succeeds, then it fails" do
       expect(decimal.that_fails(string("10")).parse("34")).to eq 34
       expect { decimal.that_fails(string("10")).parse("10") }
-        .to raise_error Parsby::ExpectationFailed2
+        .to raise_error Parsby::ExpectationFailed
     end
   end
 

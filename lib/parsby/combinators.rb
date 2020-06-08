@@ -9,7 +9,7 @@ class Parsby
         if a == e
           a
         else
-          raise ExpectationFailed2.new io
+          raise ExpectationFailed.new io
         end
       end
     end
@@ -25,7 +25,7 @@ class Parsby
         pos = io.pos
         c = any_char.parse io
         unless c =~ r
-          raise ExpectationFailed2.new io
+          raise ExpectationFailed.new io
         end
         c
       end
@@ -40,7 +40,7 @@ class Parsby
     # least <tt>choice</tt>, for when it's supplied an empty list. It
     # corresponds with mzero in Haskell's Parsec.
     def unparseable
-      Parsby.new {|io| raise ExpectationFailed2.new io }
+      Parsby.new {|io| raise ExpectationFailed.new io }
     end
 
     # Tries each provided parser until one succeeds. Providing an empty
@@ -163,7 +163,7 @@ class Parsby
     def any_char
       Parsby.new do |io|
         if io.eof?
-          raise ExpectationFailed2.new io
+          raise ExpectationFailed.new io
         end
         io.read 1
       end
@@ -178,7 +178,7 @@ class Parsby
     def eof
       Parsby.new :eof do |io|
         unless io.eof?
-          raise ExpectationFailed2.new io
+          raise ExpectationFailed.new io
         end
       end
     end

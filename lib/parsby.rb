@@ -67,7 +67,7 @@ class Parsby
   # that instead of displaying a pos, a word for actual, and one expected
   # token, we'll print the current line, and display a list of embedded
   # expecteds, like a backtrace.
-  class ExpectationFailed2 < Error
+  class ExpectationFailed < Error
     attr_reader :failures
 
     # Initializes an ExpectationFailure from a backed_io and an optional
@@ -277,7 +277,7 @@ class Parsby
       starting_pos = bio.pos
       begin
         @parser.call bio
-      rescue ExpectationFailed2 => e
+      rescue ExpectationFailed => e
         ending_pos = bio.pos
         e.failures << Failure.new(starting_pos, ending_pos, label)
         raise
@@ -409,7 +409,7 @@ class Parsby
         bio.restore
         parse bio
       else
-        raise ExpectationFailed2.new bio
+        raise ExpectationFailed.new bio
       end
     end
   end
