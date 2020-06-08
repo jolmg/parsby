@@ -152,7 +152,7 @@ class Parsby
     # pos == current_line_pos + col. This is needed to convert a pos to a
     # col, to display a cursor given an Expectation#at.
     def current_line_pos
-      pos - back_context.length
+      pos - col
     end
 
     # The part of the current line from the current position backward.
