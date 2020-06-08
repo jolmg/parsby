@@ -308,8 +308,13 @@ class Parsby
   # Parse a String or IO object.
   def parse(io)
     BackedIO.for io do |bio|
+      starting_pos = bio.pos
       begin
         @parser.call bio
+      rescue ExpectationFailed2 => e
+        ending_pos = bio.pos
+        e.failures << Failure.new(starting_pos, ending_pos, label)
+        raise
       rescue ExpectationFailed => e
         # Use the instance variable instead of the reader since the reader
         # is set-up to return an unknown token if it's nil.
