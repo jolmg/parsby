@@ -155,17 +155,13 @@ class Parsby
       pos - back_context.length
     end
 
-    # The part of the current line, from the current position backward. It
-    # stops at MAX_CONTEXT chars if it hasn't found EOL or EOF by then and
-    # adds an ellipsis if that's the case.
+    # The part of the current line from the current position backward.
     def back_context
       return @io.back_context if @io.is_a? BackedIO
       @backup[/(?<=\A|\n).*\z/]
     end
 
-    # The part of the current line, from the current position forward. It
-    # stops at MAX_CONTEXT chars if it hasn't found EOL or EOF by then and
-    # adds an ellipsis if that's the case.
+    # The part of the current line from the current position forward.
     def forward_context
       self.class.peek self do |bio|
         r = ""
@@ -178,8 +174,7 @@ class Parsby
     end
 
     # Returns current (chomped) line, including what's to come from #read,
-    # without consuming input. It has a max length of MAX_CONTEXT on each
-    # side of current position.
+    # without consuming input.
     def current_line
       back_context + forward_context
     end
