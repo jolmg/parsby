@@ -14,6 +14,10 @@ class Parsby
       end
     end
 
+    def count(n, p)
+      p * n
+    end
+
     # Uses =~ for matching. Only compares one char.
     def char_matching(r)
       Parsby.new "char matching #{r.inspect}" do |io|
