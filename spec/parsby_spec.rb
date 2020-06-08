@@ -19,6 +19,27 @@ RSpec.describe Parsby do
     end
   end
 
+  describe Parsby::ExpectationFailed2 do
+    describe "#initialize" do
+      it "can be provided just an BackedIO, leaving the expectations list as empty" do
+        expect(
+          Parsby::ExpectationFailed2
+            .new(Parsby::BackedIO.new("foobar"))
+            .expectations
+        ).to eq []
+      end
+
+      it "accepts an expectation to start up the expectations list" do
+        expect(
+          Parsby::ExpectationFailed2
+            .new(Parsby::BackedIO.new("foo"), Parsby::Expectation.new(2, "bar"))
+            .expectations
+            .first
+            .label
+        ).to eq "bar"
+      end
+    end
+
   describe Parsby::ExpectationFailed do
     describe "#initialize" do
       it "takes :expected, :actual, and :at keyword arguments for use with message" do

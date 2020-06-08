@@ -34,6 +34,23 @@ class Parsby
     end
   end
 
+  # This will eventually replace ExpectationFailed. The difference will be
+  # that instead of displaying a pos, a word for actual, and one expected
+  # token, we'll print the current line, and display a list of embedded
+  # expecteds, like a backtrace.
+  class ExpectationFailed2 < Error
+    attr_reader :expectations
+
+    # Initializes an ExpectationFailure from a backed_io and an optional
+    # expectation with which to start the list of expectations that lead to
+    # this failure.
+    def initialize(backed_io, expectation = nil)
+      @backed_io = backed_io
+      @expectations = []
+      @expectations << expectation if expectation
+    end
+  end
+
   class ExpectationFailed < Error
     attr_accessor :at, :expected, :actual
 
