@@ -6,13 +6,32 @@ class Parsby
 
   class Error < StandardError; end
 
-  class Expectation
-    attr_reader :at, :label
+  class Failure
+    attr_reader :starts_at, :ends_at, :label
 
-    # Create an expectation at the given location with the given label.
-    def initialize(at, label)
-      @at = at
+    # Initialize failure with starting position, ending position, and
+    # label of what was expected.
+    def initialize(starts_at, ends_at, label)
+      @starts_at = starts_at
+      @ends_at = ends_at
       @label = label
+    end
+
+    # Length of range. This is not considering current line bounds.
+    def length
+      @length ||= ends_at - starts_at
+    end
+
+    # col on current line where it start. This is negative when on a
+    # previous line.
+    def starts_at_col(current_line_pos)
+      starts_at - current_line_pos
+    end
+
+    # col on current line where it ends. This is negative when on a
+    # previous line.
+    def ends_at_col(current_line_pos)
+      ends_at - current_line_pos
     end
 
     # Returns an underline representation of the expectation, for the line
@@ -20,16 +39,29 @@ class Parsby
     #
     # FIXME: This depends on changes to ExpectationFailed that haven't been
     # made.
-    def underline(failure)
-      at_col = at - failure.bio.current_line_pos
-      length = failure.at_col - at_col
-      case length
-      when 1
-        "V"
-      when 2
-        "\\/"
+    def underline(current_line_pos)
+      if ends_at_col(current_line_pos) < 0
+        # Range is completely out of here. This is possible if we do
+        #
+        #   foo | multiline_thing
+        #
+        # The | would fail where multiline_thing started.
+        ""
+      elsif starts_at_col(current_line_pos) < 0
+        # Range starts on a previous line.
+        "#{"-" * (ends_at - current_line_pos - 1)}/"
       else
-        "\\#{"-" * (length - 2)}/"
+        case length
+        when 0
+          "|"
+        when 1
+          "V"
+        when 2
+          "\\/"
+        else
+          # The whole thing is on the current line.
+          "\\#{"-" * (length - 2)}/"
+        end
       end
     end
   end
@@ -39,15 +71,32 @@ class Parsby
   # token, we'll print the current line, and display a list of embedded
   # expecteds, like a backtrace.
   class ExpectationFailed2 < Error
-    attr_reader :expectations
+    attr_reader :failures
 
     # Initializes an ExpectationFailure from a backed_io and an optional
     # expectation with which to start the list of expectations that lead to
     # this failure.
-    def initialize(backed_io, expectation = nil)
+    def initialize(backed_io, failure = nil)
       @backed_io = backed_io
-      @expectations = []
-      @expectations << expectation if expectation
+      @failures = []
+      @failures << failure if failure
+    end
+
+    INDENTATION = 2
+
+    # The message of the exception. It's the current line, with a kind-of
+    # backtrace showing the failed expectations with a visualization of
+    # their range in the current line.
+    def message
+      r = "line #{@backed_io.line_number}:\n"
+      r << "#{" " * INDENTATION}#{@backed_io.current_line}\n"
+      failures.each do |f|
+        r << " " * (INDENTATION + [f.starts_at_col(@backed_io.current_line_pos), 0].max)
+        r << f.underline(@backed_io.current_line_pos)
+        r << " " + f.label
+        r << "\n"
+      end
+      r
     end
   end
 
@@ -178,7 +227,7 @@ class Parsby
     end
 
     # pos == current_line_pos + col. This is needed to convert a pos to a
-    # col, to display a cursor given an Expectation#at.
+    # col.
     def current_line_pos
       pos - col
     end

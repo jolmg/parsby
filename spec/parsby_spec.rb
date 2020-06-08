@@ -5,17 +5,73 @@ RSpec.describe Parsby do
     expect(Parsby::VERSION).not_to be nil
   end
 
-  describe Parsby::Expectation do
+  describe Parsby::Failure do
     describe "#initialize" do
-      it "takes label and location" do
-        expect(Parsby::Expectation.new 10, "foo")
-          .to satisfy {|e| e.at == 10 }
+      it "takes 2 pos and a label" do
+        expect(Parsby::Failure.new(10, 12, "foo"))
+          .to satisfy {|e| e.starts_at == 10 }
+          .and satisfy {|e| e.ends_at == 12 }
           .and satisfy {|e| e.label == "foo" }
       end
     end
 
+    describe "#length" do
+      it "returns difference between starting and ending positions" do
+        expect(Parsby::Failure.new(7, 10, "foo").length)
+          .to eq 3
+      end
+    end
+
+    describe "#starts_at_col" do
+      it "returns starts_at converted to a col for a given line starting position" do
+        expect(Parsby::Failure.new(5, 10, "foo").starts_at_col(3))
+          .to eq 2
+      end
+
+      it "returns negative, when it's in a previous line" do
+        expect(Parsby::Failure.new(5, 10, "foo").starts_at_col(7))
+          .to eq(-2)
+      end
+    end
+
+
+    describe "#ends_at_col" do
+      it "returns ends_at converted to a col for a given line starting position" do
+        expect(Parsby::Failure.new(5, 10, "foo").ends_at_col(8))
+          .to eq 2
+      end
+
+      it "returns negative, when it's in a previous line" do
+        expect(Parsby::Failure.new(5, 10, "foo").ends_at_col(12))
+          .to eq(-2)
+      end
+    end
+
     describe "#underline" do
-      it "given a failure, makes an appropriately sized underline of the expectation"
+      it "renders a visualization of where in the current line the failure was located" do
+        expect(Parsby::Failure.new(5, 10, "foo").underline(0))
+          .to eq "\\---/"
+      end
+
+      it "clips the range when it's out of bounds" do
+        expect(Parsby::Failure.new(5, 10, "foo").underline(6))
+          .to eq "---/"
+      end
+
+      it "returns empty string when range is completely out of bounds" do
+        expect(Parsby::Failure.new(5, 10, "foo").underline(20))
+          .to eq ""
+      end
+
+      it "uses | when length is 0" do
+        expect(Parsby::Failure.new(5, 5, "foo").underline(0))
+          .to eq "|"
+      end
+
+      it "uses V when length is 1" do
+        expect(Parsby::Failure.new(5, 6, "foo").underline(0))
+          .to eq "V"
+      end
     end
   end
 
@@ -25,20 +81,50 @@ RSpec.describe Parsby do
         expect(
           Parsby::ExpectationFailed2
             .new(Parsby::BackedIO.new("foobar"))
-            .expectations
+            .failures
         ).to eq []
       end
 
       it "accepts an expectation to start up the expectations list" do
         expect(
           Parsby::ExpectationFailed2
-            .new(Parsby::BackedIO.new("foo"), Parsby::Expectation.new(2, "bar"))
-            .expectations
+            .new(Parsby::BackedIO.new("foo"), Parsby::Failure.new(2, 4, "bar"))
+            .failures
             .first
             .label
         ).to eq "bar"
       end
     end
+
+    describe "#message" do
+      it "displays the current line and the list of expectations as underlined ranges" do
+        expect(
+          Parsby::ExpectationFailed2
+            .new(
+              Parsby::BackedIO
+                .new("taz\nfoo bar foo bax foo")
+                .tap {|bio| bio.read(12) },
+              Parsby::Failure.new(18, 19, '"b"'),
+            )
+            .tap do |e|
+              e.failures << Parsby::Failure.new(16, 18, '"bar"')
+              e.failures << Parsby::Failure.new(16, 16, '"foo" or "bar"')
+              e.failures << Parsby::Failure.new(8, 16, 'sep_by_count("foo" or "bar", " ", 4)')
+              e.failures << Parsby::Failure.new(0, 8, 'count(4, eol | sep_by_count("foo" or "bar", " ", 4))')
+            end
+            .message
+        ).to eq <<~ERROR
+          line 2:
+            foo bar foo bax foo
+                          V "b"
+                        \\/ "bar"
+                        | "foo" or "bar"
+                \\------/ sep_by_count("foo" or "bar", " ", 4)
+            ---/ count(4, eol | sep_by_count("foo" or "bar", " ", 4))
+        ERROR
+      end
+    end
+  end
 
   describe Parsby::ExpectationFailed do
     describe "#initialize" do
