@@ -10,7 +10,7 @@ module Parsby::Example
     end
 
     def expression(precedence = 0)
-      between(whitespace, whitespace, choice(
+      token("expression") % between(whitespace, whitespace, choice(
         parenthetical_expression,
         *(precedence...operators.length).map {|preced| binary_expression(preced)},
         decimal,
@@ -18,7 +18,7 @@ module Parsby::Example
     end
 
     def parenthetical_expression
-      string("(") > lazy { expression } < string(")")
+      (string("(") > lazy { expression } < string(")")) % "parenthetical_expression"
     end
 
     def parenthetical_text
@@ -27,7 +27,7 @@ module Parsby::Example
           << string("(") \
           << join(many((lazy { parenthetical_text } | any_char).that_fail(string(")")))) \
           << string(")")
-      )
+      ) % "parenthetical_text"
     end
 
     def binary_expression(precedence = 0)
@@ -58,7 +58,7 @@ module Parsby::Example
             end
             .parse(right_text),
         ]
-      end
+      end % "binary_expression"
     end
 
     def operators

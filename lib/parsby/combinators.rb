@@ -16,7 +16,7 @@ class Parsby
 
     # Same as <tt>p * n</tt>
     def count(n, p)
-      p * n
+      p * n % "count(#{n}, #{p.label})"
     end
 
     # Uses =~ for matching. Only compares one char.

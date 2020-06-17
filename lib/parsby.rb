@@ -305,7 +305,7 @@ class Parsby
 
   # x < y runs parser x then y and returns x.
   def <(p)
-    Parsby.new do |io|
+    Parsby.new "(#{label} < #{p.label})" do |io|
       r = parse io
       p.parse io
       r
@@ -314,7 +314,7 @@ class Parsby
 
   # x > y runs parser x then y and returns y.
   def >(p)
-    Parsby.new do |io|
+    Parsby.new "(#{label} > #{p.label})" do |io|
       parse io
       p.parse io
     end
@@ -322,7 +322,7 @@ class Parsby
 
   # p * n, runs parser p n times, grouping results in an array.
   def *(n)
-    Parsby.new do |io|
+    Parsby.new "(#{label} * #{n})" do |io|
       n.times.map { parse io }
     end
   end
