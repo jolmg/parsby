@@ -67,7 +67,7 @@ RSpec.describe Parsby::Example::JsonParser do
   end
 
   describe "#array" do
-    it "parses arrays" do
+    it "parses arrays with a variety of whitespacing options" do
       expect(array.parse "[]").to eq []
       expect(array.parse "[  ]").to eq []
       expect(array.parse "[null]").to eq [nil]
@@ -79,7 +79,15 @@ RSpec.describe Parsby::Example::JsonParser do
   end
 
   describe "#object" do
-    it "parses objects" do
+    it "parses objects different type values" do
+      expect(object.parse '{"foo": 10}').to eq({"foo" => 10})
+      expect(object.parse '{"foo": null}').to eq({"foo" => nil})
+      expect(object.parse '{"foo": {}}').to eq({"foo" => {}})
+      expect(object.parse '{"foo": []}').to eq({"foo" => []})
+      expect(object.parse '{"foo": true}').to eq({"foo" => true})
+    end
+
+    it "parses objects with a variety of whitespacing options" do
       expect(object.parse '{}').to eq({})
       expect(object.parse '{  }').to eq({})
       expect(object.parse '{"foo": "bar"}').to eq({"foo" => "bar"})
