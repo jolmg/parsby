@@ -4,6 +4,7 @@ require "parsby"
 require "parsby/example/csv_parser"
 require "parsby/example/arithmetic_parser"
 require "parsby/example/lisp_parser"
+require "parsby/example/json_parser"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

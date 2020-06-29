@@ -312,6 +312,15 @@ class Parsby
     end
   end
 
+  # This is useful for the difference in precedence. With - you can do
+  #
+  #   x - y + z
+  #
+  # and skip the parentheses needed when using <
+  #
+  #   (x < y) + z
+  alias_method :-, :<
+
   # x > y runs parser x then y and returns y.
   def >(p)
     Parsby.new "(#{label} > #{p.label})" do |io|

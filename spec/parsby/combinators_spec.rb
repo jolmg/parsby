@@ -46,6 +46,28 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
+  describe "#decimal_digit" do
+    it "parses single decimal digit as a string" do
+      expect(decimal_digit.parse "9").to eq "9"
+    end
+  end
+
+  describe "#hex_digit" do
+    it "parses single hex digit as a string" do
+      expect(hex_digit.parse "5").to eq "5"
+      expect(hex_digit(:insensitive).parse "5").to eq "5"
+      expect(hex_digit(:upper).parse "5").to eq "5"
+      expect(hex_digit(:lower).parse "5").to eq "5"
+      expect(hex_digit.parse "F").to eq "F"
+      expect(hex_digit.parse "f").to eq "f"
+      expect(hex_digit(:insensitive).parse "F").to eq "F"
+      expect(hex_digit(:insensitive).parse "f").to eq "f"
+      expect { hex_digit(:upper).parse "f" }.to raise_error Parsby::ExpectationFailed
+      expect { hex_digit(:lower).parse "F" }.to raise_error Parsby::ExpectationFailed
+      expect { hex_digit(:foo).parse "F" }.to raise_error ArgumentError
+    end
+  end
+
   describe "#string" do
     it "parses the string provided" do
       expect(string("foo").parse("foo")).to eq "foo"
@@ -84,6 +106,13 @@ RSpec.describe Parsby::Combinators do
     it "parses continuous whitespace (' ', '\\t', '\\r', '\\n')" do
       expect(whitespace.parse " \r\n\tfoo").to eq " \r\n\t"
       expect(whitespace.parse "foo").to eq ""
+    end
+  end
+
+  describe "#spaced" do
+    it "parses optional surrounding whitespace" do
+      expect(spaced(string("foo")).parse "foo").to eq "foo"
+      expect(group(spaced(string("foo")), string("bar")).parse " foo bar").to eq ["foo", "bar"]
     end
   end
 

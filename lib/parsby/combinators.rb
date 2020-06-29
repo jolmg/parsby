@@ -33,7 +33,30 @@ class Parsby
 
     # Parses a decimal number as matched by \d+.
     def decimal
-      many_1(char_matching(/\d/)).fmap {|ds| ds.join.to_i } % token("number")
+      many_1(decimal_digit).fmap {|ds| ds.join.to_i } % token("number")
+    end
+
+    # Parses single digit in range 0-9. Returns string, not number.
+    def decimal_digit
+      char_matching /[0-9]/
+    end
+
+    # Parses single hex digit. Optional argument lettercase can be one of
+    # :insensitive, :upper, or :lower.
+    def hex_digit(lettercase = :insensitive)
+      decimal_digit | case lettercase
+      when :insensitive
+        char_matching /[a-fA-F]/
+      when :upper
+        char_matching /[A-F]/
+      when :lower
+        char_matching /[a-f]/
+      else
+        raise ArgumentError.new(
+          "#{lettercase.inspect}: unrecognized; argument should be one of " \
+          ":insensitive, :upper, or :lower"
+        )
+      end
     end
 
     # Parser that always fails without consuming input. We use it for at
@@ -56,10 +79,19 @@ class Parsby
       token("whitespace") % (whitespace_1 | pure(""))
     end
 
+    alias_method :ws, :whitespace
+
     # Parses string of 1 or more continuous whitespace characters (" ",
     # "\t", "\n", "\r")
     def whitespace_1
       token("whitespace_1") % join(many_1(choice(*" \t\n\r".chars.map(&method(:string)))))
+    end
+
+    alias_method :ws_1, :whitespace_1
+
+    # Expects p to be surrounded by optional whitespace.
+    def spaced(p)
+      ws > p < ws
     end
 
     # Convinient substitute of <tt>left > p < right</tt> for when
