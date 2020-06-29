@@ -10,15 +10,15 @@ module Parsby::Example
     end
 
     def expression(precedence = 0)
-      token("expression") % between(whitespace, whitespace, choice(
+      token("expression") % choice(
         parenthetical_expression,
         *(precedence...operators.length).map {|preced| binary_expression(preced)},
         decimal,
-      ))
+      )
     end
 
     def parenthetical_expression
-      (string("(") > lazy { expression } < string(")")) % "parenthetical_expression"
+      (string("(") > spaced(lazy { expression }) < string(")")) % "parenthetical_expression"
     end
 
     def parenthetical_text
@@ -31,13 +31,12 @@ module Parsby::Example
     end
 
     def binary_expression(precedence = 0)
-      (
-        empty \
-          << parsby(&:pos) \
-          << join(many((parenthetical_text | any_char).that_fail(choice(operators[precedence])))) \
-          << choice(operators[precedence] || []) \
-          << parsby(&:pos) \
-          << join(many((parenthetical_text | any_char).that_fail(eof | string(")"))))
+      group(
+        parsby(&:pos),
+        join(many((parenthetical_text | any_char).that_fail(choice(operators[precedence])))),
+        choice(operators[precedence] || []),
+        parsby(&:pos),
+        join(many((parenthetical_text | any_char).that_fail(eof | string(")")))),
       ).fmap do |(left_pos, left_text, op, right_pos, right_text)|
         [
           expression(precedence + 1)

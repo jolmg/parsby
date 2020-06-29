@@ -29,6 +29,7 @@ module Parsby::Example
         + (string("\n") | (eof > pure("")))
     end
 
+    # Parses sexps with abbreviations, like '(foo bar) or `(foo ,bar).
     def abbrev
       choice(
         string("'") > lazy { sexp }.fmap {|s| [:quote, [s, nil]]},

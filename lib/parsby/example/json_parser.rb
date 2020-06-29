@@ -54,7 +54,7 @@ module Parsby::Example
     def json_string
       between(string('"'), string('"'),
         join(many(
-          any_char.that_fail(string('"') | string("\\")) \
+          any_char.that_fails(string('"') | string("\\")) \
           | (string("\\") > choice(
             string('"'),
             string("\\"),
@@ -77,7 +77,10 @@ module Parsby::Example
     def object
       between(string("{"), ws > string("}"),
         sep_by(
-          spaced(group(json_string < spaced(string(":")), lazy { value })),
+          spaced(group(
+            json_string < spaced(string(":")),
+            lazy { value }
+          )),
           string(","),
         )
       ).fmap(&:to_h)
