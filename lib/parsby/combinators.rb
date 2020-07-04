@@ -9,15 +9,21 @@ class Parsby
         instance_method(:_)
       end
 
-      define_method name do |*args, &b2|
-        inspected_args = args.map do |arg|
-          if arg.is_a? Parsby
-            arg.label
-          else
-            arg.inspect
-          end
+      inspect_arg = lambda do |arg|
+        case arg
+        when Parsby
+          arg.label
+        when Array
+          arg.map(&inspect_arg)
+        when Hash
+          arg.map {|k, v| [k, inspect_arg.call(v)] }.to_h
+        else
+          arg.inspect
         end
-        m.bind(self).call(*args, &b2) % "#{name}(#{inspected_args.join(", ")})"
+      end
+
+      define_method name do |*args, &b2|
+        m.bind(self).call(*args, &b2) % "#{name}(#{args.map(&inspect_arg).join(", ")})"
       end
     end
 
