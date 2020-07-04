@@ -9,28 +9,28 @@ module Parsby::Example
       sexp_sequence.parse io
     end
 
-    def sexp_sequence
+    define_combinator :sexp_sequence do
       many(whitespace > sexp) < whitespace < eof
     end
 
-    def sexp
+    define_combinator :sexp do
       abbrev | atom | list
     end
 
     # Add comments to definition of whitespace. whitespace is defined using
     # whitespace_1, so we cover both with this.
-    def whitespace_1
-      join(many_1(super | comment))
+    define_combinator :whitespace_1 do
+      join(many_1(super() | comment))
     end
 
-    def comment
+    define_combinator :comment do
       string(";") \
         + join(many(any_char.that_fails(string("\n")))) \
         + (string("\n") | (eof > pure("")))
     end
 
     # Parses sexps with abbreviations, like '(foo bar) or `(foo ,bar).
-    def abbrev
+    define_combinator :abbrev do
       choice(
         string("'") > lazy { sexp }.fmap {|s| [:quote, [s, nil]]},
         string("`") > lazy { sexp }.fmap {|s| [:quasiquote, [s, nil]]},
@@ -39,7 +39,7 @@ module Parsby::Example
       )
     end
 
-    def list
+    define_combinator :list do
       Parsby.new :list do |io|
         braces = {"(" => ")", "[" => "]"}
         opening_brace = choice(braces.keys.map {|c| string c}).parse io
@@ -47,7 +47,7 @@ module Parsby::Example
       end
     end
 
-    def inner_list
+    define_combinator :inner_list do
       (peek(string(")")) > pure(nil)) | (
         empty \
           << lazy { sexp } \
@@ -56,11 +56,11 @@ module Parsby::Example
       )
     end
 
-    def atom
+    define_combinator :atom do
       number | lisp_string | symbol
     end
 
-    def symbol
+    define_combinator :symbol do
       join(many_1(choice_char(
         [
           *('a'..'z'),
@@ -72,7 +72,7 @@ module Parsby::Example
       ))).fmap(&:to_sym)
     end
 
-    def hex_digit
+    define_combinator :hex_digit do
       choice(
         [("0".."9"), ("a".."f"), ("A".."F")]
           .map(&:to_a)
@@ -81,7 +81,7 @@ module Parsby::Example
       )
     end
 
-    def escape_sequence
+    define_combinator :escape_sequence do
       string("\\") > choice([
         string("\"") > pure("\""),
         string("n") > pure("\n"),
@@ -93,7 +93,7 @@ module Parsby::Example
       ])
     end
 
-    def lisp_string
+    define_combinator :lisp_string do
       Parsby::Token.new("string") % between(string('"'), string('"'),
         join(many(
           any_char.that_fails(string("\\") | string('"')) \
@@ -102,7 +102,7 @@ module Parsby::Example
       )
     end
 
-    def number
+    define_combinator :number do
       Parsby::Token.new("number") % (
         empty \
           << optional(string("-") | string("+")) \

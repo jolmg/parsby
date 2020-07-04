@@ -2,30 +2,37 @@ class Parsby
   module Combinators
     extend self
 
-    def self.define_combinator(name, &b)
-      # Trick to enforce arity of procs by converting them to methods.
-      m = Module.new.module_exec do
-        define_method(:_, &b)
-        instance_method(:_)
-      end
+    module ModuleMethods
+      def define_combinator(name, &b)
+        inspect_arg = lambda do |arg|
+          case arg
+          when Parsby
+            arg.label
+          when Array
+            arg.map(&inspect_arg)
+          when Hash
+            arg.map {|k, v| [k, inspect_arg.call(v)] }.to_h
+          else
+            arg.inspect
+          end
+        end
 
-      inspect_arg = lambda do |arg|
-        case arg
-        when Parsby
-          arg.label
-        when Array
-          arg.map(&inspect_arg)
-        when Hash
-          arg.map {|k, v| [k, inspect_arg.call(v)] }.to_h
-        else
-          arg.inspect
+        # This is necessary not only to convert the proc to something
+        # that'll verify arity, but also to get super in b to work.
+        define_method(name, &b)
+        m = instance_method name
+
+        define_method name do |*args, &b2|
+          m.bind(self).call(*args, &b2) % "#{name}(#{args.map(&inspect_arg).join(", ")})"
         end
       end
-
-      define_method name do |*args, &b2|
-        m.bind(self).call(*args, &b2) % "#{name}(#{args.map(&inspect_arg).join(", ")})"
-      end
     end
+
+    def self.included(base)
+      base.extend ModuleMethods
+    end
+
+    extend ModuleMethods
 
     # Parses the string as literally provided.
     define_combinator :string do |e|
