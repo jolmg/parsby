@@ -2,8 +2,27 @@ class Parsby
   module Combinators
     extend self
 
+    def self.define_combinator(name, &b)
+      # Trick to enforce arity of procs by converting them to methods.
+      m = Module.new.module_exec do
+        define_method(:_, &b)
+        instance_method(:_)
+      end
+
+      define_method name do |*args, &b2|
+        inspected_args = args.map do |arg|
+          if arg.is_a? Parsby
+            arg.label
+          else
+            arg.inspect
+          end
+        end
+        m.bind(self).call(*args, &b2) % "#{name}(#{inspected_args.join(", ")})"
+      end
+    end
+
     # Parses the string as literally provided.
-    def string(e)
+    define_combinator :string do |e|
       Parsby.new e.inspect do |io|
         a = io.read e.length
         if a == e
@@ -15,13 +34,13 @@ class Parsby
     end
 
     # Same as <tt>p * n</tt>
-    def count(n, p)
+    define_combinator :count do |n, p|
       p * n % "count(#{n}, #{p.label})"
     end
 
     # Uses =~ for matching. Only compares one char.
-    def char_matching(r)
-      Parsby.new "char matching #{r.inspect}" do |io|
+    define_combinator :char_matching do |r|
+      Parsby.new r.inspect do |io|
         pos = io.pos
         c = any_char.parse io
         unless c =~ r
@@ -32,18 +51,18 @@ class Parsby
     end
 
     # Parses a decimal number as matched by \d+.
-    def decimal
+    define_combinator :decimal do
       many_1(decimal_digit).fmap {|ds| ds.join.to_i } % token("number")
     end
 
     # Parses single digit in range 0-9. Returns string, not number.
-    def decimal_digit
+    define_combinator :decimal_digit do
       char_matching /[0-9]/
     end
 
     # Parses single hex digit. Optional argument lettercase can be one of
     # :insensitive, :upper, or :lower.
-    def hex_digit(lettercase = :insensitive)
+    define_combinator :hex_digit do |lettercase = :insensitive|
       decimal_digit | case lettercase
       when :insensitive
         char_matching /[a-fA-F]/
@@ -62,20 +81,20 @@ class Parsby
     # Parser that always fails without consuming input. We use it for at
     # least <tt>choice</tt>, for when it's supplied an empty list. It
     # corresponds with mzero in Haskell's Parsec.
-    def unparseable
+    define_combinator :unparseable do
       Parsby.new {|io| raise ExpectationFailed.new io }
     end
 
     # Tries each provided parser until one succeeds. Providing an empty
     # list causes parser to always fail, like how [].any? is false.
-    def choice(*ps)
+    define_combinator :choice do |*ps|
       ps = ps.flatten
       ps.reduce(unparseable, :|) % "(one of #{ps.map(&:label).join(", ")})"
     end
 
     # Parses string of 0 or more continuous whitespace characters (" ",
     # "\t", "\n", "\r")
-    def whitespace
+    define_combinator :whitespace do
       token("whitespace") % (whitespace_1 | pure(""))
     end
 
@@ -83,37 +102,39 @@ class Parsby
 
     # Parses string of 1 or more continuous whitespace characters (" ",
     # "\t", "\n", "\r")
-    def whitespace_1
+    define_combinator :whitespace_1 do
       token("whitespace_1") % join(many_1(choice(*" \t\n\r".chars.map(&method(:string)))))
     end
 
     alias_method :ws_1, :whitespace_1
 
     # Expects p to be surrounded by optional whitespace.
-    def spaced(p)
+    define_combinator :spaced do |p|
       ws > p < ws
     end
 
     # Convinient substitute of <tt>left > p < right</tt> for when
     # <tt>p</tt> is large to write.
-    def between(left, right, p)
+    define_combinator :between do |left, right, p|
       left > p < right
     end
 
     # Turns parser into one that doesn't consume input.
-    def peek(p)
+    define_combinator :peek do |p|
       Parsby.new {|io| p.peek io }
     end
 
     # Parser that returns provided value without consuming any input.
-    def pure(x)
+    define_combinator :pure do |x|
       Parsby.new { x }
     end
 
     # Delays construction of parser until parsing-time. This allows one to
     # construct recursive parsers, which would otherwise result in a
     # stack-overflow in construction-time.
-    def lazy(&b)
+    define_combinator :lazy do |&b|
+      # Can't have a better label, because we can't know what the parser is
+      # until parsing time.
       Parsby.new {|io| b.call.parse io }
     end
 
@@ -124,12 +145,12 @@ class Parsby
     #
     #   (empty << string("foo") << string("bar")).parse "foobar"
     #   => ["foo", "bar"]
-    def empty
+    define_combinator :empty do
       pure []
     end
 
     # Groups results into an array.
-    def group(*ps)
+    define_combinator :group do |*ps|
       ps = ps.flatten
       ps.reduce(empty, :<<)
     end
@@ -137,13 +158,13 @@ class Parsby
     # Wraps result in a list. This is to be able to do
     #
     #   single(...) + many(...)
-    def single(p)
+    define_combinator :single do |p|
       p.fmap {|x| [x]}
     end
 
     # Runs parser until it fails and returns an array of the results. Because
     # it can return an empty array, this parser can never fail.
-    def many(p)
+    define_combinator :many do |p|
       Parsby.new do |io|
         rs = []
         while true
@@ -159,29 +180,29 @@ class Parsby
     end
 
     # Same as many, but fails if it can't match even once.
-    def many_1(p)
+    define_combinator :many_1 do |p|
       single(p) + many(p)
     end
 
     # Like many, but accepts another parser for separators. It returns a list
     # of the results of the first argument. Returns an empty list if it
     # didn't match even once, so it never fails.
-    def sep_by(p, s)
+    define_combinator :sep_by do |p, s|
       sep_by_1(p, s) | empty
     end
 
     # Like sep_by, but fails if it can't match even once.
-    def sep_by_1(p, s)
+    define_combinator :sep_by_1 do |p, s|
       single(p) + many(s > p)
     end
 
     # Join the Array result of p.
-    def join(p)
+    define_combinator :join do |p|
       p.fmap(&:join)
     end
 
     # Tries the given parser and returns nil if it fails.
-    def optional(p)
+    define_combinator :optional do |p|
       Parsby.new do |io|
         begin
           p.parse io
@@ -192,7 +213,7 @@ class Parsby
     end
 
     # Parses any char. Only fails on EOF.
-    def any_char
+    define_combinator :any_char do
       Parsby.new do |io|
         if io.eof?
           raise ExpectationFailed.new io
@@ -207,7 +228,7 @@ class Parsby
     end
 
     # Matches EOF, fails otherwise. Returns nil.
-    def eof
+    define_combinator :eof do
       Parsby.new :eof do |io|
         unless io.eof?
           raise ExpectationFailed.new io
@@ -216,7 +237,7 @@ class Parsby
     end
 
     # Take characters until p matches.
-    def take_until(p, with: any_char)
+    define_combinator :take_until do |p, with: any_char|
       Parsby.new do |io|
         r = ""
         until p.would_succeed(io)

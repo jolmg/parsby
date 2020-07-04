@@ -2,7 +2,7 @@ require "parsby/version"
 require "parsby/combinators"
 
 class Parsby
-  extend Combinators
+  include Combinators
 
   class Error < StandardError; end
 
@@ -294,7 +294,7 @@ class Parsby
 
   # <tt>x | y</tt> tries y if x fails.
   def |(p)
-    Parsby.new "(#{self.label} or #{p.label})" do |io|
+    Parsby.new "(#{self.label} | #{p.label})" do |io|
       begin
         parse io
       rescue Error
@@ -339,12 +339,14 @@ class Parsby
   # x + y does + on the results of x and y. This is mostly meant to be used
   # with arrays, but it would work with numbers and strings too.
   def +(p)
-    (Parsby.empty << self << p).fmap {|(x, y)| x + y }
+    group(self, p)
+      .fmap {|(x, y)| x + y }
+      .tap {|r| r.label = "(#{label} + #{p.label})" }
   end
 
   # xs << x appends result of parser x to list result of parser xs.
   def <<(p)
-    Parsby.new do |io|
+    Parsby.new "(#{label} << #{p.label})" do |io|
       x = parse io
       y = p.parse io
       # like x << y, but without modifying x.
@@ -408,7 +410,7 @@ class Parsby
   #     10
   #     \/ expected: (not "10")
   def that_fails(p)
-    Parsby.new "(not #{p.label})" do |bio|
+    Parsby.new "#{label}.that_fails(#{p.label})" do |bio|
       orig_pos = bio.pos
       begin
         r = p.parse bio
