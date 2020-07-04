@@ -31,6 +31,7 @@ class Parsby
     def self.included(base)
       base.extend ModuleMethods
     end
+    private_class_method :included
 
     extend ModuleMethods
 
