@@ -53,9 +53,9 @@ module Parsby::Example
 
     def json_string
       between(string('"'), string('"'),
-        join(many(
-          any_char.that_fails(string('"') | string("\\")) \
-          | (string("\\") > choice(
+        join(many(choice(
+          any_char.that_fails(string('"') | string("\\")),
+          string("\\") > choice(
             string('"'),
             string("\\"),
             string("/"),
@@ -65,8 +65,8 @@ module Parsby::Example
             string("n") > pure("\n"),
             string("t") > pure("\t"),
             string("u") > join(hex_digit * 4).fmap {|s| [s.hex].pack("U") },
-          ))
-        ))
+          ),
+        )))
       )
     end
 
