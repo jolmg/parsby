@@ -98,6 +98,10 @@ class Parsby
       ps.reduce(unparseable, :|) % "(one of #{ps.map(&:label).join(", ")})"
     end
 
+    define_combinator :choice_char do |s|
+      choice s.chars.map {|c| string c }
+    end
+
     # Parses string of 0 or more continuous whitespace characters (" ",
     # "\t", "\n", "\r")
     define_combinator :whitespace do

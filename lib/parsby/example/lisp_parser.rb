@@ -61,14 +61,14 @@ module Parsby::Example
     end
 
     def symbol
-      join(many_1(choice(
+      join(many_1(choice_char(
         [
           *('a'..'z'),
           *('A'..'Z'),
           *('0'..'9'),
           # Got list from R6RS; removed '.' for simplicity.
           *%w(! $ % & * + - / : < = > ? @ ^ _ ~),
-        ].map {|c| string c}
+        ].flatten.join
       ))).fmap(&:to_sym)
     end
 
