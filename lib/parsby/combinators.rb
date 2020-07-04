@@ -3,14 +3,17 @@ class Parsby
     extend self
 
     module ModuleMethods
+      # The only reason to use this over regular def syntax is to get
+      # automatic labels. For combinators defined with this, you'll get
+      # labels that resemble the corresponding ruby expression.
       def define_combinator(name, &b)
         inspect_arg = lambda do |arg|
           case arg
           when Parsby
             arg.label
-          when Array
+          when Array # for methods like group() that accept arguments spliced or not
             arg.map(&inspect_arg)
-          when Hash
+          when Hash # for key arguments
             arg.map {|k, v| [k, inspect_arg.call(v)] }.to_h
           else
             arg.inspect
