@@ -34,7 +34,6 @@ RSpec.describe Parsby do
       end
     end
 
-
     describe "#ends_at_col" do
       it "returns ends_at converted to a col for a given line starting position" do
         expect(Parsby::Failure.new(5, 10, "foo").ends_at_col(8))
