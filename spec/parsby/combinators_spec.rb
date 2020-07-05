@@ -1,6 +1,108 @@
 RSpec.describe Parsby::Combinators do
   include Parsby::Combinators
 
+  describe Parsby::Combinators::ModuleMethods do
+    include Parsby::Combinators::ModuleMethods
+
+    describe "#define_combinator" do
+      let :mod do
+        Module.new.module_exec do
+          include Parsby::Combinators
+          extend self
+        end
+      end
+
+      it "adds automatic labeling that resembles corresponding ruby expressions of combinators" do
+        expect(
+          begin
+            mod.define_combinator :foo do
+              string("foo")
+            end
+            mod.foo.label
+          end
+        ).to eq "foo()"
+      end
+
+      it "validates arity of arguments" do
+        expect {
+          begin
+            mod.define_combinator :foo do |x|
+              string("foo")
+            end
+            mod.foo.label
+          end
+        }.to raise_error(ArgumentError, /wrong number of arguments/)
+      end
+
+      it "shows the labels of parser arguments and inspected versions of other arguments" do
+        expect(
+          begin
+            mod.define_combinator :foo do |c, x, y|
+              string("foo")
+            end
+            mod.foo(3, string("bar"), string("baz")).label
+          end
+        ).to eq 'foo(3, string("bar"), string("baz"))'
+      end
+
+      it "shows the labels of parser arguments when nested in Array or Hash arguments" do
+        expect(
+          begin
+            mod.define_combinator :foo do |x, baz:|
+              string("foo")
+            end
+            mod.foo([3, "foobar", string("bar")], baz: string("baz")).label
+          end
+        ).to eq 'foo([3, "foobar", string("bar")], {:baz=>string("baz")})'
+      end
+
+      it "works with super()" do
+        expect(
+          begin
+            mod.define_combinator :foobarbaz do
+              string("foo")
+            end
+            mod2 = Module.new
+            mod2.include mod
+            mod2.module_exec { extend self }
+            mod2.define_combinator :foobarbaz do
+              super() + string("bar")
+            end
+            mod3 = Module.new
+            mod3.include mod2
+            mod3.module_exec { extend self }
+            mod3.define_combinator :foobarbaz do
+              super() + string("baz")
+            end
+            mod3.foobarbaz.parse "foobarbaz"
+          end
+        ).to eq "foobarbaz"
+      end
+    end
+
+    describe "#inspectable_as" do
+      it "returns an object that inspects as the given string argument" do
+        expect(send(:inspectable_as, "foo").inspect).to eq "foo"
+      end
+    end
+
+    describe "#inspectable_labels" do
+      it "changes parsby objects to objects returning their label on inspect" do
+        expect(string("foo").inspect).to match /\A#<Parsby:/
+        expect(send(:inspectable_labels, string("foo")).inspect).to eq 'string("foo")'
+      end
+
+      it "deeply traverses arrays and hashes, leaving non-parsby objects alone" do
+        expect(
+          send(
+            :inspectable_labels,
+            [3, { foo: string("foo") }]
+          ).inspect
+        ).to eq '[3, {:foo=>string("foo")}]'
+      end
+    end
+  end
+
   describe "#many" do
     it "applies parser repeatedly and returns a list of the results" do
       expect(many(string("foo")).parse "foofoofoo")

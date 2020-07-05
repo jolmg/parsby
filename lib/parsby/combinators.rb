@@ -7,34 +7,55 @@ class Parsby
       # automatic labels. For combinators defined with this, you'll get
       # labels that resemble the corresponding ruby expression.
       def define_combinator(name, &b)
-        inspect_arg = lambda do |arg|
-          case arg
-          when Parsby
-            arg.label
-          when Array # for methods like group() that accept arguments spliced or not
-            arg.map(&inspect_arg)
-          when Hash # for key arguments
-            arg.map {|k, v| [k, inspect_arg.call(v)] }.to_h
-          else
-            arg.inspect
-          end
-        end
-
         # This is necessary not only to convert the proc to something
-        # that'll verify arity, but also to get super in b to work.
+        # that'll verify arity, but also to get super() in b to work.
         define_method(name, &b)
         m = instance_method name
 
+        # Lambda used to access private module method from instance method.
+        inspectable_labels_lambda = lambda {|x| inspectable_labels(x) }
+
         define_method name do |*args, &b2|
-          m.bind(self).call(*args, &b2) % "#{name}(#{args.map(&inspect_arg).join(", ")})"
+          inspected_args = inspectable_labels_lambda.call(args).map(&:inspect)
+          m.bind(self).call(*args, &b2) % "#{name}(#{inspected_args.join(", ")})"
         end
       end
-    end
 
-    def self.included(base)
-      base.extend ModuleMethods
+      private
+
+      # Returns an object whose #inspect representation is exactly as given
+      # in the argument string.
+      def inspectable_as(s)
+        Object.new.tap do |obj|
+          obj.define_singleton_method :inspect do
+            s
+          end
+        end
+      end
+
+      # Deeply traverses arrays and hashes changing each Parsby object to
+      # another object that returns their label on #inspect. The point of
+      # this is to be able to inspect the result and get something
+      # resembling the original combinator expression. Instead of writing
+      # this method, I could also just have redefined #inspect on Parsby to
+      # return the label, but I like ruby's default #inspect in general.
+      def inspectable_labels(arg)
+        case arg
+        when Parsby
+          inspectable_as arg.label
+        when Array # for methods like group() that accept arguments spliced or not
+          arg.map(&method(:inspectable_labels))
+        when Hash # for key arguments
+          arg.map {|k, v| [k, inspectable_labels(v)] }.to_h
+        else
+          arg
+        end
+      end
+
+      def included(base)
+        base.extend ModuleMethods
+      end
     end
-    private_class_method :included
 
     extend ModuleMethods
 
