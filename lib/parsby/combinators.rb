@@ -79,7 +79,6 @@ class Parsby
     # Uses =~ for matching. Only compares one char.
     define_combinator :char_matching do |r|
       Parsby.new r.inspect do |io|
-        pos = io.pos
         c = any_char.parse io
         unless c =~ r
           raise ExpectationFailed.new io
