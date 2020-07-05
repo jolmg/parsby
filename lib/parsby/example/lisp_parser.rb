@@ -73,11 +73,10 @@ module Parsby::Example
     end
 
     define_combinator :hex_digit do
-      choice(
-        [("0".."9"), ("a".."f"), ("A".."F")]
-          .map(&:to_a)
-          .reduce(:+)
-          .map {|c| string c }
+      choice_char(
+        [*("0".."9"), *("a".."f"), *("A".."F")]
+          .flatten
+          .join
       )
     end
 
