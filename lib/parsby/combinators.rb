@@ -131,7 +131,13 @@ class Parsby
     end
 
     define_combinator :choice_char do |s|
-      choice s.chars.map {|c| string c }
+      Parsby.new do |io|
+        c = any_char.parse io
+        unless s.chars.include? c
+          raise ExpectationFailed.new io
+        end
+        c
+      end
     end
 
     # Parses string of 0 or more continuous whitespace characters (" ",
