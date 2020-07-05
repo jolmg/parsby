@@ -4,7 +4,7 @@
 # used along with the script tested-methods in a test in projects_spec.rb
 # to ensure test-coverage.
 
-grep -REh '^\s*(class|module|def|end)\b' lib | awk '
+grep -REh '^\s*(class|module|def|define_combinator|end)\b' lib | awk '
   function get_indent_level() {
     return match($0, "[^[:blank:]]") - 1
   }
@@ -20,7 +20,7 @@ grep -REh '^\s*(class|module|def|end)\b' lib | awk '
     }
   }
 
-  /^\s*def\>/ {
+  /^\s*(def|define_combinator)\>/ {
     indent_level = get_indent_level()
     first = 1
     for (i in context) {
@@ -29,7 +29,7 @@ grep -REh '^\s*(class|module|def|end)\b' lib | awk '
         first = 0
       }
     }
-    match($0, /^\s*(def)\s*(self\.)?([^([:blank:]]+)/, matches)
-    print (matches[2] ? "." : "#") matches[3]
+    match($0, /^\s*(def|define_combinator)\s*(self\.|:)?([^([:blank:]]+)/, matches)
+    print (matches[2] == "self." ? "." : "#") matches[3]
   }
 ' | grep -v '[#.]included$' | sort

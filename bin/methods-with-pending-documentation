@@ -8,7 +8,7 @@
 # coverage.
 
 find lib -type f -name \*.rb ! -path lib/parsby/example/\* \
-| xargs grep -REh '^\s*(#|(class|module|def|end)\b)' \
+| xargs grep -REh '^\s*(#|(class|module|def|define_combinator|end)\b)' \
 | awk '
   function get_indent_level() {
     return match($0, "[^[:blank:]]") - 1
@@ -25,7 +25,7 @@ find lib -type f -name \*.rb ! -path lib/parsby/example/\* \
     }
   }
 
-  /^\s*def\>/ && !prev_line_is_comment {
+  /^\s*(def|define_combinator)\>/ && !prev_line_is_comment {
     indent_level = get_indent_level()
     first = 1
     for (i in context) {
@@ -34,8 +34,8 @@ find lib -type f -name \*.rb ! -path lib/parsby/example/\* \
         first = 0
       }
     }
-    match($0, /^\s*(def)\s*(self\.)?([^([:blank:]]+)/, matches)
-    print (matches[2] ? "." : "#") matches[3]
+    match($0, /^\s*(def|define_combinator)\s*(self\.|:)?([^([:blank:]]+)/, matches)
+    print (matches[2] == "self." ? "." : "#") matches[3]
     at_least_one_missing = 1
   }
 
