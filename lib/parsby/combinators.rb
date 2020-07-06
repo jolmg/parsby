@@ -129,6 +129,8 @@ class Parsby
       ps.reduce(unparseable, :|) % "(one of #{ps.map(&:label).join(", ")})"
     end
 
+    # Like choice, but parses a single char from those contained in the
+    # string argument.
     define_combinator :choice_char do |s|
       Parsby.new do |io|
         c = any_char.parse io
