@@ -180,12 +180,7 @@ class Parsby
 
     # Returns line number of current line. This is 1-indexed.
     def line_number
-      return @io.line_number if @io.is_a? BackedIO
-      count = 1
-      @backup.each_char do |c|
-        count += 1 if c == "\n"
-      end
-      count
+      lines_read.length
     end
 
     # pos == current_line_pos + col. This is needed to convert a pos to a
@@ -194,10 +189,13 @@ class Parsby
       pos - col
     end
 
+    def lines_read
+      (grand_backup + forward_context).lines.map(&:chomp)
+    end
+
     # The part of the current line from the current position backward.
     def back_context
-      return @io.back_context if @io.is_a? BackedIO
-      @backup[/(?<=\A|\n).*\z/]
+      grand_backup[/(?<=\A|\n).*\z/]
     end
 
     # The part of the current line from the current position forward.
