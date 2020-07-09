@@ -303,20 +303,20 @@ class Parsby
 
   # <tt>x | y</tt> tries y if x fails.
   def |(p)
-    Parsby.new "(#{self.label} | #{p.label})" do |io|
+    Parsby.new "(#{self.label} | #{p.label})" do |c|
       begin
-        parse io
+        parse c
       rescue Error
-        p.parse io
+        p.parse c
       end
     end
   end
 
   # x < y runs parser x then y and returns x.
   def <(p)
-    Parsby.new "(#{label} < #{p.label})" do |io|
-      r = parse io
-      p.parse io
+    Parsby.new "(#{label} < #{p.label})" do |c|
+      r = parse c
+      p.parse c
       r
     end
   end
@@ -332,16 +332,16 @@ class Parsby
 
   # x > y runs parser x then y and returns y.
   def >(p)
-    Parsby.new "(#{label} > #{p.label})" do |io|
-      parse io
-      p.parse io
+    Parsby.new "(#{label} > #{p.label})" do |c|
+      parse c
+      p.parse c
     end
   end
 
   # p * n, runs parser p n times, grouping results in an array.
   def *(n)
-    Parsby.new "(#{label} * #{n})" do |io|
-      n.times.map { parse io }
+    Parsby.new "(#{label} * #{n})" do |c|
+      n.times.map { parse c }
     end
   end
 
@@ -355,9 +355,9 @@ class Parsby
 
   # xs << x appends result of parser x to list result of parser xs.
   def <<(p)
-    Parsby.new "(#{label} << #{p.label})" do |io|
-      x = parse io
-      y = p.parse io
+    Parsby.new "(#{label} << #{p.label})" do |c|
+      x = parse c
+      y = p.parse c
       # like x << y, but without modifying x.
       x + [y]
     end
@@ -377,17 +377,17 @@ class Parsby
   #   decimal.fmap {|x| x + 1}.parse("2")
   #   => 3
   def fmap(&b)
-    Parsby.new self.label do |io|
-      b.call parse io
+    Parsby.new self.label do |c|
+      b.call parse c
     end
   end
 
   # Allows you to modify the exception to add information when defining the
   # parser via combinators.
   def on_catch(&b)
-    Parsby.new do |io|
+    Parsby.new do |c|
       begin
-        parse io
+        parse c
       rescue Error => e
         b.call e
         raise
@@ -396,9 +396,9 @@ class Parsby
   end
 
   # Peeks to see whether parser would succeed if applied.
-  def would_succeed(io)
+  def would_succeed(c)
     begin
-      peek io
+      peek c
     rescue Error
       false
     else

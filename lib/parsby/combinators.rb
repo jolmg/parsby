@@ -119,7 +119,7 @@ class Parsby
     # least <tt>choice</tt>, for when it's supplied an empty list. It
     # corresponds with mzero in Haskell's Parsec.
     define_combinator :unparseable do
-      Parsby.new {|io| raise ExpectationFailed.new io }
+      Parsby.new {|c| raise ExpectationFailed.new c }
     end
 
     # Tries each provided parser until one succeeds. Providing an empty
@@ -169,7 +169,7 @@ class Parsby
 
     # Turns parser into one that doesn't consume input.
     define_combinator :peek do |p|
-      Parsby.new {|io| p.peek io }
+      Parsby.new {|c| p.peek c }
     end
 
     # Parser that returns provided value without consuming any input.
@@ -183,7 +183,7 @@ class Parsby
     define_combinator :lazy do |&b|
       # Can't have a better label, because we can't know what the parser is
       # until parsing time.
-      Parsby.new {|io| b.call.parse io }
+      Parsby.new {|c| b.call.parse c }
     end
 
     # Results in empty array without consuming input. This is meant to be
@@ -251,9 +251,9 @@ class Parsby
 
     # Tries the given parser and returns nil if it fails.
     define_combinator :optional do |p|
-      Parsby.new do |io|
+      Parsby.new do |c|
         begin
-          p.parse io
+          p.parse c
         rescue Error
           nil
         end
@@ -286,10 +286,10 @@ class Parsby
 
     # Take characters until p matches.
     define_combinator :take_until do |p, with: any_char|
-      Parsby.new do |io|
+      Parsby.new do |c|
         r = ""
-        until p.would_succeed(io)
-          r << with.parse(io)
+        until p.would_succeed(c)
+          r << with.parse(c)
         end
         r
       end
