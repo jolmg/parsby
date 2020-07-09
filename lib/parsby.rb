@@ -6,60 +6,81 @@ class Parsby
 
   class Error < StandardError; end
 
+  class PosRange
+    attr_accessor :start, :end
+
+    def initialize(pos_start, pos_end)
+      @start = pos_start
+      @end = pos_end
+    end
+
+    def length
+      @end - @start
+    end
+
+    def length_in(range)
+      (self & range)&.length || 0
+    end
+
+    # Intersection of the two ranges.
+    def &(range)
+      return nil unless overlaps? range
+      PosRange.new [@start, range.start].max, [@end, range.end].min
+    end
+
+    def overlaps?(range)
+      !(completely_left_of?(range) || completely_right_of?(range))
+    end
+
+    def completely_left_of?(range)
+      @end < range.start
+    end
+
+    def completely_right_of?(range)
+      @start > range.end
+    end
+
+    def contains?(pos)
+      @start <= pos && pos <= @end
+    end
+
+    def starts_inside_of?(range)
+      range.contains? @start
+    end
+
+    def ends_inside_of?(range)
+      range.contains? @end
+    end
+
+    def completely_inside_of?(range)
+      starts_inside_of?(range) && ends_inside_of?(range)
+    end
+
+    def render_in(line_range)
+      return "<-" if completely_left_of? line_range
+      return "->" if completely_right_of? line_range
+      indentation = " " * [0, start - line_range.start].max
+      r = "-" * length_in(line_range)
+      r[0] = "\\" if starts_inside_of? line_range
+      r[-1] = "/" if ends_inside_of? line_range
+      r[0] = "|" if length_in(line_range) == 0
+      r[0] = "V" if length_in(line_range) == 1 && completely_inside_of?(line_range)
+      indentation + r
+    end
+  end
+
   class Failure
-    attr_accessor :starts_at, :ends_at, :label
+    attr_reader :range, :label
 
     # Initialize failure with starting position, ending position, and
     # label of what was expected.
-    def initialize(starts_at, ends_at, label)
-      @starts_at = starts_at
-      @ends_at = ends_at
+    def initialize(range, label)
+      @range = range
       @label = label
     end
 
-    # Length of range. This is not considering current line bounds.
-    def length
-      @length ||= ends_at - starts_at
-    end
-
-    # col on current line where it start. This is negative when on a
-    # previous line.
-    def starts_at_col(current_line_pos)
-      starts_at - current_line_pos
-    end
-
-    # col on current line where it ends. This is negative when on a
-    # previous line.
-    def ends_at_col(current_line_pos)
-      ends_at - current_line_pos
-    end
-
-    # Returns an underline representation of the expectation, for the line
-    # where a failure was raised.
-    def underline(current_line_pos)
-      if ends_at_col(current_line_pos) < 0
-        # Range is completely out of here. This is possible if we do
-        #
-        #   foo | multiline_thing
-        #
-        # The | would fail where multiline_thing started.
-        ""
-      elsif starts_at_col(current_line_pos) < 0
-        # Range starts on a previous line.
-        "#{"-" * (ends_at - current_line_pos - 1)}/"
-      else
-        case length
-        when 0
-          "|"
-        when 1
-          "V"
-        when 2
-          "\\/"
-        else
-          # The whole thing is on the current line.
-          "\\#{"-" * (length - 2)}/"
-        end
-      end
+    def underline(line_range)
+      range.render_in line_range
     end
   end
 
@@ -81,9 +102,10 @@ class Parsby
     def message
       r = "line #{ctx.bio.line_number}:\n"
       r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
+      line_range = ctx.bio.current_line_range
       ctx.failures.each do |f|
-        r << " " * (INDENTATION + [f.starts_at_col(ctx.bio.current_line_pos), 0].max)
-        r << f.underline(ctx.bio.current_line_pos)
+        r << " " * INDENTATION
+        r << f.underline(line_range)
         r << " expected: #{f.label}"
         r << "\n"
       end
@@ -187,6 +209,11 @@ class Parsby
       pos - col
     end
 
+    def current_line_range
+      start = current_line_pos
+      PosRange.new start, start + current_line.length
+    end
+
     def lines_read
       (grand_backup + forward_context).lines.map(&:chomp)
     end
@@ -284,7 +311,7 @@ class Parsby
       @parser.call ctx
     rescue ExpectationFailed => e
       ending_pos = ctx.bio.pos
-      ctx.failures << Failure.new(starting_pos, ending_pos, label)
+      ctx.failures << Failure.new(PosRange.new(starting_pos, ending_pos), label)
       ctx.bio.restore_to starting_pos
       raise
     end

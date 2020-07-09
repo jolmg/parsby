@@ -7,69 +7,38 @@ RSpec.describe Parsby do
 
   describe Parsby::Failure do
     describe "#initialize" do
-      it "takes 2 pos and a label" do
-        expect(Parsby::Failure.new(10, 12, "foo"))
+      it "takes a PosRange and a label" do
+        expect(Parsby::Failure.new(Parsby::PosRange.new(10, 12), "foo"))
           .to satisfy {|e| e.starts_at == 10 }
           .and satisfy {|e| e.ends_at == 12 }
           .and satisfy {|e| e.label == "foo" }
       end
     end
 
-    describe "#length" do
-      it "returns difference between starting and ending positions" do
-        expect(Parsby::Failure.new(7, 10, "foo").length)
-          .to eq 3
-      end
-    end
-
-    describe "#starts_at_col" do
-      it "returns starts_at converted to a col for a given line starting position" do
-        expect(Parsby::Failure.new(5, 10, "foo").starts_at_col(3))
-          .to eq 2
-      end
-
-      it "returns negative, when it's in a previous line" do
-        expect(Parsby::Failure.new(5, 10, "foo").starts_at_col(7))
-          .to eq(-2)
-      end
-    end
-
-    describe "#ends_at_col" do
-      it "returns ends_at converted to a col for a given line starting position" do
-        expect(Parsby::Failure.new(5, 10, "foo").ends_at_col(8))
-          .to eq 2
-      end
-
-      it "returns negative, when it's in a previous line" do
-        expect(Parsby::Failure.new(5, 10, "foo").ends_at_col(12))
-          .to eq(-2)
-      end
-    end
-
     describe "#underline" do
       it "renders a visualization of where in the current line the failure was located" do
-        expect(Parsby::Failure.new(5, 10, "foo").underline(0))
-          .to eq "\\---/"
+        expect(Parsby::Failure.new(Parsby::PosRange.new(5, 10), "foo").underline(Parsby::PosRange.new(0, 100)))
+          .to eq "     \\---/"
       end
 
       it "clips the range when it's out of bounds" do
-        expect(Parsby::Failure.new(5, 10, "foo").underline(6))
+        expect(Parsby::Failure.new(Parsby::PosRange.new(5, 10), "foo").underline(Parsby::PosRange.new(6, 100)))
           .to eq "---/"
       end
 
       it "returns empty string when range is completely out of bounds" do
-        expect(Parsby::Failure.new(5, 10, "foo").underline(20))
-          .to eq ""
+        expect(Parsby::Failure.new(Parsby::PosRange.new(5, 10), "foo").underline(Parsby::PosRange.new(20, 100)))
+          .to eq "<-"
       end
 
       it "uses | when length is 0" do
-        expect(Parsby::Failure.new(5, 5, "foo").underline(0))
-          .to eq "|"
+        expect(Parsby::Failure.new(Parsby::PosRange.new(5, 5), "foo").underline(Parsby::PosRange.new(0, 100)))
+          .to eq "     |"
       end
 
       it "uses V when length is 1" do
-        expect(Parsby::Failure.new(5, 6, "foo").underline(0))
-          .to eq "V"
+        expect(Parsby::Failure.new(Parsby::PosRange.new(5, 6), "foo").underline(Parsby::PosRange.new(0, 100)))
+          .to eq "     V"
       end
     end
   end
@@ -576,10 +545,10 @@ RSpec.describe Parsby do
       expect(
         begin
           string("foo")
-            .on_catch {|e| e.ctx.failures.first.ends_at += 100 }
+            .on_catch {|e| e.ctx.failures.first.range.end += 100 }
             .parse "fox"
         rescue Parsby::ExpectationFailed => e
-          e.ctx.failures.first.ends_at
+          e.ctx.failures.first.range.end
         end
       ).to eq 103
     end
