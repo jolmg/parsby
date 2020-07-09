@@ -351,10 +351,10 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
-  describe "#choice_char" do
+  describe "#char_in" do
     it "parses one char from those in the string argument" do
-      expect(choice_char("abc").parse("be")).to eq "b"
-      expect(choice_char("abc").parse("bc")).to eq "b"
+      expect(char_in("abc").parse("be")).to eq "b"
+      expect(char_in("abc").parse("bc")).to eq "b"
     end
   end
 

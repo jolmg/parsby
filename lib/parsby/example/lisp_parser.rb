@@ -61,7 +61,7 @@ module Parsby::Example
     end
 
     define_combinator :symbol do
-      join(many_1(choice_char(
+      join(many_1(char_in(
         [
           *('a'..'z'),
           *('A'..'Z'),
@@ -73,7 +73,7 @@ module Parsby::Example
     end
 
     define_combinator :hex_digit do
-      choice_char(
+      char_in(
         [*("0".."9"), *("a".."f"), *("A".."F")]
           .flatten
           .join
