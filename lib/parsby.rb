@@ -64,15 +64,13 @@ class Parsby
   end
 
   class ExpectationFailed < Error
-    attr_reader :failures
+    attr_reader :ctx
 
     # Initializes an ExpectationFailure from a backed_io and an optional
     # expectation with which to start the list of expectations that lead to
     # this failure.
-    def initialize(backed_io, failure = nil)
-      @backed_io = backed_io
-      @failures = []
-      @failures << failure if failure
+    def initialize(ctx)
+      @ctx = ctx
     end
 
     INDENTATION = 2
@@ -81,11 +79,11 @@ class Parsby
     # backtrace showing the failed expectations with a visualization of
     # their range in the current line.
     def message
-      r = "line #{@backed_io.line_number}:\n"
-      r << "#{" " * INDENTATION}#{@backed_io.current_line}\n"
-      failures.each do |f|
-        r << " " * (INDENTATION + [f.starts_at_col(@backed_io.current_line_pos), 0].max)
-        r << f.underline(@backed_io.current_line_pos)
+      r = "line #{ctx.bio.line_number}:\n"
+      r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
+      ctx.failures.each do |f|
+        r << " " * (INDENTATION + [f.starts_at_col(ctx.bio.current_line_pos), 0].max)
+        r << f.underline(ctx.bio.current_line_pos)
         r << " expected: #{f.label}"
         r << "\n"
       end
@@ -222,6 +220,10 @@ class Parsby
       nil
     end
 
+    def restore_to(prev_pos)
+      restore(pos - prev_pos)
+    end
+
     # This is to provide transparent delegation to methods of underlying
     # IO.
     def method_missing(m, *args, &b)
@@ -246,6 +248,15 @@ class Parsby
     end
   end
 
+  class Context
+    attr_reader :bio, :failures
+
+    def initialize(io)
+      @bio = BackedIO.new io
+      @failures = []
+    end
+  end
+
   # The parser's label. It's an "unknown" token by default.
   def label
     @label || Token.new("unknown")
@@ -266,27 +277,27 @@ class Parsby
   end
 
   # Parse a String or IO object.
-  def parse(io)
-    BackedIO.for io do |bio|
-      starting_pos = bio.pos
-      begin
-        @parser.call bio
-      rescue ExpectationFailed => e
-        ending_pos = bio.pos
-        e.failures << Failure.new(starting_pos, ending_pos, label)
-        raise
-      end
+  def parse(src)
+    ctx = src.is_a?(Context) ? src : Context.new(src)
+    starting_pos = ctx.bio.pos
+    begin
+      @parser.call ctx
+    rescue ExpectationFailed => e
+      ending_pos = ctx.bio.pos
+      ctx.failures << Failure.new(starting_pos, ending_pos, label)
+      ctx.bio.restore_to starting_pos
+      raise
     end
   end
 
-  # Turns parser into one that doesn't consume input.
-  def peek(io)
-    BackedIO.for(io) do |bio|
-      begin
-        parse bio
-      ensure
-        bio.restore
-      end
+  # Parses without consuming input.
+  def peek(src)
+    ctx = src.is_a?(Context) ? src : Context.new(src)
+    starting_pos = ctx.bio.pos
+    begin
+      parse ctx
+    ensure
+      ctx.bio.restore_to starting_pos
     end
   end
 
@@ -408,15 +419,15 @@ class Parsby
   #     10
   #     \/ expected: (not "10")
   def that_fails(p)
-    Parsby.new "#{label}.that_fails(#{p.label})" do |bio|
-      orig_pos = bio.pos
+    Parsby.new "#{label}.that_fails(#{p.label})" do |c|
+      orig_pos = c.bio.pos
       begin
-        r = p.parse bio
+        r = p.parse c.bio
       rescue Error
-        bio.restore
-        parse bio
+        c.bio.restore_to orig_pos
+        parse c.bio
       else
-        raise ExpectationFailed.new bio
+        raise ExpectationFailed.new c
       end
     end
   end

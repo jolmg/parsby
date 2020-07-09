@@ -76,50 +76,36 @@ RSpec.describe Parsby do
 
   describe Parsby::ExpectationFailed do
     describe "#initialize" do
-      it "can be provided just an BackedIO, leaving the expectations list as empty" do
+      it "takes a context as argument" do
         expect(
           Parsby::ExpectationFailed
-            .new(Parsby::BackedIO.new("foobar"))
-            .failures
-        ).to eq []
-      end
-
-      it "accepts an expectation to start up the expectations list" do
-        expect(
-          Parsby::ExpectationFailed
-            .new(Parsby::BackedIO.new("foo"), Parsby::Failure.new(2, 4, "bar"))
-            .failures
-            .first
-            .label
-        ).to eq "bar"
+            .new(Parsby::Context.new("foobar"))
+            .instance_eval { @ctx }
+        ).to be_a Parsby::Context
       end
     end
 
     describe "#message" do
-      it "displays the current line and the list of expectations as underlined ranges" do
+      def exception
+        yield
+      rescue => e
+        e
+      end
+
+      it "displays the furthest point of error despite the last error being earlier" do
         expect(
-          Parsby::ExpectationFailed
-            .new(
-              Parsby::BackedIO
-                .new("taz\nfoo bar foo bax foo")
-                .tap {|bio| bio.read(12) },
-              Parsby::Failure.new(18, 19, '"b"'),
-            )
-            .tap do |e|
-              e.failures << Parsby::Failure.new(16, 18, '"bar"')
-              e.failures << Parsby::Failure.new(16, 16, '"foo" or "bar"')
-              e.failures << Parsby::Failure.new(8, 16, 'sep_by_count("foo" or "bar", " ", 4)')
-              e.failures << Parsby::Failure.new(0, 8, 'count(4, eol | sep_by_count("foo" or "bar", " ", 4))')
-            end
-            .message
+          exception {
+            (string("foo") > many(spaced(string("bar"))) < eof)
+              .parse("foo\nbar bar box")
+          }.message
         ).to eq <<~ERROR
           line 2:
-            foo bar foo bax foo
-                          V expected: "b"
-                        \\/ expected: "bar"
-                        | expected: "foo" or "bar"
-                \\------/ expected: sep_by_count("foo" or "bar", " ", 4)
-            ---/ expected: count(4, eol | sep_by_count("foo" or "bar", " ", 4))
+            bar bar box
+                    \\-/ expected: string("bar")
+                    | expected: (whitespace() > string("bar"))
+                    | expected: spaced(string("bar"))
+            -------/ expected: (spaced(string("bar")) * 3)
+            <- expected: ((string("foo") > (spaced(string("bar")) * 3)) < eof())
         ERROR
       end
     end
@@ -484,8 +470,8 @@ RSpec.describe Parsby do
     end
 
     it "takes block that provides a BackedIO as argument, and which result is the result of #parse" do
-      expect(Parsby.new {|io| io.class}.parse "foo").to eq Parsby::BackedIO
-      expect(Parsby.new {|io| io.read(2) }.parse "foo").to eq "fo"
+      expect(Parsby.new {|c| c.class}.parse "foo").to eq Parsby::Context
+      expect(Parsby.new {|c| c.bio.read(2) }.parse "foo").to eq "fo"
     end
   end
 
@@ -590,10 +576,10 @@ RSpec.describe Parsby do
       expect(
         begin
           string("foo")
-            .on_catch {|e| e.failures.first.ends_at += 100 }
+            .on_catch {|e| e.ctx.failures.first.ends_at += 100 }
             .parse "fox"
         rescue Parsby::ExpectationFailed => e
-          e.failures.first.ends_at
+          e.ctx.failures.first.ends_at
         end
       ).to eq 103
     end

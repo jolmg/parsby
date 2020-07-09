@@ -1,12 +1,4 @@
 RSpec.describe Parsby::Example::CsvParser do
-  let :simple_csv do
-    <<~EOF
-      foo,bar
-      1,2
-      3,4
-    EOF
-  end
-
   it "parses simple csv files" do
     expect(Parsby::Example::CsvParser.parse <<~CSV)
       foo,bar

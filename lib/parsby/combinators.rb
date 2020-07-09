@@ -61,12 +61,12 @@ class Parsby
 
     # Parses the string as literally provided.
     define_combinator :string do |e|
-      Parsby.new e.inspect do |io|
-        a = io.read e.length
+      Parsby.new e.inspect do |c|
+        a = c.bio.read e.length
         if a == e
           a
         else
-          raise ExpectationFailed.new io
+          raise ExpectationFailed.new c
         end
       end
     end
@@ -78,12 +78,12 @@ class Parsby
 
     # Uses =~ for matching. Only compares one char.
     define_combinator :char_matching do |r|
-      Parsby.new r.inspect do |io|
-        c = any_char.parse io
-        unless c =~ r
-          raise ExpectationFailed.new io
+      Parsby.new r.inspect do |c|
+        char = any_char.parse c
+        unless char =~ r
+          raise ExpectationFailed.new c
         end
-        c
+        char
       end
     end
 
@@ -131,12 +131,12 @@ class Parsby
 
     # Parses a single char from those contained in the string argument.
     define_combinator :char_in do |s|
-      Parsby.new do |io|
-        c = any_char.parse io
-        unless s.chars.include? c
-          raise ExpectationFailed.new io
+      Parsby.new do |c|
+        char = any_char.parse c
+        unless s.chars.include? char
+          raise ExpectationFailed.new c
         end
-        c
+        char
       end
     end
 
@@ -213,12 +213,12 @@ class Parsby
     # Runs parser until it fails and returns an array of the results. Because
     # it can return an empty array, this parser can never fail.
     define_combinator :many do |p|
-      Parsby.new do |io|
+      Parsby.new do |c|
         rs = []
         while true
-          break if io.eof?
+          break if c.bio.eof?
           begin
-            rs << p.parse(io)
+            rs << p.parse(c)
           rescue Error
             break
           end
@@ -262,11 +262,11 @@ class Parsby
 
     # Parses any char. Only fails on EOF.
     define_combinator :any_char do
-      Parsby.new do |io|
-        if io.eof?
-          raise ExpectationFailed.new io
+      Parsby.new do |c|
+        if c.bio.eof?
+          raise ExpectationFailed.new c
         end
-        io.read 1
+        c.bio.read 1
       end
     end
 
@@ -277,9 +277,9 @@ class Parsby
 
     # Matches EOF, fails otherwise. Returns nil.
     define_combinator :eof do
-      Parsby.new :eof do |io|
-        unless io.eof?
-          raise ExpectationFailed.new io
+      Parsby.new :eof do |c|
+        unless c.bio.eof?
+          raise ExpectationFailed.new c
         end
       end
     end
