@@ -138,13 +138,59 @@ class Parsby
     end
   end
 
+  class Backup < StringIO
+    def with_saved_pos(&b)
+      saved = pos
+      b.call saved
+    ensure
+      seek saved
+    end
+
+    def whole
+      with_saved_pos do
+        seek 0
+        read
+      end
+    end
+
+    alias_method :back_size, :pos
+
+    def back(n = back_size)
+      with_saved_pos do |saved|
+        seek -n, IO::SEEK_CUR
+        read n
+      end
+    end
+
+    def rest_of_line
+      with_saved_pos { readline }
+    rescue EOFError
+      ""
+    end
+
+    def back_lines
+      (back + rest_of_line).lines
+    end
+
+    def col
+      back[/(?<=\A|\n).*\z/].length
+    end
+
+    def current_line
+      with_saved_pos do
+        seek(-col, IO::SEEK_CUR)
+        readline.chomp
+      end
+    end
+  end
+
   class BackedIO
     # Initializes a BackedIO out of the provided IO object or String. The
     # String will be turned into an IO using StringIO.
     def initialize(io)
       io = StringIO.new io if io.is_a? String
       @io = io
-      @backup = ""
+      @backup = Backup.new
     end
 
     # Makes a new BackedIO out of the provided IO, calls the provided
@@ -171,11 +217,18 @@ class Parsby
       end
     end
 
+    def with_saved_pos(&b)
+      saved = pos
+      begin
+        b.call saved
+      ensure
+        restore_to saved
+      end
+    end
+
     # Like #read, but without consuming.
     def peek(*args)
-      self.class.peek self do |bio|
-        bio.read(*args)
-      end
+      with_saved_pos { read(*args) }
     end
 
     # Returns the backup from the innermost BackedIO
@@ -189,13 +242,7 @@ class Parsby
     def pos
       @io.pos
     rescue Errno::ESPIPE
-      grand_backup.length
-    end
-
-    # Position in current_line. current_line[col] == peek(1). This is
-    # 0-indexed.
-    def col
-      back_context.length
+      grand_backup.pos
     end
 
     # Returns line number of current line. This is 1-indexed.
@@ -209,41 +256,39 @@ class Parsby
       pos - col
     end
 
+    def col
+      @backup.col
+    end
+
     def current_line_range
       start = current_line_pos
       PosRange.new start, start + current_line.length
     end
 
+    def load_rest_of_line
+      with_saved_pos { readline }
+    end
+
     def lines_read
-      (grand_backup + forward_context).lines.map(&:chomp)
+      load_rest_of_line
+      grand_backup.back_lines.map(&:chomp)
     end
 
-    # The part of the current line from the current position backward.
-    def back_context
-      grand_backup[/(?<=\A|\n).*\z/]
-    end
-
-    # The part of the current line from the current position forward.
-    def forward_context
-      self.class.peek self do |bio|
-        r = ""
-        begin
-          x = bio.read(1)
-          r << x.to_s
-        end while x != "\n" && !x.nil?
-        r.chomp
-      end
-    end
-
-    # Returns current (chomped) line, including what's to come from #read,
-    # without consuming input.
+    # Returns current line, including what's to come from #read, without
+    # consuming input.
     def current_line
-      back_context + forward_context
+      load_rest_of_line
+      @backup.current_line
     end
 
     # Restore n chars from the backup.
-    def restore(n = @backup.length)
-      n.times { ungetc @backup[-1] }
+    def restore(n = @backup.back_size)
+      # Handle negatives in consideration of #with_saved_pos.
+      if n < 0
+        read(-n)
+      else
+        @backup.back(n).chars.reverse.each {|c| ungetc c}
+      end
       nil
     end
 
@@ -257,9 +302,13 @@ class Parsby
       @io.send(m, *args, &b)
     end
 
+    def readline(*args)
+      @io.readline(*args).tap {|r| @backup.write r unless r.nil? }
+    end
+
     # Reads from underlying IO and backs it up.
     def read(*args)
-      @io.read(*args).tap {|r| @backup << r unless r.nil? }
+      @io.read(*args).tap {|r| @backup.write r unless r.nil? }
     end
 
     # Pass to underlying IO's ungetc and discard a part of the same length
@@ -270,7 +319,7 @@ class Parsby
       # Though c is supposed to be a single character, as specified by the
       # ungetc of different IO objects, let's not assume that when
       # adjusting the backup.
-      @backup.slice! @backup.length - c.length
+      @backup.seek(-c.length, IO::SEEK_CUR)
       @io.ungetc(c)
     end
   end

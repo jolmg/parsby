@@ -9,8 +9,8 @@ RSpec.describe Parsby do
     describe "#initialize" do
       it "takes a PosRange and a label" do
         expect(Parsby::Failure.new(Parsby::PosRange.new(10, 12), "foo"))
-          .to satisfy {|e| e.starts_at == 10 }
-          .and satisfy {|e| e.ends_at == 12 }
+          .to satisfy {|e| e.range.start == 10 }
+          .and satisfy {|e| e.range.end == 12 }
           .and satisfy {|e| e.label == "foo" }
       end
     end
@@ -173,6 +173,7 @@ RSpec.describe Parsby do
             )
             .tap {|bio| bio.read(3) }
             .grand_backup
+            .back
         ).to eq "foobar"
       end
     end
@@ -207,7 +208,7 @@ RSpec.describe Parsby do
         piped "foo" do |io|
           bio = Parsby::BackedIO.new io
           allow(io).to receive(:pos) { raise Errno::ESPIPE }
-          allow(bio).to receive(:grand_backup) { "foo" }
+          allow(bio).to receive(:grand_backup) { Parsby::Backup.new("foo") }
           expect(io).to receive(:pos)
           expect(bio).to receive(:grand_backup)
           bio.pos
@@ -234,7 +235,7 @@ RSpec.describe Parsby do
             r1 = bio.read 3
             r2 = bio.read 3
             backup = bio.instance_eval { @backup }
-            [r1, r2, backup]
+            [r1, r2, backup.back]
           end
         ).to eq ["foo", "bar", "foobar"]
       end
@@ -255,7 +256,7 @@ RSpec.describe Parsby do
           Parsby::BackedIO.new("foobar").tap do |bio|
             bio.read(3)
             bio.ungetc("b")
-          end.instance_eval { @backup }
+          end.instance_eval { @backup.back }
         ).to eq "fo"
       end
     end
@@ -294,67 +295,6 @@ RSpec.describe Parsby do
       it "accepts a string as argument, turning it into a StringIO" do
         expect(Parsby::BackedIO.new("foo").instance_eval { @io })
           .to be_a StringIO
-      end
-    end
-
-    describe "#back_context" do
-      it "gets text from current position backward until first of newline, BOF" do
-        expect(
-          Parsby::BackedIO
-            .new("foo\nbar")
-            .tap {|io| io.read 3 }
-            .back_context
-        ).to eq "foo"
-
-        expect(
-          Parsby::BackedIO
-            .new("foo\nbar")
-            .tap {|io| io.read 4 }
-            .back_context
-        ).to eq ""
-
-        expect(
-          Parsby::BackedIO
-            .new("foo\nbar")
-            .tap {|io| io.read }
-            .back_context
-        ).to eq "bar"
-
-        expect(
-          Parsby::BackedIO
-            .new("foobar")
-            .back_context
-        ).to eq ""
-      end
-
-      it "delegates to inner BackedIO if available for more backup" do
-        expect(
-          begin
-            inner = Parsby::BackedIO.new "foobarbaz"
-            inner.read(3)
-            outer = Parsby::BackedIO.new inner
-            outer.read(3)
-            outer.back_context
-          end
-        ).to eq "foobar"
-      end
-    end
-
-    describe "#forward_context" do
-      it "gets text from current position forward until first of newline, EOF" do
-        expect(
-          Parsby::BackedIO
-            .new("foobar\n")
-            .tap {|io| io.read 3 }
-            .forward_context
-        ).to eq "bar"
-
-        expect(
-          Parsby::BackedIO
-            .new("foobar")
-            .tap {|io| io.read 3 }
-            .forward_context
-        ).to eq "bar"
       end
     end
 
