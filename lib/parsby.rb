@@ -181,7 +181,7 @@ class Parsby
       seek saved
     end
 
-    def whole
+    def all
       with_saved_pos do
         seek 0
         read
