@@ -74,6 +74,7 @@ RSpec.describe Parsby do
                     | expected: (whitespace() > string("bar"))
                     | expected: spaced(string("bar"))
             -------/ expected: (spaced(string("bar")) * 3)
+            <- expected: (string("foo") > (spaced(string("bar")) * 3))
             <- expected: ((string("foo") > (spaced(string("bar")) * 3)) < eof())
         ERROR
       end
