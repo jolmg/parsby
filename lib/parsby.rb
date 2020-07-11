@@ -412,14 +412,13 @@ class Parsby
   # Parse a String or IO object.
   def parse(src)
     ctx = src.is_a?(Context) ? src : Context.new(src)
-    starting_pos = ctx.bio.pos
-    parsed_range = PosRange.new(ctx.bio.pos, ctx.bio.pos)
+    parsed_range = ParsedRange.new(ctx.bio.pos, ctx.bio.pos, label)
     begin
       @parser.call ctx
     rescue ExpectationFailed => e
-      ending_pos = ctx.bio.pos
-      ctx.failures << ParsedRange.new(starting_pos, ending_pos, label)
-      ctx.bio.restore_to starting_pos
+      parsed_range.end = ctx.bio.pos
+      ctx.failures << parsed_range
+      ctx.bio.restore_to parsed_range.start
       raise
     end
   end
