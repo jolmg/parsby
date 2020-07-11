@@ -98,16 +98,16 @@ class Parsby
     # backtrace showing the failed expectations with a visualization of
     # their range in the current line.
     def message
-      failure_pos = ctx.furthest_failure.start
+      parsed_range = ctx.furthest_parsed_range
       ctx.bio.with_saved_pos do
-        ctx.bio.seek failure_pos
+        ctx.bio.seek parsed_range.element.start
         r = "line #{ctx.bio.line_number}:\n"
         r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
         line_range = ctx.bio.current_line_range
-        ctx.failures.select {|f| f.overlaps? line_range }.each do |f|
+        parsed_range.self_and_ancestors.each do |range|
           r << " " * INDENTATION
-          r << f.underline(line_range)
-          r << " expected: #{f.label}"
+          r << range.element.underline(line_range)
+          r << " expected: #{range.element.label}"
           r << "\n"
         end
         r
@@ -377,7 +377,7 @@ class Parsby
   end
 
   class Context
-    attr_reader :bio, :failures
+    attr_reader :bio
     attr_accessor :parsed_ranges
 
     def initialize(io)
@@ -385,8 +385,8 @@ class Parsby
       @failures = []
     end
 
-    def furthest_failure
-      failures.max_by(&:start)
+    def furthest_parsed_range
+      parsed_ranges.flatten.max_by {|t| t.element.end }
     end
   end
 
@@ -420,10 +420,11 @@ class Parsby
       @parser.call ctx
     rescue ExpectationFailed => e
       parsed_range.end = ctx.bio.pos
-      ctx.failures << parsed_range
-      ctx.parsed_ranges = ctx.parsed_ranges.parent
       ctx.bio.restore_to parsed_range.start
       raise
+    ensure
+      # Keep the root one for use in ExceptionFailed#message
+      ctx.parsed_ranges = ctx.parsed_ranges.parent unless ctx.parsed_ranges.parent.nil?
     end
   end
 

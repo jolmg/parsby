@@ -550,10 +550,10 @@ RSpec.describe Parsby do
       expect(
         begin
           string("foo")
-            .on_catch {|e| e.ctx.failures.first.end += 100 }
+            .on_catch {|e| e.ctx.parsed_ranges.flatten.each {|r| r.element.end += 100 } }
             .parse "fox"
         rescue Parsby::ExpectationFailed => e
-          e.ctx.failures.first.end
+          e.ctx.furthest_parsed_range.element.end
         end
       ).to eq 103
     end
