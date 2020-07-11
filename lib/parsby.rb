@@ -69,8 +69,39 @@ class Parsby
     end
   end
 
+  module Tree
+    attr_accessor :parent
+
+    def children
+      @children ||= []
+    end
+
+    def <<(t)
+      t.parent = self
+      children << t
+    end
+
+    def root
+      if parent == nil
+        self 
+      else
+        parent.root
+      end
+    end
+
+    def flatten
+      [self, *children.map(&:flatten).flatten]
+    end
+
+    def self_and_ancestors
+      [self, *parent&.self_and_ancestors]
+    end
+  end
+
   class ParsedRange < PosRange
     attr_reader :label
+
+    include Tree
 
     # Initialize failure with starting position, ending position, and
     # label of what was expected.
@@ -100,49 +131,18 @@ class Parsby
     def message
       parsed_range = ctx.furthest_parsed_range
       ctx.bio.with_saved_pos do
-        ctx.bio.seek parsed_range.element.start
+        ctx.bio.seek parsed_range.start
         r = "line #{ctx.bio.line_number}:\n"
         r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
         line_range = ctx.bio.current_line_range
         parsed_range.self_and_ancestors.each do |range|
           r << " " * INDENTATION
-          r << range.element.underline(line_range)
-          r << " expected: #{range.element.label}"
+          r << range.underline(line_range)
+          r << " expected: #{range.label}"
           r << "\n"
         end
         r
       end
-    end
-  end
-
-  class Tree
-    attr_reader :element, :children
-    attr_accessor :parent
-
-    def initialize(element)
-      @element = element
-      @children = []
-    end
-
-    def <<(t)
-      t.parent = self
-      children << t
-    end
-
-    def root
-      if parent == nil
-        self 
-      else
-        parent.root
-      end
-    end
-
-    def flatten
-      [self, *children.map(&:flatten).flatten]
-    end
-
-    def self_and_ancestors
-      [self, *parent&.self_and_ancestors]
     end
   end
 
@@ -386,7 +386,7 @@ class Parsby
     end
 
     def furthest_parsed_range
-      parsed_ranges.flatten.max_by {|t| t.element.end }
+      parsed_ranges.flatten.max_by(&:end)
     end
   end
 
@@ -413,9 +413,8 @@ class Parsby
   def parse(src)
     ctx = src.is_a?(Context) ? src : Context.new(src)
     parsed_range = ParsedRange.new(ctx.bio.pos, ctx.bio.pos, label)
-    parsed_range_node = Tree.new parsed_range
-    ctx.parsed_ranges << parsed_range_node if ctx.parsed_ranges
-    ctx.parsed_ranges = parsed_range_node
+    ctx.parsed_ranges << parsed_range if ctx.parsed_ranges
+    ctx.parsed_ranges = parsed_range
     begin
       @parser.call ctx
     rescue ExpectationFailed => e

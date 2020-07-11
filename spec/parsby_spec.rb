@@ -82,20 +82,18 @@ RSpec.describe Parsby do
   end
 
   describe Parsby::Tree do
-    def tree(e, &b)
-      Parsby::Tree.new(e).tap do |t|
-        t.tap(&b) if b
+    class TreeObj
+      include Parsby::Tree
+      attr_reader :x
+
+      def initialize(x)
+        @x = x
       end
     end
 
-    describe "#initialize" do
-      it "requires element attribute" do
-        expect { Parsby::Tree.new }.to raise_error ArgumentError, /wrong number of arguments.*expected 1/
-        expect(Parsby::Tree.new("foo").element).to eq "foo"
-      end
-
-      it "starts tree as root" do
-        expect(Parsby::Tree.new("foo").parent).to eq nil
+    def tree(e, &b)
+      TreeObj.new(e).tap do |t|
+        t.tap(&b) if b
       end
     end
 
@@ -107,7 +105,7 @@ RSpec.describe Parsby do
               t << tree("foo_bar_baz")
             }
             t << tree("foo_baz")
-          }.flatten.map(&:element)
+          }.flatten.map(&:x)
         ).to eq ["foo", "foo_bar", "foo_bar_baz", "foo_baz"]
       end
 
@@ -118,7 +116,7 @@ RSpec.describe Parsby do
               t << tree("foo_bar_baz")
             }
             t << tree("foo_baz")
-          }.children.first.flatten.map(&:element)
+          }.children.first.flatten.map(&:x)
         ).to eq ["foo_bar", "foo_bar_baz"]
       end
     end
@@ -129,7 +127,7 @@ RSpec.describe Parsby do
           tree("foo") { |t|
             t << tree("foo_bar")
             t << tree("foo_baz")
-          }.children.map(&:element)
+          }.children.map(&:x)
         ).to eq ["foo_bar", "foo_baz"]
       end
 
@@ -137,7 +135,7 @@ RSpec.describe Parsby do
         expect(
           tree("foo") { |t|
             t << tree("foo_bar")
-          }.children[0].parent.element
+          }.children[0].parent.x
         ).to eq "foo"
       end
     end
@@ -150,11 +148,11 @@ RSpec.describe Parsby do
               t << tree("foo_bar_baz")
             }
             t << tree("foo_baz")
-          }.children.first.children.first.root.element
+          }.children.first.children.first.root.x
         ).to eq "foo"
 
         expect(
-          tree("foo").root.element
+          tree("foo").root.x
         ).to eq "foo"
       end
     end
@@ -167,7 +165,7 @@ RSpec.describe Parsby do
               t << tree("foo_bar_baz")
             }
             t << tree("foo_baz")
-          }.children.first.children.first.self_and_ancestors.map(&:element)
+          }.children.first.children.first.self_and_ancestors.map(&:x)
         ).to eq ["foo_bar_baz", "foo_bar", "foo"]
       end
     end
@@ -550,10 +548,10 @@ RSpec.describe Parsby do
       expect(
         begin
           string("foo")
-            .on_catch {|e| e.ctx.parsed_ranges.flatten.each {|r| r.element.end += 100 } }
+            .on_catch {|e| e.ctx.parsed_ranges.flatten.each {|r| r.end += 100 } }
             .parse "fox"
         rescue Parsby::ExpectationFailed => e
-          e.ctx.furthest_parsed_range.element.end
+          e.ctx.furthest_parsed_range.end
         end
       ).to eq 103
     end
