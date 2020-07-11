@@ -48,11 +48,15 @@ module Parsby::Example
     end
 
     define_combinator :inner_list do
-      (peek(string(")")) > pure(nil)) | (
-        empty \
-          << lazy { sexp } \
-          << ((whitespace > string(".") > whitespace > lazy { sexp }) \
-              | optional(whitespace > lazy { inner_list }))
+      choice(
+        peek(string(")")) > pure(nil),
+        group(
+          lazy { sexp },
+          choice(
+            whitespace > string(".") > whitespace > lazy { sexp },
+            optional(whitespace > lazy { inner_list })
+          ),
+        ),
       )
     end
 
