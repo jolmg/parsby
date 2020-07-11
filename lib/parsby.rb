@@ -69,19 +69,17 @@ class Parsby
     end
   end
 
-  class Failure
-    attr_reader :range, :label
+  class ParsedRange < PosRange
+    attr_reader :label
 
     # Initialize failure with starting position, ending position, and
     # label of what was expected.
-    def initialize(range, label)
-      @range = range
+    def initialize(pos_start, pos_end, label)
       @label = label
+      super(pos_start, pos_end)
     end
 
-    def underline(line_range)
-      range.render_in line_range
-    end
+    alias_method :underline, :render_in
   end
 
   class ExpectationFailed < Error
@@ -100,13 +98,13 @@ class Parsby
     # backtrace showing the failed expectations with a visualization of
     # their range in the current line.
     def message
-      failure_pos = ctx.furthest_failure.range.start
+      failure_pos = ctx.furthest_failure.start
       ctx.bio.with_saved_pos do
         ctx.bio.seek failure_pos
         r = "line #{ctx.bio.line_number}:\n"
         r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
         line_range = ctx.bio.current_line_range
-        ctx.failures.select {|f| f.range.overlaps? line_range }.each do |f|
+        ctx.failures.select {|f| f.overlaps? line_range }.each do |f|
           r << " " * INDENTATION
           r << f.underline(line_range)
           r << " expected: #{f.label}"
@@ -380,6 +378,7 @@ class Parsby
 
   class Context
     attr_reader :bio, :failures
+    attr_accessor :parsed_ranges
 
     def initialize(io)
       @bio = BackedIO.new io
@@ -387,7 +386,7 @@ class Parsby
     end
 
     def furthest_failure
-      failures.max_by {|f| f.range.start }
+      failures.max_by(&:start)
     end
   end
 
@@ -414,11 +413,12 @@ class Parsby
   def parse(src)
     ctx = src.is_a?(Context) ? src : Context.new(src)
     starting_pos = ctx.bio.pos
+    parsed_range = PosRange.new(ctx.bio.pos, ctx.bio.pos)
     begin
       @parser.call ctx
     rescue ExpectationFailed => e
       ending_pos = ctx.bio.pos
-      ctx.failures << Failure.new(PosRange.new(starting_pos, ending_pos), label)
+      ctx.failures << ParsedRange.new(starting_pos, ending_pos, label)
       ctx.bio.restore_to starting_pos
       raise
     end
