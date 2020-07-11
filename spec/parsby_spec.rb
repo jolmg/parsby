@@ -81,6 +81,98 @@ RSpec.describe Parsby do
     end
   end
 
+  describe Parsby::Tree do
+    def tree(e, &b)
+      Parsby::Tree.new(e).tap do |t|
+        t.tap(&b) if b
+      end
+    end
+
+    describe "#initialize" do
+      it "requires element attribute" do
+        expect { Parsby::Tree.new }.to raise_error ArgumentError, /wrong number of arguments.*expected 1/
+        expect(Parsby::Tree.new("foo").element).to eq "foo"
+      end
+
+      it "starts tree as root" do
+        expect(Parsby::Tree.new("foo").parent).to eq nil
+      end
+    end
+
+    describe "#flatten" do
+      it "flattens the tree into an array" do
+        expect(
+          tree("foo") { |t|
+            t << tree("foo_bar") { |t|
+              t << tree("foo_bar_baz")
+            }
+            t << tree("foo_baz")
+          }.flatten.map(&:element)
+        ).to eq ["foo", "foo_bar", "foo_bar_baz", "foo_baz"]
+      end
+
+      it "doesn't include ancestors" do
+        expect(
+          tree("foo") { |t|
+            t << tree("foo_bar") { |t|
+              t << tree("foo_bar_baz")
+            }
+            t << tree("foo_baz")
+          }.children.first.flatten.map(&:element)
+        ).to eq ["foo_bar", "foo_bar_baz"]
+      end
+    end
+
+    describe "#<<" do
+      it "appends right tree to list of children of left tree" do
+        expect(
+          tree("foo") { |t|
+            t << tree("foo_bar")
+            t << tree("foo_baz")
+          }.children.map(&:element)
+        ).to eq ["foo_bar", "foo_baz"]
+      end
+
+      it "sets parent of right tree to be the left tree" do
+        expect(
+          tree("foo") { |t|
+            t << tree("foo_bar")
+          }.children[0].parent.element
+        ).to eq "foo"
+      end
+    end
+
+    describe "#root" do
+      it "returns the root of a tree" do
+        expect(
+          tree("foo") { |t|
+            t << tree("foo_bar") { |t|
+              t << tree("foo_bar_baz")
+            }
+            t << tree("foo_baz")
+          }.children.first.children.first.root.element
+        ).to eq "foo"
+
+        expect(
+          tree("foo").root.element
+        ).to eq "foo"
+      end
+    end
+
+    describe "#self_and_ancestors" do
+      it "returns list of self and ancestors" do
+        expect(
+          tree("foo") { |t|
+            t << tree("foo_bar") { |t|
+              t << tree("foo_bar_baz")
+            }
+            t << tree("foo_baz")
+          }.children.first.children.first.self_and_ancestors.map(&:element)
+        ).to eq ["foo_bar_baz", "foo_bar", "foo"]
+      end
+    end
+  end
+
   describe Parsby::Token do
     describe "#to_s" do
       it "wraps name in angle brackets" do

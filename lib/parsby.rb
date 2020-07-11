@@ -117,6 +117,37 @@ class Parsby
     end
   end
 
+  class Tree
+    attr_reader :element, :children
+    attr_accessor :parent
+
+    def initialize(element)
+      @element = element
+      @children = []
+    end
+
+    def <<(t)
+      t.parent = self
+      children << t
+    end
+
+    def root
+      if parent == nil
+        self 
+      else
+        parent.root
+      end
+    end
+
+    def flatten
+      [self, *children.map(&:flatten).flatten]
+    end
+
+    def self_and_ancestors
+      [self, *parent&.self_and_ancestors]
+    end
+  end
+
   class Token
     attr_reader :name
 
