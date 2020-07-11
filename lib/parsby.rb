@@ -413,11 +413,15 @@ class Parsby
   def parse(src)
     ctx = src.is_a?(Context) ? src : Context.new(src)
     parsed_range = ParsedRange.new(ctx.bio.pos, ctx.bio.pos, label)
+    parsed_range_node = Tree.new parsed_range
+    ctx.parsed_ranges << parsed_range_node if ctx.parsed_ranges
+    ctx.parsed_ranges = parsed_range_node
     begin
       @parser.call ctx
     rescue ExpectationFailed => e
       parsed_range.end = ctx.bio.pos
       ctx.failures << parsed_range
+      ctx.parsed_ranges = ctx.parsed_ranges.parent
       ctx.bio.restore_to parsed_range.start
       raise
     end
