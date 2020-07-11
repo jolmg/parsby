@@ -100,16 +100,20 @@ class Parsby
     # backtrace showing the failed expectations with a visualization of
     # their range in the current line.
     def message
-      r = "line #{ctx.bio.line_number}:\n"
-      r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
-      line_range = ctx.bio.current_line_range
-      ctx.failures.each do |f|
-        r << " " * INDENTATION
-        r << f.underline(line_range)
-        r << " expected: #{f.label}"
-        r << "\n"
+      failure_pos = ctx.furthest_failure.range.start
+      ctx.bio.with_saved_pos do
+        ctx.bio.seek failure_pos
+        r = "line #{ctx.bio.line_number}:\n"
+        r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
+        line_range = ctx.bio.current_line_range
+        ctx.failures.select {|f| f.range.overlaps? line_range }.each do |f|
+          r << " " * INDENTATION
+          r << f.underline(line_range)
+          r << " expected: #{f.label}"
+          r << "\n"
+        end
+        r
       end
-      r
     end
   end
 
@@ -244,6 +248,25 @@ class Parsby
       lines_read.length
     end
 
+    def seek(amount, whence = IO::SEEK_SET)
+      if whence == IO::SEEK_END
+        read
+        restore(-amount)
+        return
+      end
+      new_pos = case whence
+      when IO::SEEK_SET
+        amount
+      when IO::SEEK_CUR
+        pos + amount
+      end
+      if new_pos > pos
+        read new_pos - pos
+      else
+        restore_to new_pos
+      end
+    end
+
     # pos == current_line_pos + col. This is needed to convert a pos to a
     # col.
     def current_line_pos
@@ -330,6 +353,10 @@ class Parsby
     def initialize(io)
       @bio = BackedIO.new io
       @failures = []
+    end
+
+    def furthest_failure
+      failures.max_by {|f| f.range.start }
     end
   end
 
