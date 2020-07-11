@@ -17,7 +17,9 @@ class Parsby
 
         define_method name do |*args, &b2|
           inspected_args = inspectable_labels_lambda.call(args).map(&:inspect)
-          m.bind(self).call(*args, &b2) % "#{name}(#{inspected_args.join(", ")})"
+          label = name.to_s
+          label += "(#{inspected_args.join(", ")})" unless inspected_args.empty?
+          m.bind(self).call(*args, &b2) % label
         end
       end
 
