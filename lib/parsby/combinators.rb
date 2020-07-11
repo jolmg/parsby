@@ -19,7 +19,9 @@ class Parsby
           inspected_args = inspectable_labels_lambda.call(args).map(&:inspect)
           label = name.to_s
           label += "(#{inspected_args.join(", ")})" unless inspected_args.empty?
-          m.bind(self).call(*args, &b2) % label
+          # Wrap in new parser so we don't overwrite another automatic
+          # label.
+          Parsby.new(label) {|c| m.bind(self).call(*args, &b2).parse c }
         end
       end
 
