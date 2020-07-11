@@ -10,7 +10,7 @@ module Parsby::Example
     end
 
     define_combinator :sexp_sequence do
-      many(whitespace > sexp) < whitespace < eof
+      many(spaced(sexp)) < eof
     end
 
     define_combinator :sexp do
@@ -43,7 +43,7 @@ module Parsby::Example
       Parsby.new :list do |io|
         braces = {"(" => ")", "[" => "]"}
         opening_brace = choice(braces.keys.map {|c| string c}).parse io
-        (whitespace > inner_list < whitespace < string(braces[opening_brace])).parse io
+        (spaced(inner_list) < string(braces[opening_brace])).parse io
       end
     end
 
@@ -53,8 +53,8 @@ module Parsby::Example
         group(
           lazy { sexp },
           choice(
-            whitespace > string(".") > whitespace > lazy { sexp },
-            optional(whitespace > lazy { inner_list })
+            spaced(string(".")) > lazy { sexp },
+            optional(whitespace > lazy { inner_list }),
           ),
         ),
       )
