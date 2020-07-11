@@ -64,7 +64,7 @@ RSpec.describe Parsby do
       it "displays the furthest point of error despite the last error being earlier" do
         expect(
           exception {
-            (string("foo") > many(spaced(string("bar"))) < eof)
+            (string("foo") > spaced(string("bar")) * 3 < eof)
               .parse("foo\nbar bar box")
           }.message
         ).to eq <<~ERROR
