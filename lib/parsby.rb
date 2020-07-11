@@ -87,7 +87,7 @@ class Parsby
   class ExpectationFailed < Error
     attr_reader :ctx
 
-    # Initializes an ExpectationFailure from a backed_io and an optional
+    # Initializes an ExpectationFailed from a backed_io and an optional
     # expectation with which to start the list of expectations that lead to
     # this failure.
     def initialize(ctx)
