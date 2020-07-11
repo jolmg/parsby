@@ -147,7 +147,7 @@ class Parsby
     # Parses string of 0 or more continuous whitespace characters (" ",
     # "\t", "\n", "\r")
     define_combinator :whitespace do
-      token("whitespace") % (whitespace_1 | pure(""))
+      whitespace_1 | pure("")
     end
 
     alias_method :ws, :whitespace
@@ -155,7 +155,7 @@ class Parsby
     # Parses string of 1 or more continuous whitespace characters (" ",
     # "\t", "\n", "\r")
     define_combinator :whitespace_1 do
-      token("whitespace_1") % join(many_1(char_in(" \t\n\r")))
+      join(many_1(char_in(" \t\n\r")))
     end
 
     alias_method :ws_1, :whitespace_1
