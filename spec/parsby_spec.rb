@@ -137,18 +137,6 @@ RSpec.describe Parsby do
             .line_number
         ).to eq 4
       end
-
-      it "takes into account that it may need the additional backup inner BackedIOs" do
-        expect(
-          Parsby::BackedIO
-            .new(
-              Parsby::BackedIO
-                .new("\nfoo\n\nbar")
-                .tap {|bio| bio.read(8)}
-            )
-            .line_number
-        ).to eq 4
-      end
     end
 
     describe "#current_line_pos" do
@@ -159,22 +147,6 @@ RSpec.describe Parsby do
             .tap {|bio| bio.read(6) }
             .current_line_pos
         ).to eq 4
-      end
-    end
-
-    describe "#grand_backup" do
-      it "returns the backup of the innermost BackedIO" do
-        expect(
-          Parsby::BackedIO
-            .new(
-              Parsby::BackedIO
-                .new("foobarbaz")
-                .tap {|bio| bio.read(3) }
-            )
-            .tap {|bio| bio.read(3) }
-            .grand_backup
-            .back
-        ).to eq "foobar"
       end
     end
 
@@ -197,20 +169,20 @@ RSpec.describe Parsby do
         bio.pos
       end
 
-      it "doesn't use grand_backup when it doesn't need to" do
+      it "doesn't use backup when it doesn't need to" do
         io = StringIO.new "foo"
         bio = Parsby::BackedIO.new io
-        expect(bio).to_not receive(:grand_backup)
+        expect(bio).to_not receive(:backup)
         bio.pos
       end
 
-      it "uses grand_backup when using the io's pos fails for being a pipe" do
+      it "uses backup when using the io's pos fails for being a pipe" do
         piped "foo" do |io|
           bio = Parsby::BackedIO.new io
           allow(io).to receive(:pos) { raise Errno::ESPIPE }
-          allow(bio).to receive(:grand_backup) { Parsby::Backup.new("foo") }
+          allow(bio).to receive(:backup) { Parsby::Backup.new("foo") }
           expect(io).to receive(:pos)
-          expect(bio).to receive(:grand_backup)
+          expect(bio).to receive(:backup)
           bio.pos
         end
       end

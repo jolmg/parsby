@@ -231,18 +231,12 @@ class Parsby
       with_saved_pos { read(*args) }
     end
 
-    # Returns the backup from the innermost BackedIO
-    def grand_backup
-      return @io.grand_backup if @io.is_a? BackedIO
-      @backup
-    end
-
     # Delegates pos to inner io, and works around pipes' inability to
     # return pos by getting the length of the innermost BackedIO.
     def pos
       @io.pos
     rescue Errno::ESPIPE
-      grand_backup.pos
+      backup.pos
     end
 
     # Returns line number of current line. This is 1-indexed.
@@ -257,7 +251,7 @@ class Parsby
     end
 
     def col
-      @backup.col
+      backup.col
     end
 
     def current_line_range
@@ -271,23 +265,23 @@ class Parsby
 
     def lines_read
       load_rest_of_line
-      grand_backup.back_lines.map(&:chomp)
+      backup.back_lines.map(&:chomp)
     end
 
     # Returns current line, including what's to come from #read, without
     # consuming input.
     def current_line
       load_rest_of_line
-      @backup.current_line
+      backup.current_line
     end
 
     # Restore n chars from the backup.
-    def restore(n = @backup.back_size)
+    def restore(n = backup.back_size)
       # Handle negatives in consideration of #with_saved_pos.
       if n < 0
         read(-n)
       else
-        @backup.back(n).chars.reverse.each {|c| ungetc c}
+        backup.back(n).chars.reverse.each {|c| ungetc c}
       end
       nil
     end
@@ -303,12 +297,12 @@ class Parsby
     end
 
     def readline(*args)
-      @io.readline(*args).tap {|r| @backup.write r unless r.nil? }
+      @io.readline(*args).tap {|r| backup.write r unless r.nil? }
     end
 
     # Reads from underlying IO and backs it up.
     def read(*args)
-      @io.read(*args).tap {|r| @backup.write r unless r.nil? }
+      @io.read(*args).tap {|r| backup.write r unless r.nil? }
     end
 
     # Pass to underlying IO's ungetc and discard a part of the same length
@@ -319,8 +313,14 @@ class Parsby
       # Though c is supposed to be a single character, as specified by the
       # ungetc of different IO objects, let's not assume that when
       # adjusting the backup.
-      @backup.seek(-c.length, IO::SEEK_CUR)
+      backup.seek(-c.length, IO::SEEK_CUR)
       @io.ungetc(c)
+    end
+
+    private
+
+    def backup
+      @backup
     end
   end
 
