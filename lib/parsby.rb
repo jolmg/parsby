@@ -89,6 +89,10 @@ class Parsby
       end
     end
 
+    def sibling_index
+      parent&.children&.index self
+    end
+
     def flatten
       [self, *children.map(&:flatten).flatten]
     end
@@ -136,10 +140,13 @@ class Parsby
         r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
         line_range = ctx.bio.current_line_range
         parsed_range.self_and_ancestors.each do |range|
-          r << " " * INDENTATION
-          r << range.underline(line_range)
-          r << " expected: #{range.label}"
-          r << "\n"
+          line = ""
+          line << " " * INDENTATION
+          line << range.underline(line_range)
+          line << " " * (ctx.bio.current_line.length - line.length)
+          line << " " + "|" * range.sibling_index if range&.sibling_index&.> 0
+          line << " expected: #{range.label}"
+          r << "#{line}\n"
         end
         r
       end
