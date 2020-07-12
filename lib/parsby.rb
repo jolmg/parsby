@@ -393,7 +393,7 @@ class Parsby
     end
 
     def furthest_parsed_range
-      parsed_ranges.flatten.max_by(&:end)
+      parsed_ranges.flatten.max_by(&:start)
     end
   end
 
