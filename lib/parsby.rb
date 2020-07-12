@@ -423,11 +423,14 @@ class Parsby
     ctx.parsed_ranges << parsed_range if ctx.parsed_ranges
     ctx.parsed_ranges = parsed_range
     begin
-      @parser.call ctx
+      r = @parser.call ctx
     rescue ExpectationFailed => e
       parsed_range.end = ctx.bio.pos
       ctx.bio.restore_to parsed_range.start
       raise
+    else
+      parsed_range.end = ctx.bio.pos
+      r
     ensure
       # Keep the root one for use in ExceptionFailed#message
       ctx.parsed_ranges = ctx.parsed_ranges.parent unless ctx.parsed_ranges.parent.nil?
