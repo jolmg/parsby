@@ -104,6 +104,7 @@ class Parsby
 
   class ParsedRange < PosRange
     attr_reader :label
+    attr_accessor :failed
 
     include Tree
 
@@ -145,7 +146,7 @@ class Parsby
           line << range.underline(line_range)
           line << " " * (ctx.bio.current_line.length - line.length)
           line << " " + "|" * range.sibling_index if range&.sibling_index&.> 0
-          line << " expected: #{range.label}"
+          line << " #{range.failed ? "failed" : "success"}: #{range.label}"
           r << "#{line}\n"
         end
         r
@@ -426,6 +427,7 @@ class Parsby
       r = @parser.call ctx
     rescue ExpectationFailed => e
       parsed_range.end = ctx.bio.pos
+      parsed_range.failed = true
       ctx.bio.restore_to parsed_range.start
       raise
     else
