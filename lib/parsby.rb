@@ -521,7 +521,7 @@ class Parsby
   #   decimal.fmap {|x| x + 1}.parse("2")
   #   => 3
   def fmap(&b)
-    Parsby.new self.label do |c|
+    Parsby.new "#{self.label}.fmap" do |c|
       b.call parse c
     end
   end
