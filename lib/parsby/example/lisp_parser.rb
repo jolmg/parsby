@@ -42,7 +42,7 @@ module Parsby::Example
     define_combinator :list do
       Parsby.new :list do |io|
         braces = {"(" => ")", "[" => "]"}
-        opening_brace = choice(braces.keys.map {|c| string c}).parse io
+        opening_brace = char_in(braces.keys.join).parse io
         (spaced(inner_list) < string(braces[opening_brace])).parse io
       end
     end
