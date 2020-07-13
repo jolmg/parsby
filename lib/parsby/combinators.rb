@@ -6,7 +6,7 @@ class Parsby
       # The only reason to use this over regular def syntax is to get
       # automatic labels. For combinators defined with this, you'll get
       # labels that resemble the corresponding ruby expression.
-      def define_combinator(name, wrap_parser: true, &b)
+      def define_combinator(name, wrap_parser: true, primitive: false, &b)
         # This is necessary not only to convert the proc to something
         # that'll verify arity, but also to get super() in b to work.
         define_method(name, &b)
@@ -23,8 +23,9 @@ class Parsby
           # label.
           p = m.bind(self).call(*args, &b2)
           if wrap_parser
-            Parsby.new(label) {|c| p.parse c }
+            Parsby.new(label) {|c| p.parse c }.tap {|p2| p2.primitive = primitive }
           else
+            p.primitive = primitive
             p % label
           end
         end

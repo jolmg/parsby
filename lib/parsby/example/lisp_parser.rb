@@ -76,7 +76,7 @@ module Parsby::Example
       )
     end
 
-    define_combinator :symbol do
+    define_combinator :symbol, primitive: true do
       join(many_1(symbol_char)).fmap(&:to_sym)
     end
 
@@ -100,7 +100,7 @@ module Parsby::Example
       ])
     end
 
-    define_combinator :lisp_string do
+    def lisp_string
       Parsby.wrap :string, primitive: true do
         between(string('"'), string('"'),
           join(many(choice(
@@ -111,7 +111,7 @@ module Parsby::Example
       end
     end
 
-    define_combinator :number do
+    define_combinator :number, primitive: true do
       group(
         optional(string("-") | string("+")),
         decimal,

@@ -102,6 +102,8 @@ class Parsby
       [self, *children.map(&:flatten).flatten]
     end
 
+    alias_method :self_and_descendants, :flatten
+
     def path
       [*parent&.path, *sibling_index]
     end
@@ -501,10 +503,17 @@ class Parsby
   # Initialize parser with optional label argument, and parsing block. The
   # parsing block is given an IO as argument, and its result is the result
   # when parsing.
-  def initialize(label = nil, &b)
+  def initialize(label = nil, primitive: false, &b)
     self.label = label if label
+    @primitive = primitive
     @parser = b
   end
+
+  def self.wrap(*args, &b)
+    Parsby.new(*args) {|c| b.call.parse c }
+  end
+
+  attr_accessor :primitive
 
   # Parse a String or IO object.
   def parse(src)
@@ -523,6 +532,10 @@ class Parsby
       parsed_range.end = ctx.bio.pos
       r
     ensure
+      if primitive
+        parsed_range.self_and_descendants.max_by(&:end)
+        parsed_range.children = []
+      end
       # Keep the root one for use in ExceptionFailed#message
       ctx.parsed_ranges = ctx.parsed_ranges.parent unless ctx.parsed_ranges.parent.nil?
     end
