@@ -101,20 +101,21 @@ module Parsby::Example
     end
 
     define_combinator :lisp_string do
-      Parsby::Token.new("string") % between(string('"'), string('"'),
-        join(many(
-          any_char.that_fails(string("\\") | string('"')) \
-          | escape_sequence
-        ))
-      )
+      Parsby.wrap :string, primitive: true do
+        between(string('"'), string('"'),
+          join(many(choice(
+            any_char.that_fails(string("\\") | string('"')),
+            escape_sequence,
+          )))
+        )
+      end
     end
 
     define_combinator :number do
-      Parsby::Token.new("number") % (
-        empty \
-          << optional(string("-") | string("+")) \
-          << decimal \
-          << optional(empty << string(".") << optional(decimal))
+      group(
+        optional(string("-") | string("+")),
+        decimal,
+        optional(empty << string(".") << optional(decimal)),
       ).fmap do |(sign, whole_part, (_, fractional_part))|
         n = whole_part
         n += (fractional_part || 0).to_f / 10 ** fractional_part.to_s.length
