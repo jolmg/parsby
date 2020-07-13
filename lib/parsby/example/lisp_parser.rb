@@ -64,8 +64,8 @@ module Parsby::Example
       number | lisp_string | symbol
     end
 
-    define_combinator :symbol do
-      join(many_1(char_in(
+    define_combinator :symbol_char do
+      char_in(
         [
           *('a'..'z'),
           *('A'..'Z'),
@@ -73,7 +73,11 @@ module Parsby::Example
           # Got list from R6RS; removed '.' for simplicity.
           *%w(! $ % & * + - / : < = > ? @ ^ _ ~),
         ].flatten.join
-      ))).fmap(&:to_sym)
+      )
+    end
+
+    define_combinator :symbol do
+      join(many_1(symbol_char)).fmap(&:to_sym)
     end
 
     define_combinator :hex_digit do
