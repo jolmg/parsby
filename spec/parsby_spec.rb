@@ -140,6 +140,44 @@ RSpec.describe Parsby do
       end
     end
 
+    describe "#sibling_index" do
+      it "returns the index where the current node is situated in its parent's children array" do
+        expect(
+          tree("foo") { |t|
+            t << tree("foo_bar")
+            t << tree("foo_baz")
+          }.children[1].sibling_index
+        ).to eq 1
+      end
+
+      it "returns nil for a root node" do
+        expect(
+          tree("foo").sibling_index
+        ).to eq nil
+      end
+    end
+
+    describe "#path" do
+      it "returns the path to the current node from the root" do
+        expect(
+          tree("foo") { |t|
+            t << tree("foo_bar")
+            t << tree("foo_baz") { |t|
+              t << tree("foo_baz_taz") { |t|
+                t << tree("foo_baz_taz_mak")
+              }
+            }
+          }.children[1].children[0].children[0].path
+        ).to eq [1, 0, 0]
+      end
+
+      it "returns an empty list for the root node" do
+        expect(
+          tree("foo").path
+        ).to eq []
+      end
+    end
+
     describe "#root" do
       it "returns the root of a tree" do
         expect(

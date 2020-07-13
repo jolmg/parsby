@@ -71,6 +71,7 @@ class Parsby
 
   module Tree
     attr_accessor :parent
+    attr_writer :children
 
     def children
       @children ||= []
@@ -89,12 +90,82 @@ class Parsby
       end
     end
 
+    def sibling_reverse_index
+      parent&.children&.reverse&.index self
+    end
+
     def sibling_index
       parent&.children&.index self
     end
 
     def flatten
       [self, *children.map(&:flatten).flatten]
+    end
+
+    def path
+      [*parent&.path, *sibling_index]
+    end
+
+    def each(&b)
+      b.call self
+      children.each {|c| c.each(&b) }
+      self
+    end
+
+    def right_each(&b)
+      b.call self
+      children.reverse.each {|c| c.right_each(&b) }
+      self
+    end
+
+    def depth
+      1 + children.max_by(&:depth)
+    end
+
+    def left_uncles
+      if parent
+        sibling_index + parent.left_uncles
+      else
+        0
+      end
+    end
+
+    def right_uncles
+      if parent
+        sibling_reverse_index + parent.right_uncles
+      else
+        0
+      end
+    end
+
+    def left_tree_slice
+      "|" * left_uncles + "*"
+    end
+
+    def right_tree_slice
+      "*" + "|" * right_uncles
+    end
+
+    def dup
+      super.tap {|d| d.children.map! {|c| c.dup.tap {|dc| dc.parent = d } } }
+    end
+
+    def keep_only!(*paths)
+      self.children = paths
+        .group_by(&:first)
+        .to_a
+        .reject {|(i, _)| i.nil? }
+        .map do |(child_index, child_paths)|
+          if child_index
+            child_subpaths = child_paths.map {|p| p.drop 1 }
+            children[child_index].keep_only!(*child_subpaths)
+          end
+        end
+      self
+    end
+
+    def find((idx, *sub_path))
+      children[idx].find sub_path
     end
 
     def self_and_ancestors
@@ -135,20 +206,38 @@ class Parsby
     # their range in the current line.
     def message
       parsed_range = ctx.furthest_parsed_range
+      other_ranges = ctx.parsed_ranges.flatten.select do |range|
+        range.start == parsed_range.start && range != parsed_range
+      end
+      r = "line #{ctx.bio.line_number}:\n"
+      failure_tree = parsed_range.dup.root.keep_only!(*[parsed_range, *other_ranges].map(&:path))
       ctx.bio.with_saved_pos do
         ctx.bio.seek parsed_range.start
-        r = "line #{ctx.bio.line_number}:\n"
         r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
         line_range = ctx.bio.current_line_range
-        parsed_range.self_and_ancestors.each do |range|
+        tree_lines = []
+        max_tree_slice_length = failure_tree.flatten.map {|t| t.right_tree_slice.length }.max
+        prev_slice_length = nil
+        failure_tree.each do |range|
           line = ""
           line << " " * INDENTATION
           line << range.underline(line_range)
           line << " " * (ctx.bio.current_line.length - line.length)
-          line << " " + "|" * range.sibling_index if range&.sibling_index&.> 0
-          line << " #{range.failed ? "failed" : "success"}: #{range.label}"
-          r << "#{line}\n"
+          this_slice_length = range.right_tree_slice.length
+          if prev_slice_length && this_slice_length > prev_slice_length
+            fork_line = line.gsub(/./, " ")
+            fork_line << " #{range.right_tree_slice.rjust(max_tree_slice_length).sub(/\*/, "\\")}"
+            fork_line << "\n"
+          else
+            fork_line = ""
+          end
+          prev_slice_length = this_slice_length
+          line << " #{range.right_tree_slice.rjust(max_tree_slice_length)}"
+          line << " #{range.failed ? "failure" : "success"}: #{range.label}"
+          line << "\n"
+          tree_lines << fork_line << line
         end
+        r << tree_lines.reverse.join
         r
       end
     end
