@@ -39,7 +39,7 @@ module Parsby::Example
       )
     end
 
-    define_combinator :list do
+    define_combinator :list, wrap_parser: false do
       Parsby.new :list do |io|
         braces = {"(" => ")", "[" => "]"}
         opening_brace = char_in(braces.keys.join).parse io
