@@ -140,7 +140,7 @@ class Parsby
     end
 
     # Parses a single char from those contained in the string argument.
-    define_combinator :char_in, wrap_parser: false do |s|
+    define_combinator :char_in, wrap_parser: false, primitive: true do |s|
       Parsby.new do |c|
         char = any_char.parse c
         unless s.chars.include? char
