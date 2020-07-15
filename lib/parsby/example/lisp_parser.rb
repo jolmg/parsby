@@ -100,15 +100,13 @@ module Parsby::Example
       ])
     end
 
-    def lisp_string
-      Parsby.wrap :string, primitive: true do
-        between(string('"'), string('"'),
-          join(many(choice(
-            any_char.that_fails(string("\\") | string('"')),
-            escape_sequence,
-          )))
-        )
-      end
+    define_combinator :lisp_string, primitive: true do
+      between(string('"'), string('"'),
+        join(many(choice(
+          any_char.that_fails(string("\\") | string('"')),
+          escape_sequence,
+        )))
+      )
     end
 
     define_combinator :number, primitive: true do
