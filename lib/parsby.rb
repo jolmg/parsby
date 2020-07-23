@@ -224,7 +224,7 @@ class Parsby
           line = ""
           line << " " * INDENTATION
           line << range.underline(line_range)
-          line << " " * (ctx.bio.current_line.length - line.length)
+          line << " " * (ctx.bio.current_line.length + INDENTATION - line.length)
           this_slice_length = range.right_tree_slice.length
           if prev_slice_length && this_slice_length > prev_slice_length
             fork_line = line.gsub(/./, " ")
