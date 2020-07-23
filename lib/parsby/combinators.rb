@@ -70,7 +70,7 @@ class Parsby
     extend ModuleMethods
 
     # Parses the string as literally provided.
-    define_combinator :string, wrap_parser: false do |e|
+    define_combinator :lit, wrap_parser: false do |e|
       Parsby.new e.inspect do |c|
         a = c.bio.read e.length
         if a == e
@@ -104,16 +104,16 @@ class Parsby
 
     # This is taken from the Json subparser for numbers.
     define_combinator :decimal_fraction do 
-      sign = string("-") | string("+")
+      sign = lit("-") | lit("+")
       group(
         optional(sign),
         decimal,
         optional(group(
-          string("."),
+          lit("."),
           decimal,
         )),
         optional(group(
-          string("e") | string("E"),
+          lit("e") | lit("E"),
           optional(sign),
           decimal,
         )),

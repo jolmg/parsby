@@ -26,7 +26,7 @@ RSpec.describe Parsby do
           .to eq "---/"
       end
 
-      it "returns empty string when range is completely out of bounds" do
+      it "returns empty lit when range is completely out of bounds" do
         expect(Parsby::ParsedRange.new(5, 10, "foo").underline(Parsby::PosRange.new(20, 100)))
           .to eq "<-"
       end
@@ -64,18 +64,18 @@ RSpec.describe Parsby do
       it "displays the furthest point of error despite the last error being earlier" do
         expect(
           exception {
-            (string("foo") > spaced(string("bar")) * 3 < eof)
+            (lit("foo") > spaced(lit("bar")) * 3 < eof)
               .parse("foo\nbar bar box")
           }.message
         ).to eq <<~ERROR
           line 2:
             bar bar box
-                    \\-/ expected: string("bar")
-                    | expected: (whitespace() > string("bar"))
-                    | expected: spaced(string("bar"))
-            -------/ expected: (spaced(string("bar")) * 3)
-            <- expected: (string("foo") > (spaced(string("bar")) * 3))
-            <- expected: ((string("foo") > (spaced(string("bar")) * 3)) < eof())
+                    \\-/ expected: lit("bar")
+                    | expected: (whitespace() > lit("bar"))
+                    | expected: spaced(lit("bar"))
+            -------/ expected: (spaced(lit("bar")) * 3)
+            <- expected: (lit("foo") > (spaced(lit("bar")) * 3))
+            <- expected: ((lit("foo") > (spaced(lit("bar")) * 3)) < eof())
         ERROR
       end
     end
@@ -230,7 +230,7 @@ RSpec.describe Parsby do
 
     describe "#%" do
       it "is the flipped version of Parsby's" do
-        expect((Parsby::Token.new("foo") % string("foo")).label.to_s)
+        expect((Parsby::Token.new("foo") % lit("foo")).label.to_s)
           .to eq "<foo>"
       end
     end
@@ -393,7 +393,7 @@ RSpec.describe Parsby do
     end
 
     describe "#initialize" do
-      it "accepts a string as argument, turning it into a StringIO" do
+      it "accepts a lit as argument, turning it into a StringIO" do
         expect(Parsby::BackedIO.new("foo").instance_eval { @io })
           .to be_a StringIO
       end
@@ -487,11 +487,11 @@ RSpec.describe Parsby do
 
   describe "#parse" do
     it "accepts strings" do
-      expect(string("foo").parse("foo")).to eq "foo"
+      expect(lit("foo").parse("foo")).to eq "foo"
     end
 
     it "accepts IO objects" do
-      expect(string("foo").parse IO.pipe.tap {|(_, w)| w.write "foo"; w.close }.first)
+      expect(lit("foo").parse IO.pipe.tap {|(_, w)| w.write "foo"; w.close }.first)
         .to eq "foo"
     end
   end
@@ -526,58 +526,58 @@ RSpec.describe Parsby do
 
   describe "#*" do
     it "p * n parses p n times and returns the results in an array" do
-      expect((string("foo") * 2).parse "foofoo").to eq ["foo", "foo"]
+      expect((lit("foo") * 2).parse "foofoo").to eq ["foo", "foo"]
     end
 
     it "fails if it can't parse the number of times specified" do
-      expect { (string("foo") * 3).parse "foofoo" }
+      expect { (lit("foo") * 3).parse "foofoo" }
         .to raise_error Parsby::ExpectationFailed
     end
   end
 
   describe "#<<" do
     it "appends right operand to list result of left operand" do
-      expect((many(string("foo")) << string("bar")).parse "foofoobar")
+      expect((many(lit("foo")) << lit("bar")).parse "foofoobar")
         .to eq ["foo", "foo", "bar"]
     end
   end
 
   describe "#+" do
     it "joins the results with +" do
-      expect((string("foo") + string("bar")).parse "foobar").to eq "foobar"
+      expect((lit("foo") + lit("bar")).parse "foobar").to eq "foobar"
     end
   end
 
   describe "#|" do
     it "tries second operand if first one fails" do
-      expect((string("foo") | string("bar")).parse "bar").to eq "bar"
-      expect { (string("foo") | string("bar")).parse "baz" }
+      expect((lit("foo") | lit("bar")).parse "bar").to eq "bar"
+      expect { (lit("foo") | lit("bar")).parse "baz" }
         .to raise_error Parsby::ExpectationFailed
     end
   end
 
   describe "#<" do
     it "parses left operand then right operand, and returns the result of left" do
-      expect((string("foo") < string("bar")).parse "foobar").to eq "foo"
+      expect((lit("foo") < lit("bar")).parse "foobar").to eq "foo"
     end
   end
 
   describe "#>" do
     it "parses left operand then right operand, and returns the result of right" do
-      expect((string("foo") > string("bar")).parse "foobar").to eq "bar"
+      expect((lit("foo") > lit("bar")).parse "foobar").to eq "bar"
     end
   end
 
   describe "#%" do
     it "sets the label of the parser" do
-      expect((string("foo") % "bar").label).to eq "bar"
+      expect((lit("foo") % "bar").label).to eq "bar"
     end
   end
 
   describe "#would_succeed" do
     it "peeks to tell whether or not it would succeed" do
-      expect(string("foo").would_succeed("foo")).to eq true
-      expect(string("foo").would_succeed("bar")).to eq false
+      expect(lit("foo").would_succeed("foo")).to eq true
+      expect(lit("foo").would_succeed("bar")).to eq false
     end
   end
 
@@ -585,7 +585,7 @@ RSpec.describe Parsby do
     it "runs block when catching ExpectationFailed, allowing one to modify the exception" do
       expect(
         begin
-          string("foo")
+          lit("foo")
             .on_catch {|e| e.ctx.parsed_ranges.flatten.each {|r| r.end += 100 } }
             .parse "fox"
         rescue Parsby::ExpectationFailed => e
@@ -597,8 +597,8 @@ RSpec.describe Parsby do
 
   describe "#that_fails" do
     it "tries parser argument; if argument fails, it parses with receiver; if argument succeeds, then it fails" do
-      expect(decimal.that_fails(string("10")).parse("34")).to eq 34
-      expect { decimal.that_fails(string("10")).parse("10") }
+      expect(decimal.that_fails(lit("10")).parse("34")).to eq 34
+      expect { decimal.that_fails(lit("10")).parse("10") }
         .to raise_error Parsby::ExpectationFailed
     end
   end

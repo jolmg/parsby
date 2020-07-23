@@ -16,7 +16,7 @@ RSpec.describe Parsby::Combinators do
         expect(
           begin
             mod.define_combinator :foo do
-              string("foo")
+              lit("foo")
             end
             mod.foo.label
           end
@@ -27,7 +27,7 @@ RSpec.describe Parsby::Combinators do
         expect {
           begin
             mod.define_combinator :foo do |x|
-              string("foo")
+              lit("foo")
             end
             mod.foo.label
           end
@@ -38,41 +38,41 @@ RSpec.describe Parsby::Combinators do
         expect(
           begin
             mod.define_combinator :foo do |c, x, y|
-              string("foo")
+              lit("foo")
             end
-            mod.foo(3, string("bar"), string("baz")).label
+            mod.foo(3, lit("bar"), lit("baz")).label
           end
-        ).to eq 'foo(3, string("bar"), string("baz"))'
+        ).to eq 'foo(3, lit("bar"), lit("baz"))'
       end
 
       it "shows the labels of parser arguments when nested in Array or Hash arguments" do
         expect(
           begin
             mod.define_combinator :foo do |x, baz:|
-              string("foo")
+              lit("foo")
             end
-            mod.foo([3, "foobar", string("bar")], baz: string("baz")).label
+            mod.foo([3, "foobar", lit("bar")], baz: lit("baz")).label
           end
-        ).to eq 'foo([3, "foobar", string("bar")], {:baz=>string("baz")})'
+        ).to eq 'foo([3, "foobar", lit("bar")], {:baz=>lit("baz")})'
       end
 
       it "works with super()" do
         expect(
           begin
             mod.define_combinator :foobarbaz do
-              string("foo")
+              lit("foo")
             end
             mod2 = Module.new
             mod2.include mod
             mod2.module_exec { extend self }
             mod2.define_combinator :foobarbaz do
-              super() + string("bar")
+              super() + lit("bar")
             end
             mod3 = Module.new
             mod3.include mod2
             mod3.module_exec { extend self }
             mod3.define_combinator :foobarbaz do
-              super() + string("baz")
+              super() + lit("baz")
             end
             mod3.foobarbaz.parse "foobarbaz"
           end
@@ -81,43 +81,43 @@ RSpec.describe Parsby::Combinators do
     end
 
     describe "#inspectable_as" do
-      it "returns an object that inspects as the given string argument" do
+      it "returns an object that inspects as the given lit argument" do
         expect(send(:inspectable_as, "foo").inspect).to eq "foo"
       end
     end
 
     describe "#inspectable_labels" do
       it "changes parsby objects to objects returning their label on inspect" do
-        expect(string("foo").inspect).to match /\A#<Parsby:/
-        expect(send(:inspectable_labels, string("foo")).inspect).to eq 'string("foo")'
+        expect(lit("foo").inspect).to match /\A#<Parsby:/
+        expect(send(:inspectable_labels, lit("foo")).inspect).to eq 'lit("foo")'
       end
 
       it "deeply traverses arrays and hashes, leaving non-parsby objects alone" do
         expect(
           send(
             :inspectable_labels,
-            [3, { foo: string("foo") }]
+            [3, { foo: lit("foo") }]
           ).inspect
-        ).to eq '[3, {:foo=>string("foo")}]'
+        ).to eq '[3, {:foo=>lit("foo")}]'
       end
     end
   end
 
   describe "#many" do
     it "applies parser repeatedly and returns a list of the results" do
-      expect(many(string("foo")).parse "foofoofoo")
+      expect(many(lit("foo")).parse "foofoofoo")
         .to eq ["foo", "foo", "foo"]
     end
 
     it "returns empty list when parser couldn't be applied" do
-      expect(many(string("bar")).parse "foofoofoo")
+      expect(many(lit("bar")).parse "foofoofoo")
         .to eq []
     end
   end
 
   describe "#many_1" do
     it "fails when parser couldn't be applied even once" do
-      expect { many_1(string("bar")).parse "foofoofoo" }
+      expect { many_1(lit("bar")).parse "foofoofoo" }
         .to raise_error Parsby::ExpectationFailed
     end
   end
@@ -149,13 +149,13 @@ RSpec.describe Parsby::Combinators do
   end
 
   describe "#decimal_digit" do
-    it "parses single decimal digit as a string" do
+    it "parses single decimal digit as a lit" do
       expect(decimal_digit.parse "9").to eq "9"
     end
   end
 
   describe "#hex_digit" do
-    it "parses single hex digit as a string" do
+    it "parses single hex digit as a lit" do
       expect(hex_digit.parse "5").to eq "5"
       expect(hex_digit(:insensitive).parse "5").to eq "5"
       expect(hex_digit(:upper).parse "5").to eq "5"
@@ -171,8 +171,8 @@ RSpec.describe Parsby::Combinators do
   end
 
   describe "#string" do
-    it "parses the string provided" do
-      expect(string("foo").parse("foo")).to eq "foo"
+    it "parses the lit provided" do
+      expect(lit("foo").parse("foo")).to eq "foo"
     end
     
     # XXX: Backtracking should be handled BackedIO, but I've implemented
@@ -182,11 +182,11 @@ RSpec.describe Parsby::Combinators do
     # own or not, and I'd like to know why.
     it "backtracks properly on failure" do
       s = StringIO.new "barbaz"
-      expect { string("foo").parse(s) }.to raise_error Parsby::ExpectationFailed
+      expect { lit("foo").parse(s) }.to raise_error Parsby::ExpectationFailed
       expect(s.read).to eq "barbaz"
 
       s = StringIO.new "baz"
-      expect { string("foobar").parse(s) }.to raise_error Parsby::ExpectationFailed
+      expect { lit("foobar").parse(s) }.to raise_error Parsby::ExpectationFailed
       expect(s.read).to eq "baz"
     end
   end
@@ -213,8 +213,8 @@ RSpec.describe Parsby::Combinators do
 
   describe "#spaced" do
     it "parses optional surrounding whitespace" do
-      expect(spaced(string("foo")).parse "foo").to eq "foo"
-      expect(group(spaced(string("foo")), string("bar")).parse " foo bar").to eq ["foo", "bar"]
+      expect(spaced(lit("foo")).parse "foo").to eq "foo"
+      expect(group(spaced(lit("foo")), lit("bar")).parse " foo bar").to eq ["foo", "bar"]
     end
   end
 
@@ -231,9 +231,9 @@ RSpec.describe Parsby::Combinators do
 
           def self.parenthesis
             empty \
-              << string("(") \
+              << lit("(") \
               << optional(lazy { parenthesis }) \
-              << string(")")
+              << lit(")")
           end
         end.parenthesis.parse("(())")
       ).to eq ["(", ["(", nil, ")"], ")"]
@@ -242,52 +242,52 @@ RSpec.describe Parsby::Combinators do
 
   describe "#peek" do
     it "makes a parser not consume input" do
-      expect(StringIO.new("foobar").tap {|io| peek(string("foo")).parse(io) }.read(6))
+      expect(StringIO.new("foobar").tap {|io| peek(lit("foo")).parse(io) }.read(6))
         .to eq "foobar"
     end
   end
 
   describe "#join" do
     it "joins the resulting array of the provided parser" do
-      expect(join(many(string("foo") < string(";"))).parse("foo;foo;"))
+      expect(join(many(lit("foo") < lit(";"))).parse("foo;foo;"))
         .to eq "foofoo"
     end
   end
 
   describe "#sep_by_1" do
     it "is like sep_by, but fails if it can't match even once" do
-      expect(sep_by_1(string("foo"), string(", ")).parse "foo, foo, foo")
+      expect(sep_by_1(lit("foo"), lit(", ")).parse "foo, foo, foo")
         .to eq ["foo", "foo", "foo"]
-      expect(sep_by_1(string("foo"), string(", ")).parse "foo")
+      expect(sep_by_1(lit("foo"), lit(", ")).parse "foo")
         .to eq ["foo"]
-      expect { sep_by_1(string("foo"), string(", ")).parse "bar, bar, bar" }
+      expect { sep_by_1(lit("foo"), lit(", ")).parse "bar, bar, bar" }
         .to raise_error Parsby::ExpectationFailed
     end
   end
 
   describe "#sep_by" do
     it "is like many, but allowing you to specify a separating parser" do
-      expect(sep_by(string("foo"), string(", ")).parse "foo, foo, foo")
+      expect(sep_by(lit("foo"), lit(", ")).parse "foo, foo, foo")
         .to eq ["foo", "foo", "foo"]
-      expect(sep_by(string("foo"), string(", ")).parse "foo")
+      expect(sep_by(lit("foo"), lit(", ")).parse "foo")
         .to eq ["foo"]
-      expect(sep_by(string("foo"), string(", ")).parse "bar, bar, bar")
+      expect(sep_by(lit("foo"), lit(", ")).parse "bar, bar, bar")
         .to eq []
     end
   end
 
   describe "#collect" do
     it "is meant to start collecting for & for when first parser returns array" do
-      expect((empty << string("foo") << string("bar")).parse "foobar").to eq ["foo", "bar"]
-      expect((empty << many(string("foo")) << many(string("bar"))).parse "foofoobarbar")
+      expect((empty << lit("foo") << lit("bar")).parse "foobar").to eq ["foo", "bar"]
+      expect((empty << many(lit("foo")) << many(lit("bar"))).parse "foofoobarbar")
         .to eq [["foo", "foo"], ["bar", "bar"]]
     end
   end
 
   describe "#optional" do
     it "causes parsing errors to be returned as nil results" do
-      expect(optional(string("foo")).parse("foo")).to eq "foo"
-      expect(optional(string("foo")).parse("bar")).to eq nil
+      expect(optional(lit("foo")).parse("foo")).to eq "foo"
+      expect(optional(lit("foo")).parse("bar")).to eq nil
     end
   end
 
@@ -309,13 +309,13 @@ RSpec.describe Parsby::Combinators do
 
   describe "#single" do
     it "wraps result of provided parser into an array" do
-      expect(single(string("foo")).parse "foo").to eq ["foo"]
+      expect(single(lit("foo")).parse "foo").to eq ["foo"]
     end
   end
 
   describe "#group" do
     it "groups results of array into a list" do
-      expect(group(many(string("foo")), string("bar")).parse "foofoobar")
+      expect(group(many(lit("foo")), lit("bar")).parse "foofoobar")
         .to eq [["foo", "foo"], "bar"]
     end
   end
@@ -352,7 +352,7 @@ RSpec.describe Parsby::Combinators do
   end
 
   describe "#char_in" do
-    it "parses one char from those in the string argument" do
+    it "parses one char from those in the lit argument" do
       expect(char_in("abc").parse("be")).to eq "b"
       expect(char_in("abc").parse("bc")).to eq "b"
     end
@@ -360,13 +360,13 @@ RSpec.describe Parsby::Combinators do
 
   describe "#choice" do
     it "tries each parser until one succeeds" do
-      expect(choice(string("foo"), string("bar")).parse "bar").to eq "bar"
+      expect(choice(lit("foo"), lit("bar")).parse "bar").to eq "bar"
     end
 
     it "accepts multiple arguments or array arguments" do
-      expect(choice(string("foo"), string("bar")).parse "bar").to eq "bar"
-      expect(choice([string("foo"), string("bar")]).parse "bar").to eq "bar"
-      expect(choice([string("foo")], [string("bar")]).parse "bar").to eq "bar"
+      expect(choice(lit("foo"), lit("bar")).parse "bar").to eq "bar"
+      expect(choice([lit("foo"), lit("bar")]).parse "bar").to eq "bar"
+      expect(choice([lit("foo")], [lit("bar")]).parse "bar").to eq "bar"
     end
 
     it "always fails parsing when given empty list" do
@@ -376,15 +376,15 @@ RSpec.describe Parsby::Combinators do
 
   describe "#between" do
     it "(open, close, p) parses open, then p, then close, and returns the result of p" do
-      expect(between(string("{{"), string("}}"), string("foo")).parse "{{foo}}").to eq "foo"
+      expect(between(lit("{{"), lit("}}"), lit("foo")).parse "{{foo}}").to eq "foo"
     end
   end
 
   describe "#count" do
     it "expects parser p to parse n times" do
-      expect(count(2, string("foo")).parse("foofoofoo"))
+      expect(count(2, lit("foo")).parse("foofoofoo"))
         .to eq ["foo", "foo"]
-      expect { count(2, string("foo")).parse "foo" }
+      expect { count(2, lit("foo")).parse "foo" }
         .to raise_error Parsby::ExpectationFailed
     end
   end
@@ -398,14 +398,14 @@ RSpec.describe Parsby::Combinators do
 
   describe "#take_until" do
     it "returns everything until the provided parser matches" do
-      expect(take_until(string("baz")).parse("foobarbaztaz")).to eq "foobar"
+      expect(take_until(lit("baz")).parse("foobarbaztaz")).to eq "foobar"
     end
 
     it "doesn't consume the input that matches the provided parser" do
       expect(
         begin
           s = StringIO.new("foobarbaztaz")
-          take_until(string("baz")).parse(s)
+          take_until(lit("baz")).parse(s)
           s.read
         end
       ).to eq "baztaz"

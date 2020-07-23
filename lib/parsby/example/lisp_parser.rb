@@ -24,18 +24,18 @@ module Parsby::Example
     end
 
     define_combinator :comment do
-      string(";") \
-        + join(many(any_char.that_fails(string("\n")))) \
-        + (string("\n") | (eof > pure("")))
+      lit(";") \
+        + join(many(any_char.that_fails(lit("\n")))) \
+        + (lit("\n") | (eof > pure("")))
     end
 
     # Parses sexps with abbreviations, like '(foo bar) or `(foo ,bar).
     define_combinator :abbrev do
       choice(
-        string("'") > lazy { sexp }.fmap {|s| [:quote, [s, nil]]},
-        string("`") > lazy { sexp }.fmap {|s| [:quasiquote, [s, nil]]},
-        string(",@") > lazy { sexp }.fmap {|s| [:"unquote-splicing", [s, nil]]},
-        string(",") > lazy { sexp }.fmap {|s| [:unquote, [s, nil]]},
+        lit("'") > lazy { sexp }.fmap {|s| [:quote, [s, nil]]},
+        lit("`") > lazy { sexp }.fmap {|s| [:quasiquote, [s, nil]]},
+        lit(",@") > lazy { sexp }.fmap {|s| [:"unquote-splicing", [s, nil]]},
+        lit(",") > lazy { sexp }.fmap {|s| [:unquote, [s, nil]]},
       )
     end
 
@@ -43,17 +43,17 @@ module Parsby::Example
       Parsby.new :list do |io|
         braces = {"(" => ")", "[" => "]"}
         opening_brace = char_in(braces.keys.join).parse io
-        (spaced(inner_list) < string(braces[opening_brace])).parse io
+        (spaced(inner_list) < lit(braces[opening_brace])).parse io
       end
     end
 
     define_combinator :inner_list do
       choice(
-        peek(string(")")) > pure(nil),
+        peek(lit(")")) > pure(nil),
         group(
           lazy { sexp },
           choice(
-            spaced(string(".")) > lazy { sexp },
+            spaced(lit(".")) > lazy { sexp },
             optional(whitespace > lazy { inner_list }),
           ),
         ),
@@ -89,21 +89,21 @@ module Parsby::Example
     end
 
     define_combinator :escape_sequence do
-      string("\\") > choice([
-        string("\"") > pure("\""),
-        string("n") > pure("\n"),
-        string("t") > pure("\t"),
-        string("r") > pure("\r"),
-        string("x") > (hex_digit * 2)
+      lit("\\") > choice([
+        lit("\"") > pure("\""),
+        lit("n") > pure("\n"),
+        lit("t") > pure("\t"),
+        lit("r") > pure("\r"),
+        lit("x") > (hex_digit * 2)
           .fmap {|(d1, d2)| (d1 + d2).to_i(16).chr },
-        string("\\"),
+        lit("\\"),
       ])
     end
 
     define_combinator :lisp_string, primitive: true do
-      between(string('"'), string('"'),
+      between(lit('"'), lit('"'),
         join(many(choice(
-          any_char.that_fails(string("\\") | string('"')),
+          any_char.that_fails(lit("\\") | lit('"')),
           escape_sequence,
         )))
       )
@@ -111,9 +111,9 @@ module Parsby::Example
 
     define_combinator :number, primitive: true do
       group(
-        optional(string("-") | string("+")),
+        optional(lit("-") | lit("+")),
         decimal,
-        optional(empty << string(".") << optional(decimal)),
+        optional(empty << lit(".") << optional(decimal)),
       ).fmap do |(sign, whole_part, (_, fractional_part))|
         n = whole_part
         n += (fractional_part || 0).to_f / 10 ** fractional_part.to_s.length

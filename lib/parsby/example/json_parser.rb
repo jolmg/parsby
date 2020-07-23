@@ -14,13 +14,13 @@ module Parsby::Example
     end
 
     def null
-      string("null") > pure(nil)
+      lit("null") > pure(nil)
     end
 
     def bool
       choice(
-        string("true") > pure(true),
-        string("false") > pure(false),
+        lit("true") > pure(true),
+        lit("false") > pure(false),
       )
     end
 
@@ -29,16 +29,16 @@ module Parsby::Example
     # example of using Parsby, and this works well for showing how to use
     # `group` and `fmap`.
     def number 
-      sign = string("-") | string("+")
+      sign = lit("-") | lit("+")
       group(
         optional(sign),
         decimal,
         optional(group(
-          string("."),
+          lit("."),
           decimal,
         )),
         optional(group(
-          string("e") | string("E"),
+          lit("e") | lit("E"),
           optional(sign),
           decimal,
         )),
@@ -55,37 +55,37 @@ module Parsby::Example
       end
     end
 
-    def json_string
-      between(string('"'), string('"'),
+    def string
+      between(lit('"'), lit('"'),
         join(many(choice(
-          any_char.that_fails(string('"') | string("\\")),
-          string("\\") > choice(
-            string('"'),
-            string("\\"),
-            string("/"),
-            string("f") > pure("\f"),
-            string("b") > pure("\b"),
-            string("r") > pure("\r"),
-            string("n") > pure("\n"),
-            string("t") > pure("\t"),
-            string("u") > join(hex_digit * 4).fmap {|s| [s.hex].pack("U") },
+          any_char.that_fails(lit('"') | lit("\\")),
+          lit("\\") > choice(
+            lit('"'),
+            lit("\\"),
+            lit("/"),
+            lit("f") > pure("\f"),
+            lit("b") > pure("\b"),
+            lit("r") > pure("\r"),
+            lit("n") > pure("\n"),
+            lit("t") > pure("\t"),
+            lit("u") > join(hex_digit * 4).fmap {|s| [s.hex].pack("U") },
           ),
         )))
       )
     end
 
     def array
-      between(string("["), ws > string("]"), sep_by(spaced(lazy { value }), string(",")))
+      between(lit("["), ws > lit("]"), sep_by(spaced(lazy { value }), lit(",")))
     end
 
     def object
-      between(string("{"), ws > string("}"),
+      between(lit("{"), ws > lit("}"),
         sep_by(
           spaced(group(
-            json_string < spaced(string(":")),
+            json_string < spaced(lit(":")),
             lazy { value }
           )),
-          string(","),
+          lit(","),
         )
       ).fmap(&:to_h)
     end
