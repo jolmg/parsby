@@ -75,17 +75,16 @@ module Parsby::Example
     end
 
     def array
-      between(lit("["), ws > lit("]"), sep_by(spaced(lazy { value }), lit(",")))
+      between(lit("["), ws > lit("]"), sep_by(lit(","), spaced(lazy { value })))
     end
 
     def object
       between(lit("{"), ws > lit("}"),
-        sep_by(
+        sep_by(lit(","),
           spaced(group(
             json_string < spaced(lit(":")),
             lazy { value }
           )),
-          lit(","),
         )
       ).fmap(&:to_h)
     end

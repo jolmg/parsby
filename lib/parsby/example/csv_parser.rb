@@ -17,7 +17,7 @@ module Parsby::Example
     end
 
     def record
-      sep_by(cell, lit(",")) < (eol | eof)
+      sep_by(lit(","), cell) < (eol | eof)
     end
 
     def cell
@@ -26,7 +26,7 @@ module Parsby::Example
 
     def quoted_cell
       non_quote = join(many(any_char.that_fail(lit('"'))))
-      inner = sep_by(non_quote, lit('""')).fmap {|r| r.join '"' }
+      inner = sep_by(lit('""'), non_quote).fmap {|r| r.join '"' }
       lit('"') > inner < lit('"')
     end
 

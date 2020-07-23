@@ -277,12 +277,12 @@ class Parsby
     # Like many, but accepts another parser for separators. It returns a list
     # of the results of the first argument. Returns an empty list if it
     # didn't match even once, so it never fails.
-    define_combinator :sep_by do |p, s|
-      sep_by_1(p, s) | empty
+    define_combinator :sep_by do |s, p|
+      sep_by_1(s, p) | empty
     end
 
     # Like sep_by, but fails if it can't match even once.
-    define_combinator :sep_by_1 do |p, s|
+    define_combinator :sep_by_1 do |s, p|
       single(p) + many(s > p)
     end
 

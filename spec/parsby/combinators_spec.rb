@@ -256,22 +256,22 @@ RSpec.describe Parsby::Combinators do
 
   describe "#sep_by_1" do
     it "is like sep_by, but fails if it can't match even once" do
-      expect(sep_by_1(lit("foo"), lit(", ")).parse "foo, foo, foo")
+      expect(sep_by_1(lit(", "), lit("foo")).parse "foo, foo, foo")
         .to eq ["foo", "foo", "foo"]
-      expect(sep_by_1(lit("foo"), lit(", ")).parse "foo")
+      expect(sep_by_1(lit(", "), lit("foo")).parse "foo")
         .to eq ["foo"]
-      expect { sep_by_1(lit("foo"), lit(", ")).parse "bar, bar, bar" }
+      expect { sep_by_1(lit(", "), lit("foo")).parse "bar, bar, bar" }
         .to raise_error Parsby::ExpectationFailed
     end
   end
 
   describe "#sep_by" do
     it "is like many, but allowing you to specify a separating parser" do
-      expect(sep_by(lit("foo"), lit(", ")).parse "foo, foo, foo")
+      expect(sep_by(lit(", "), lit("foo")).parse "foo, foo, foo")
         .to eq ["foo", "foo", "foo"]
-      expect(sep_by(lit("foo"), lit(", ")).parse "foo")
+      expect(sep_by(lit(", "), lit("foo")).parse "foo")
         .to eq ["foo"]
-      expect(sep_by(lit("foo"), lit(", ")).parse "bar, bar, bar")
+      expect(sep_by(lit(", "), lit("foo")).parse "bar, bar, bar")
         .to eq []
     end
   end
