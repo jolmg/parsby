@@ -24,6 +24,10 @@ module Parsby::Example
       )
     end
 
+    # This has been adopted as Parsby::Combinators#fractional_decimal, but
+    # we leave this definition here since this module is supposed to be an
+    # example of using Parsby, and this works well for showing how to use
+    # `group` and `fmap`.
     def number 
       sign = string("-") | string("+")
       group(

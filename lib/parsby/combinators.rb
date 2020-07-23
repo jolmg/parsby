@@ -102,6 +102,34 @@ class Parsby
       many_1(decimal_digit).fmap {|ds| ds.join.to_i } % token("number")
     end
 
+    # This is taken from the Json subparser for numbers.
+    define_combinator :decimal_fraction do 
+      sign = string("-") | string("+")
+      group(
+        optional(sign),
+        decimal,
+        optional(group(
+          string("."),
+          decimal,
+        )),
+        optional(group(
+          string("e") | string("E"),
+          optional(sign),
+          decimal,
+        )),
+      ).fmap do |(sign, whole, (_, fractional), (_, exponent_sign, exponent))|
+        n = whole
+        n += fractional.to_f / 10 ** fractional.to_s.length if fractional
+        n *= -1 if sign == "-"
+        if exponent
+          e = exponent
+          e *= -1 if exponent_sign == "-"
+          n *= 10 ** e
+        end
+        n
+      end
+    end
+
     # Parses single digit in range 0-9. Returns string, not number.
     define_combinator :decimal_digit do
       char_matching /[0-9]/
