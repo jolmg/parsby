@@ -73,7 +73,7 @@ class Parsby
     define_combinator :lit, wrap_parser: false do |e, case_sensitive: true|
       Parsby.new e.inspect do |c|
         a = c.bio.read e.length
-        if case_sensitive ? a == e : a.downcase == e.downcase
+        if case_sensitive ? a == e : a.to_s.downcase == e.downcase
           a
         else
           raise ExpectationFailed.new c
