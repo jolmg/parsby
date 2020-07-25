@@ -292,14 +292,8 @@ class Parsby
     end
 
     # Tries the given parser and returns nil if it fails.
-    define_combinator :optional, wrap_parser: false do |p|
-      Parsby.new do |c|
-        begin
-          p.parse c
-        rescue Error
-          nil
-        end
-      end
+    define_combinator :optional do |p|
+      p | pure(nil)
     end
 
     # Parses any char. Only fails on EOF.
