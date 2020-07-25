@@ -228,6 +228,19 @@ class Parsby
       Parsby.new {|c| b.call.parse c }
     end
 
+    # Make a recursive parser. Block shall take an argument and return a
+    # parser. The block's argument is the parser it returns.
+    #
+    # Example:
+    #
+    #   recursive {|p|
+    #     single(lit("(") > optional(p) < lit(")"))
+    #   }.parse "((()))"
+    #   #=> [[[nil]]]
+    define_combinator :recursive do |&b|
+      p = lazy { b.call p }
+    end
+
     # Results in empty array without consuming input. This is meant to be
     # used to start off use of <<.
     #
