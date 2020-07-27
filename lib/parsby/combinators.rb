@@ -247,7 +247,8 @@ class Parsby
     # parses using result of block, the result of the parse is passed again
     # to the block, and so on until the returned parser fails. Returns the
     # last result before failure. Immediate failure means that the initial
-    # value passed to reduce is returned.
+    # value passed to reduce is returned. This means that this parser can't
+    # fail.
     #
     # This combinator is meant to make shift-reduce parsers for LR
     # grammars.
@@ -259,6 +260,22 @@ class Parsby
           accum
         end
       end
+    end
+
+    # Like reduce, but argument should be a parser instead of a regular
+    # value / parser result. Shortcut for common pattern combining #then
+    # and #reduce. Example:
+    #
+    #   reducep(foo) {|accum| bar accum }
+    #
+    # is the same as
+    #
+    #   foo.then {|foo_result| reduce(foo_result) {|accum| bar accum } }
+    #
+    # Unlike #reduce, #reducep can fail. That's only when the initial
+    # parser fails.
+    define_combinator :reducep do |initp, &b|
+      initp.then {|init| reduce(init, &b) }
     end
 
     # Results in empty array without consuming input. This is meant to be
