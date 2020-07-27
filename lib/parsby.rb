@@ -628,8 +628,31 @@ class Parsby
   #   decimal.fmap {|x| x + 1}.parse("2")
   #   => 3
   def fmap(&b)
-    Parsby.new "#{self.label}.fmap" do |c|
+    Parsby.new "#{label}.fmap" do |c|
       b.call parse c
+    end
+  end
+
+  # Pass result of self parser to block to construct the next parser.
+  #
+  # For example, instead of writing:
+  #
+  #   Parsby.new do |c|
+  #     x = foo.parse c
+  #     bar(x).parse c
+  #   end
+  #
+  # you can write:
+  #
+  #   foo.then {|x| bar x }
+  #
+  # This is analogous to Parsec's >>= operator in Haskell, where you could
+  # write:
+  #
+  #   foo >>= bar
+  def then(&b)
+    Parsby.new "#{label}.then" do |c|
+      b.call(parse(c)).parse(c)
     end
   end
 
