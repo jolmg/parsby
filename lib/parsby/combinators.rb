@@ -237,8 +237,28 @@ class Parsby
     #     single(lit("(") > optional(p) < lit(")"))
     #   }.parse "((()))"
     #   #=> [[[nil]]]
+    #
+    # This is analogous to Haskell's fix function.
     define_combinator :recursive do |&b|
       p = lazy { b.call p }
+    end
+
+    # Similar to Enumerable's #reduce. Passes argument value to block,
+    # parses using result of block, the result of the parse is passed again
+    # to the block, and so on until the returned parser fails. Returns the
+    # last result before failure. Immediate failure means that the initial
+    # value passed to reduce is returned.
+    #
+    # This combinator is meant to make shift-reduce parsers for LR
+    # grammars.
+    define_combinator :reduce, wrap_parser: false do |accum, &b|
+      Parsby.new do |c|
+        begin
+          accum = b.call(accum).parse(c) while true
+        rescue ExpectationFailed
+          accum
+        end
+      end
     end
 
     # Results in empty array without consuming input. This is meant to be
