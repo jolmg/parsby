@@ -243,39 +243,30 @@ class Parsby
       p = lazy { b.call p }
     end
 
-    # Similar to Enumerable's #reduce. Passes argument value to block,
-    # parses using result of block, the result of the parse is passed again
-    # to the block, and so on until the returned parser fails. Returns the
-    # last result before failure. Immediate failure means that the initial
-    # value passed to reduce is returned. This means that this parser can't
-    # fail.
+    # Similar to Enumerable's #reduce. Takes parser as argument, passes the
+    # parsing result to the block, parses using result of block, the result
+    # of the parse is passed again to the block, and so on until the
+    # returned parser fails. Returns the last result before failure.
+    #
+    # The only way for this parser to fail is if the initial parser passed
+    # as argument fails.
     #
     # This combinator is meant to make shift-reduce parsers for LR
     # grammars.
-    define_combinator :reduce, wrap_parser: false do |accum, &b|
-      Parsby.new do |c|
-        begin
-          accum = b.call(accum).parse(c) while true
-        rescue ExpectationFailed
-          accum
+    define_combinator :reduce, wrap_parser: false do |init, &b|
+      init.then do |accum|
+        Parsby.new do |c|
+          begin
+            accum = b.call(accum).parse(c) while true
+          rescue ExpectationFailed
+            accum
+          end
         end
       end
     end
 
-    # Like reduce, but argument should be a parser instead of a regular
-    # value / parser result. Shortcut for common pattern combining #then
-    # and #reduce. Example:
-    #
-    #   reducep(foo) {|accum| bar accum }
-    #
-    # is the same as
-    #
-    #   foo.then {|foo_result| reduce(foo_result) {|accum| bar accum } }
-    #
-    # Unlike #reduce, #reducep can fail. That's only when the initial
-    # parser fails.
-    define_combinator :reducep do |initp, &b|
-      initp.then {|init| reduce(init, &b) }
+    define_combinator :fmap do |p, &b|
+      p.fmap(&b)
     end
 
     # Results in empty array without consuming input. This is meant to be
