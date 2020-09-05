@@ -163,6 +163,14 @@ class Parsby
       end
     end
 
+    def splice!(*paths)
+      self.children = paths.map {|p| find(p).tap {|d| d.parent = self } }
+    end
+
+    def splice(*paths)
+      dup.splice!(*paths)
+    end
+
     def keep_only!(*paths)
       self.children = paths
         .group_by(&:first)
