@@ -24,10 +24,10 @@ class Parsby
           p = m.bind(self).call(*args, &b2)
           if wrap_parser
             Parsby.new(label) {|c| p.parse c }.tap do |p2|
-              p2.splicing = splicing
+              p2.splicing = splicing if splicing
             end
           else
-            p.splicing = splicing
+            p.splicing = splicing if splicing
             p % label
           end
         end
@@ -168,9 +168,14 @@ class Parsby
 
     # Tries each provided parser until one succeeds. Providing an empty
     # list causes parser to always fail, like how [].any? is false.
-    define_combinator :choice do |*ps|
+    define_combinator :choice, wrap_parser: false do |*ps|
       ps = ps.flatten
-      ps.reduce(unparseable, :|)
+      i = 0
+      ps.reduce(unparseable) do |a, p|
+        r = wrap(a | p, splicing: [*(0...i).map {|n| [0, 0, n] }, [0, 1]])
+        i += 1
+        r
+      end
     end
 
     # Parses a single char from those contained in the string argument.
@@ -209,6 +214,10 @@ class Parsby
     # <tt>p</tt> is large to write.
     define_combinator :between do |left, right, p|
       left > p < right
+    end
+
+    def wrap(p, *args)
+      Parsby.new(*args) {|c| p.parse c }
     end
 
     # Turns parser into one that doesn't consume input.

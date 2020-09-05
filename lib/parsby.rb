@@ -249,7 +249,16 @@ class Parsby
           this_slice_length = range.right_tree_slice.length
           if prev_slice_length && this_slice_length > prev_slice_length
             fork_line = line.gsub(/./, " ")
-            fork_line << " #{range.right_tree_slice.rjust(max_tree_slice_length).sub(/\*/, "\\")}"
+            fork_line << " "
+            i = 0
+            fork_line << range.right_tree_slice.rjust(max_tree_slice_length).gsub(/[*|]/) do |c|
+              i += 1
+              if i <= this_slice_length - prev_slice_length
+                "\\"
+              else
+                c 
+              end
+            end
             fork_line << "\n"
           else
             fork_line = ""
