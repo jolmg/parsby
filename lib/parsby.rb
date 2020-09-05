@@ -148,14 +148,14 @@ class Parsby
       "*" + "|" * right_uncles
     end
 
-    def dup(from_parent: false)
+    def dup(currently_descending: false)
       self_path = path
-      if parent && !from_parent
+      if parent && !currently_descending
         root.dup.find self_path
       else
         super().tap do |d|
           d.children = d.children.map do |c|
-            c.dup(from_parent: true).tap do |dc|
+            c.dup(currently_descending: true).tap do |dc|
               dc.parent = d
             end
           end
