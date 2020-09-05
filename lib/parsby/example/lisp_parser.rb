@@ -76,7 +76,7 @@ module Parsby::Example
       )
     end
 
-    define_combinator :symbol, primitive: true do
+    define_combinator :symbol, splicing: [] do
       join(many_1(symbol_char)).fmap(&:to_sym)
     end
 
@@ -100,7 +100,7 @@ module Parsby::Example
       ])
     end
 
-    define_combinator :lisp_string, primitive: true do
+    define_combinator :lisp_string, splicing: [] do
       between(lit('"'), lit('"'),
         join(many(choice(
           any_char.that_fails(lit("\\") | lit('"')),
@@ -109,7 +109,7 @@ module Parsby::Example
       )
     end
 
-    define_combinator :number, primitive: true do
+    define_combinator :number, splicing: [] do
       group(
         optional(lit("-") | lit("+")),
         decimal,

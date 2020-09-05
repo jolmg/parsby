@@ -6,7 +6,7 @@ class Parsby
       # The only reason to use this over regular def syntax is to get
       # automatic labels. For combinators defined with this, you'll get
       # labels that resemble the corresponding ruby expression.
-      def define_combinator(name, wrap_parser: true, primitive: false, &b)
+      def define_combinator(name, wrap_parser: true, splicing: nil, &b)
         # This is necessary not only to convert the proc to something
         # that'll verify arity, but also to get super() in b to work.
         define_method(name, &b)
@@ -23,9 +23,11 @@ class Parsby
           # label.
           p = m.bind(self).call(*args, &b2)
           if wrap_parser
-            Parsby.new(label) {|c| p.parse c }.tap {|p2| p2.primitive = primitive }
+            Parsby.new(label) {|c| p.parse c }.tap do |p2|
+              p2.splicing = splicing
+            end
           else
-            p.primitive = primitive
+            p.splicing = splicing
             p % label
           end
         end
@@ -172,7 +174,7 @@ class Parsby
     end
 
     # Parses a single char from those contained in the string argument.
-    define_combinator :char_in, wrap_parser: false, primitive: true do |s|
+    define_combinator :char_in, wrap_parser: false, splicing: [] do |s|
       Parsby.new do |c|
         char = any_char.parse c
         unless s.chars.include? char
@@ -192,14 +194,14 @@ class Parsby
 
     # Parses string of 1 or more continuous whitespace characters (" ",
     # "\t", "\n", "\r")
-    define_combinator :whitespace_1 do
+    define_combinator :whitespace_1, splicing: [] do
       join(many_1(char_in(" \t\n\r")))
     end
 
     alias_method :ws_1, :whitespace_1
 
     # Expects p to be surrounded by optional whitespace.
-    define_combinator :spaced do |p|
+    define_combinator :spaced, splicing: [[0, 0, 1]] do |p|
       ws > p < ws
     end
 

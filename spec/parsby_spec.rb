@@ -70,12 +70,11 @@ RSpec.describe Parsby do
         ).to eq <<~ERROR
           line 2:
             bar bar box
-                    \\-/ expected: lit("bar")
-                    | expected: (whitespace() > lit("bar"))
-                    | expected: spaced(lit("bar"))
-            -------/ expected: (spaced(lit("bar")) * 3)
-            <- expected: (lit("foo") > (spaced(lit("bar")) * 3))
-            <- expected: ((lit("foo") > (spaced(lit("bar")) * 3)) < eof())
+                    \\-/ * failure: lit("bar")
+                    |   * failure: spaced(lit("bar"))
+            -------/    * failure: (spaced(lit("bar")) * 3)
+            <-          * failure: (lit("foo") > (spaced(lit("bar")) * 3))
+            <-          * failure: ((lit("foo") > (spaced(lit("bar")) * 3)) < eof)
         ERROR
       end
     end
