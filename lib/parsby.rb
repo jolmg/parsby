@@ -171,7 +171,7 @@ class Parsby
       dup.splice!(*paths)
     end
 
-    def keep_only!(*paths)
+    def trim_to_just!(*paths)
       self.children = paths
         .group_by(&:first)
         .to_a
@@ -179,7 +179,7 @@ class Parsby
         .map do |(child_index, child_paths)|
           if child_index
             child_subpaths = child_paths.map {|p| p.drop 1 }
-            children[child_index].keep_only!(*child_subpaths)
+            children[child_index].trim_to_just!(*child_subpaths)
           end
         end
       self
@@ -233,7 +233,7 @@ class Parsby
         range.start == parsed_range.start && range != parsed_range
       end
       r = "line #{ctx.bio.line_number}:\n"
-      failure_tree = parsed_range.dup.root.keep_only!(*[parsed_range, *other_ranges].map(&:path))
+      failure_tree = parsed_range.dup.root.trim_to_just!(*[parsed_range, *other_ranges].map(&:path))
       ctx.bio.with_saved_pos do
         ctx.bio.seek parsed_range.start
         r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
