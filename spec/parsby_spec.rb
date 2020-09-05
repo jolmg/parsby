@@ -139,6 +139,20 @@ RSpec.describe Parsby do
           [t1.parent.x, t1.parent.object_id == t0.parent.object_id ]
         )).to eq ["foo", false]
       end
+
+      it "duplicates siblings" do
+        expect((
+          t0 = tree("foo") { |t|
+            t << tree("foo_bar")
+            t << tree("foo_baz")
+          }.children.first
+          t1 = t0.dup
+          [
+            t1.parent.children.last.x,
+            t1.parent.children.last.object_id == t0.parent.children.last.object_id,
+          ]
+        )).to eq ["foo_baz", false]
+      end
     end
 
     describe "#flatten" do
