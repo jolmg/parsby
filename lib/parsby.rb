@@ -148,11 +148,16 @@ class Parsby
       "*" + "|" * right_uncles
     end
 
-    def dup
-      super.tap do |d|
-        d.children = d.children.map do |c|
-          c.dup.tap do |dc|
-            dc.parent = d
+    def dup(from_parent: false)
+      self_path = path
+      if parent && !from_parent
+        root.dup.find self_path
+      else
+        super().tap do |d|
+          d.children = d.children.map do |c|
+            c.dup(from_parent: true).tap do |dc|
+              dc.parent = d
+            end
           end
         end
       end
@@ -172,7 +177,9 @@ class Parsby
       self
     end
 
-    def find((idx, *sub_path))
+    def find(path)
+      return self if path.empty?
+      idx, *sub_path = path
       children[idx].find sub_path
     end
 

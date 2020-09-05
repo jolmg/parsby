@@ -119,6 +119,26 @@ RSpec.describe Parsby do
           false,
         ]
       end
+
+      it "redirects parents of children" do
+        expect((
+          t0 = tree("foo") { |t|
+            t << tree("foo_bar")
+          }
+          t1 = t0.dup
+          t1.children.first.parent == t1
+        )).to eq true
+      end
+
+      it "duplicates parents" do
+        expect((
+          t0 = tree("foo") { |t|
+            t << tree("foo_bar")
+          }.children.first
+          t1 = t0.dup
+          [t1.parent.x, t1.parent.object_id == t0.parent.object_id ]
+        )).to eq ["foo", false]
+      end
     end
 
     describe "#flatten" do
