@@ -97,6 +97,30 @@ RSpec.describe Parsby do
       end
     end
 
+    describe "#dup" do
+      it "duplicates self" do
+        expect(tree("foo").dup.x).to eq "foo"
+        expect((t = tree("foo"); t.dup.object_id == t.object_id)).to eq false
+      end
+
+      it "duplicates children" do
+        expect((
+          t0 = tree("foo") { |t|
+            t << tree("foo_bar")
+            t << tree("foo_baz")
+          }
+          t1 = t0.dup
+          [
+            t1.children.map(&:x),
+            t1.children.map(&:object_id) == t0.children.map(&:object_id),
+          ]
+        )).to eq [
+          ["foo_bar", "foo_baz"],
+          false,
+        ]
+      end
+    end
+
     describe "#flatten" do
       it "flattens the tree into an array" do
         expect(

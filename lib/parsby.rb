@@ -149,7 +149,13 @@ class Parsby
     end
 
     def dup
-      super.tap {|d| d.children.map! {|c| c.dup.tap {|dc| dc.parent = d } } }
+      super.tap do |d|
+        d.children = d.children.map do |c|
+          c.dup.tap do |dc|
+            dc.parent = d
+          end
+        end
+      end
     end
 
     def keep_only!(*paths)
