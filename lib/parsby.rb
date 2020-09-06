@@ -688,19 +688,6 @@ class Parsby
     end
   end
 
-  # Allows you to modify the exception to add information when defining the
-  # parser via combinators.
-  def on_catch(&b)
-    Parsby.new do |c|
-      begin
-        parse c
-      rescue Error => e
-        b.call e
-        raise
-      end
-    end
-  end
-
   # Peeks to see whether parser would succeed if applied.
   def would_succeed(c)
     begin
