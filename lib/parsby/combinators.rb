@@ -373,17 +373,6 @@ class Parsby
       end
     end
 
-    # Take characters until p matches.
-    define_combinator :take_until, wrap_parser: false do |p, with: any_char|
-      Parsby.new do |c|
-        r = ""
-        until p.would_succeed(c)
-          r << with.parse(c)
-        end
-        r
-      end
-    end
-
     # Makes a token with the given name.
     def token(name)
       Parsby::Token.new name

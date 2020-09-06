@@ -396,22 +396,6 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
-  describe "#take_until" do
-    it "returns everything until the provided parser matches" do
-      expect(take_until(lit("baz")).parse("foobarbaztaz")).to eq "foobar"
-    end
-
-    it "doesn't consume the input that matches the provided parser" do
-      expect(
-        begin
-          s = StringIO.new("foobarbaztaz")
-          take_until(lit("baz")).parse(s)
-          s.read
-        end
-      ).to eq "baztaz"
-    end
-  end
-
   describe "#token" do
     it "builds a token with the given name" do
       expect(token "foo").to be_a(Parsby::Token).and satisfy {|t| t.name == "foo"}

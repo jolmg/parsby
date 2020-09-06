@@ -688,17 +688,6 @@ class Parsby
     end
   end
 
-  # Peeks to see whether parser would succeed if applied.
-  def would_succeed(c)
-    begin
-      peek c
-    rescue Error
-      false
-    else
-      true
-    end
-  end
-
   # <tt>x.that_fails(y)</tt> will try <tt>y</tt>, fail if <tt>y</tt>
   # succeeds, or parse with <tt>x</tt> if <tt>y</tt>
   # fails.

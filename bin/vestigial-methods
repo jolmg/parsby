@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Vestigial methods are those that are defined, but not used anywhere else
+# lib/. This is to help us detect methods that we no longer use to
+# determine whether to remove them. If a vestigial method is still useful
+# for users of this library or otherwise, add it to the whitelist below.
+
 for n in $(grep -Phro '^[^#]*(def (self\.)?|define_combinator :)\K\w+' lib | sort -u); do
   printf "%s\t%s\n" \
     "$(grep -Frn "$n" lib | grep -Ev '#[^{]|\b(def|define_combinator|require)\b' | wc -l)" \
@@ -13,6 +18,10 @@ done | awk '
     return is_ruby_hook() \
       || $2 == "define_combinator" \
       || $2 == "parsby" \
+      || $2 == "ilit" \
+      || $2 == "recursive" \
+      || $2 == "decimal_fraction" \
+      || $2 == "left_tree_slice" \
     ;
   }
 
