@@ -164,7 +164,9 @@ class Parsby
     end
 
     def splice!(*paths)
-      self.children = paths.map {|p| find(p).tap {|d| d.parent = self } }
+      self.children = paths
+        .map {|p| find(p)&.tap {|d| d.parent = self } }
+        .reject(&:nil?)
     end
 
     def splice(*paths)
@@ -188,7 +190,8 @@ class Parsby
     def find(path)
       return self if path.empty?
       idx, *sub_path = path
-      children[idx].find sub_path
+      child = children[idx]
+      child&.find sub_path
     end
 
     def self_and_ancestors

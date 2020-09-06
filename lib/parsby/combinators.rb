@@ -172,9 +172,10 @@ class Parsby
       ps = ps.flatten
       i = 0
       ps.reduce(unparseable) do |a, p|
-        r = wrap(a | p, splicing: [*(0...i).map {|n| [0, 0, n] }, [0, 1]])
-        i += 1
-        r
+        (a | p).tap do |o|
+          o.splicing = [*(0...i).map {|n| [0, n] }, [1]]
+          i += 1
+        end
       end
     end
 

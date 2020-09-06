@@ -14,7 +14,7 @@ module Parsby::Example
     end
 
     define_combinator :sexp do
-      abbrev | atom | list
+      choice(abbrev, atom, list)
     end
 
     # Add comments to definition of whitespace. whitespace is defined using
