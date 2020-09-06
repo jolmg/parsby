@@ -235,10 +235,10 @@ class Parsby
       other_ranges = ctx.parsed_ranges.flatten.select do |range|
         range.start == parsed_range.start && range != parsed_range
       end
-      r = "line #{ctx.bio.line_number}:\n"
       failure_tree = parsed_range.dup.root.trim_to_just!(*[parsed_range, *other_ranges].map(&:path))
       ctx.bio.with_saved_pos do
         ctx.bio.seek parsed_range.start
+        r = "line #{ctx.bio.line_number}:\n"
         r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
         line_range = ctx.bio.current_line_range
         tree_lines = []
