@@ -48,7 +48,7 @@ RSpec.describe Parsby::Example::LispParser do
     end
   end
 
-  describe "#inner_list" do
+  describe "#list_insides" do
     it "accepts lists with pair ends"
   end
 

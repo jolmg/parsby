@@ -43,18 +43,18 @@ module Parsby::Example
       Parsby.new :list do |io|
         braces = {"(" => ")", "[" => "]"}
         opening_brace = char_in(braces.keys.join).parse io
-        (spaced(inner_list) < lit(braces[opening_brace])).parse io
+        (spaced(list_insides) < lit(braces[opening_brace])).parse io
       end
     end
 
-    define_combinator :inner_list do
+    define_combinator :list_insides do
       choice(
         peek(lit(")")) > pure(nil),
         group(
           lazy { sexp },
           choice(
             spaced(lit(".")) > lazy { sexp },
-            optional(whitespace > lazy { inner_list }),
+            optional(whitespace > lazy { list_insides }),
           ),
         ),
       )
