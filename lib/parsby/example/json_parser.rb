@@ -10,7 +10,7 @@ module Parsby::Example
     end
 
     def value
-      null | bool | number | json_string | array | object
+      null | bool | number | string | array | object
     end
 
     def null
@@ -82,7 +82,7 @@ module Parsby::Example
       between(lit("{"), ws > lit("}"),
         sep_by(lit(","),
           spaced(group(
-            json_string < spaced(lit(":")),
+            string < spaced(lit(":")),
             lazy { value }
           )),
         )

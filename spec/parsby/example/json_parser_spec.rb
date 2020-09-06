@@ -35,20 +35,20 @@ RSpec.describe Parsby::Example::JsonParser do
     end
   end
 
-  describe "#json_string" do
+  describe "#string" do
     it "parses simple strings" do
-      expect(json_string.parse '"foo"').to eq "foo"
+      expect(string.parse '"foo"').to eq "foo"
     end
 
     it "accepts escape sequences" do
-      expect(json_string.parse '"fo\\"o"').to eq "fo\"o"
-      expect(json_string.parse '"fo\\no"').to eq "fo\no"
-      expect(json_string.parse '"fo\\u03Bbo"').to eq "fo\u03bbo"
-      expect(json_string.parse '"fo\\fo"').to eq "fo\fo"
-      expect(json_string.parse '"fo\\ro"').to eq "fo\ro"
-      expect(json_string.parse '"fo\\\\o"').to eq "fo\\o"
-      expect(json_string.parse '"fo\\/o"').to eq "fo/o"
-      expect(json_string.parse '"fo\\bo"').to eq "fo\bo"
+      expect(string.parse '"fo\\"o"').to eq "fo\"o"
+      expect(string.parse '"fo\\no"').to eq "fo\no"
+      expect(string.parse '"fo\\u03Bbo"').to eq "fo\u03bbo"
+      expect(string.parse '"fo\\fo"').to eq "fo\fo"
+      expect(string.parse '"fo\\ro"').to eq "fo\ro"
+      expect(string.parse '"fo\\\\o"').to eq "fo\\o"
+      expect(string.parse '"fo\\/o"').to eq "fo/o"
+      expect(string.parse '"fo\\bo"').to eq "fo\bo"
     end
   end
 
