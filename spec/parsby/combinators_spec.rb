@@ -20,7 +20,7 @@ RSpec.describe Parsby::Combinators do
             end
             mod.foo.label
           end
-        ).to eq "foo()"
+        ).to eq "foo"
       end
 
       it "validates arity of arguments" do
