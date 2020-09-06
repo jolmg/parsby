@@ -151,7 +151,7 @@ class Parsby
     def dup(currently_descending: false)
       self_path = path
       if parent && !currently_descending
-        root.dup.find self_path
+        root.dup.get self_path
       else
         super().tap do |d|
           d.children = d.children.map do |c|
@@ -163,9 +163,15 @@ class Parsby
       end
     end
 
+    def splice_self!
+      idx = sibling_index
+      parent.children.delete_at(idx)
+      parent.children.insert(idx, *children.each {|c| c.parent = parent })
+    end
+
     def splice!(*paths)
       self.children = paths
-        .map {|p| find(p)&.tap {|d| d.parent = self } }
+        .map {|p| get(p)&.tap {|d| d.parent = self } }
         .reject(&:nil?)
     end
 
@@ -187,11 +193,28 @@ class Parsby
       self
     end
 
-    def find(path)
+    def select(&b)
+      r = []
+      each do |n|
+        if b.call n
+          r << n
+        end
+      end
+      r
+    end
+
+    def select_paths(&b)
+      root_path = path
+      select(&b).map do |n|
+        n.path.drop root_path.length
+      end
+    end
+
+    def get(path)
       return self if path.empty?
       idx, *sub_path = path
       child = children[idx]
-      child&.find sub_path
+      child&.get sub_path
     end
 
     def self_and_ancestors
@@ -200,16 +223,21 @@ class Parsby
   end
 
   class ParsedRange < PosRange
-    attr_reader :label
+    attr_reader :label, :is_splice_end
     attr_accessor :failed
 
     include Tree
 
     # Initialize failure with starting position, ending position, and
     # label of what was expected.
-    def initialize(pos_start, pos_end, label)
+    def initialize(pos_start, pos_end, label, is_splice_end = false)
       @label = label
+      @is_splice_end = is_splice_end
       super(pos_start, pos_end)
+    end
+
+    def splice_to_ends!
+      splice!(*select_paths(&:is_splice_end))
     end
 
     alias_method :underline, :render_in
@@ -536,9 +564,10 @@ class Parsby
   # Initialize parser with optional label argument, and parsing block. The
   # parsing block is given an IO as argument, and its result is the result
   # when parsing.
-  def initialize(label = nil, splicing: nil, &b)
+  def initialize(label = nil, splicing: nil, should_splice_self: false, &b)
     self.label = label if label
     @splicing = splicing
+    @should_splice_self = should_splice_self
     @parser = b
   end
 
@@ -551,25 +580,31 @@ class Parsby
   # Parse a String or IO object.
   def parse(src)
     ctx = src.is_a?(Context) ? src : Context.new(src)
-    parsed_range = ParsedRange.new(ctx.bio.pos, ctx.bio.pos, label)
+    parsed_range = ParsedRange.new(ctx.bio.pos, ctx.bio.pos, label, is_splice_end)
     ctx.parsed_ranges << parsed_range if ctx.parsed_ranges
     ctx.parsed_ranges = parsed_range
     begin
       r = @parser.call ctx
     rescue ExpectationFailed => e
-      parsed_range.end = ctx.bio.pos
-      parsed_range.failed = true
-      ctx.bio.restore_to parsed_range.start
+      ctx.parsed_ranges.end = ctx.bio.pos
+      ctx.parsed_ranges.failed = true
+      ctx.bio.restore_to ctx.parsed_ranges.start
       raise
     else
-      parsed_range.end = ctx.bio.pos
+      ctx.parsed_ranges.end = ctx.bio.pos
       r
     ensure
       if splicing
         parsed_range.splice!(*splicing)
       end
+      if is_splice_start
+        parsed_range.splice_to_ends!
+      end
       # Keep the root one for use in ExceptionFailed#message
-      ctx.parsed_ranges = ctx.parsed_ranges.parent unless ctx.parsed_ranges.parent.nil?
+      if ctx.parsed_ranges.parent
+        ctx.parsed_ranges = ctx.parsed_ranges.parent
+        parsed_range.splice_self! if should_splice_self
+      end
     end
   end
 
@@ -619,6 +654,23 @@ class Parsby
       parse c
       p.parse c
     end
+  end
+
+  attr_accessor :should_splice_self, :is_splice_start, :is_splice_end
+
+  def ~
+    @should_splice_self = true
+    self
+  end
+
+  def -@
+    @is_splice_start = true
+    self
+  end
+
+  def +@
+    @is_splice_end = true
+    self
   end
 
   # p * n, runs parser p n times, grouping results in an array.

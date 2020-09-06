@@ -39,7 +39,7 @@ module Parsby::Example
       )
     end
 
-    define_combinator :list, wrap_parser: false do
+    define_combinator :list, wrap_parser: false, splicing: [[1, 0, 0]] do
       Parsby.new :list do |io|
         braces = {"(" => ")", "[" => "]"}
         opening_brace = char_in(braces.keys.join).parse io
@@ -48,13 +48,13 @@ module Parsby::Example
     end
 
     define_combinator :list_insides do
-      choice(
+      ~-choice(
         peek(lit(")")) > pure(nil),
         group(
-          lazy { sexp },
+          lazy { +sexp },
           choice(
-            spaced(lit(".")) > lazy { sexp },
-            optional(whitespace > lazy { list_insides }),
+            +(spaced(lit(".")) > lazy { sexp }),
+            optional(whitespace > lazy { +list_insides }),
           ),
         ),
       )
