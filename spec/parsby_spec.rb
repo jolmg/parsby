@@ -88,11 +88,38 @@ RSpec.describe Parsby do
       def initialize(x)
         @x = x
       end
+
+      def whole_name
+        self_and_ancestors.reverse.map(&:x).join(".")
+      end
     end
 
     def tree(e, &b)
       TreeObj.new(e).tap do |t|
         t.tap(&b) if b
+      end
+    end
+
+    let :std_tree do
+      tree("root") { |t|
+        t.<< *3.times.map { |i|
+          tree("a#{i}") { |t|
+            t.<< *3.times.map { |i|
+              tree("b#{i}") { |t|
+                t.<< *3.times.map { |i|
+                  tree("c#{i}")
+                }
+              }
+            }
+          }
+        }
+      }
+    end
+
+    describe "#children" do
+      it "returns the children of the current node" do
+        expect(tree("foo").children).to eq []
+        expect(tree("foo") {|t| t << tree("bar") }.children.map(&:x)).to eq ["bar"]
       end
     end
 
@@ -211,6 +238,112 @@ RSpec.describe Parsby do
         expect(
           tree("foo").sibling_index
         ).to eq nil
+      end
+    end
+
+    describe "#sibling_reverse_index" do
+      it "returns index of self among siblings in reverse order" do
+        expect(
+          tree("foo") { |t|
+            t << tree("foo_bar")
+            t << tree("foo_baz")
+          }.children[1].sibling_reverse_index
+        ).to eq 0
+      end
+
+      it "returns nil for a root node" do
+        expect(
+          tree("foo").sibling_reverse_index
+        ).to eq nil
+      end
+    end
+
+    describe "#right_uncles" do
+      it "returns the sum of the number of latter siblings among all ancestors (uncles) and self (non-uncles)" do
+        expect(
+          std_tree.get([1,1,1]).right_uncles
+        ).to eq 3
+      end
+    end
+
+    describe "#get" do
+      it "returns child at the given path" do
+        expect(
+          std_tree.children[1].get([1,1]).path
+        ).to eq [1,1,1]
+      end
+    end
+
+    describe "#each" do
+      it "runs block for self and descendant nodes" do
+        expect((
+          r = []
+          std_tree.get([1,1]).each do |t|
+            r << t.whole_name
+          end
+          r
+        )).to eq ["root.a1.b1", "root.a1.b1.c0", "root.a1.b1.c1", "root.a1.b1.c2"]
+      end
+    end
+
+    describe "#select" do
+      it "selects among self and descendants according to block" do
+        expect(
+          std_tree.select {|t| t.x =~ /\Aa/}.map(&:whole_name)
+        ).to eq %w(root.a0 root.a1 root.a2)
+      end
+    end
+
+    describe "#select_paths" do
+      it "selects like #select, but returning paths relative to current node" do
+        expect(
+          std_tree.children[1].select_paths {|t| t.x =~ /\Ab/}
+        ).to eq [[0], [1], [2]]
+      end
+    end
+
+    describe "#right_tree_slice" do
+      it "returns a slice of a right-justified rendition of the tree for the current node" do
+        expect(
+          std_tree.get([1,1,1]).right_tree_slice
+        ).to eq "*|||"
+      end
+    end
+
+    describe "#trim_to_just!" do
+      it "removes all descendants except for those specified and their ancestors up to self" do
+        expect(
+          std_tree.children[1]
+            .trim_to_just!([1, 2], [2])
+            .select {true}.map(&:whole_name)
+        ).to eq %w(root.a1 root.a1.b1 root.a1.b1.c2 root.a1.b2)
+      end
+    end
+
+    describe "#splice_self!" do
+      it "removes self from tree, replacing itself among its siblings with its children" do
+        expect {
+          std_tree.children[1].splice_self!
+        }.to change { std_tree.children.map(&:x) }
+          .from(%w(a0 a1 a2))
+          .to(%w(a0 b0 b1 b2 a2))
+      end
+    end
+
+    describe "#splice" do
+      it "returns dup'ed tree where children are replaced with indicated descendants" do
+        expect(
+          std_tree.children[1].splice([1,1], [2,2]).children.map(&:whole_name)
+        ).to eq %w(root.a1.c1 root.a1.c2)
+      end
+    end
+
+    describe "#splice!" do
+      it "destructively replaces children with indicated descendants" do
+        expect((
+          std_tree.children[1].splice!([1,1], [2,2])
+          std_tree.children[1].children.map(&:whole_name)
+        )).to eq %w(root.a1.c1 root.a1.c2)
       end
     end
 

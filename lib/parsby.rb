@@ -77,9 +77,11 @@ class Parsby
       @children ||= []
     end
 
-    def <<(t)
-      t.parent = self
-      children << t
+    def <<(*ts)
+      ts.each do |t|
+        t.parent = self
+        children << t
+      end
     end
 
     def root
@@ -114,34 +116,12 @@ class Parsby
       self
     end
 
-    def right_each(&b)
-      b.call self
-      children.reverse.each {|c| c.right_each(&b) }
-      self
-    end
-
-    def depth
-      1 + children.max_by(&:depth)
-    end
-
-    def left_uncles
-      if parent
-        sibling_index + parent.left_uncles
-      else
-        0
-      end
-    end
-
     def right_uncles
       if parent
         sibling_reverse_index + parent.right_uncles
       else
         0
       end
-    end
-
-    def left_tree_slice
-      "|" * left_uncles + "*"
     end
 
     def right_tree_slice
@@ -167,12 +147,14 @@ class Parsby
       idx = sibling_index
       parent.children.delete_at(idx)
       parent.children.insert(idx, *children.each {|c| c.parent = parent })
+      parent
     end
 
     def splice!(*paths)
       self.children = paths
         .map {|p| get(p)&.tap {|d| d.parent = self } }
         .reject(&:nil?)
+      self
     end
 
     def splice(*paths)
