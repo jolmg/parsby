@@ -33,11 +33,11 @@ class Parsby
     end
 
     def completely_left_of?(range)
-      @end < range.start
+      @end <= range.start
     end
 
     def completely_right_of?(range)
-      @start > range.end
+      @start >= range.end
     end
 
     def contains?(pos)

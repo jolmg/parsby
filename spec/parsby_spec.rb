@@ -43,6 +43,292 @@ RSpec.describe Parsby do
     end
   end
 
+  describe Parsby::PosRange do
+    describe "#initialize" do
+      it "takes the start and end positions" do
+        expect((
+          r = Parsby::PosRange.new(10, 12)
+          [r.start, r.end]
+        )).to eq [10, 12]
+      end
+    end
+
+    describe "#length" do
+      it "is the difference of the start and end positions" do
+        expect(Parsby::PosRange.new(10, 12).length).to eq 2
+      end
+    end
+
+    describe "#contains?" do
+      it "is true when position is within bounds" do
+        expect(Parsby::PosRange.new(10, 12).contains?(11)).to eq true
+        expect(Parsby::PosRange.new(10, 12).contains?(9)).to eq false
+        expect(Parsby::PosRange.new(10, 12).contains?(13)).to eq false
+      end
+
+      it "is true when position is at the bounts" do
+        expect(Parsby::PosRange.new(10, 12).contains?(10)).to eq true
+        expect(Parsby::PosRange.new(10, 12).contains?(12)).to eq true
+      end
+    end
+
+    describe "#overlaps?" do
+      it "is true when partially overlapping" do
+        expect(
+          Parsby::PosRange.new(10, 12).overlaps?(
+            Parsby::PosRange.new(11, 13)
+          )
+        ).to eq true
+      end
+
+      it "is true when completely overlapping" do
+        expect(
+          Parsby::PosRange.new(10, 12).overlaps?(
+            Parsby::PosRange.new(9, 13)
+          )
+        ).to eq true
+        expect(
+          Parsby::PosRange.new(9, 13).overlaps?(
+            Parsby::PosRange.new(10, 12)
+          )
+        ).to eq true
+      end
+
+      it "is false when just touching a bound" do
+        expect(
+          Parsby::PosRange.new(10, 12).overlaps?(
+            Parsby::PosRange.new(12, 13)
+          )
+        ).to eq false
+
+        expect(
+          Parsby::PosRange.new(12, 13).overlaps?(
+            Parsby::PosRange.new(10, 12)
+          )
+        ).to eq false
+      end
+
+      it "is false when completely outside" do
+        expect(
+          Parsby::PosRange.new(10, 12).overlaps?(
+            Parsby::PosRange.new(13, 14)
+          )
+        ).to eq false
+      end
+    end
+
+    describe "#&" do
+      it "returns intersection of overlapping ranges" do
+        expect((
+          r = Parsby::PosRange.new(10, 12) \
+            & Parsby::PosRange.new(11, 13)
+          [r.start, r.end]
+        )).to eq [11, 12]
+      end
+
+      it "returns nil when ranges don't overlap" do
+        expect(
+          Parsby::PosRange.new(10, 12) \
+            & Parsby::PosRange.new(13, 14)
+        ).to eq nil
+      end
+    end
+
+    describe "#length_in" do
+      it "returns length of overlapping range" do
+        expect(
+          Parsby::PosRange.new(10, 12).length_in(
+            Parsby::PosRange.new(11, 13)
+          )
+        ).to eq 1
+      end
+
+      it "returns 0 when ranges don't overlap" do
+        expect(
+          Parsby::PosRange.new(10, 12).length_in(
+            Parsby::PosRange.new(13, 14)
+          )
+        ).to eq 0
+      end
+    end
+
+    describe "#starts_inside_of?" do
+      it "returns true if provided range contains our start" do
+        expect(
+          Parsby::PosRange.new(10, 12).starts_inside_of?(
+            Parsby::PosRange.new(11, 13)
+          )
+        ).to eq false
+
+        expect(
+          Parsby::PosRange.new(11, 13).starts_inside_of?(
+            Parsby::PosRange.new(10, 12)
+          )
+        ).to eq true
+      end
+    end
+
+    describe "#ends_inside_of?" do
+      it "returns true if provided range contains our start" do
+        expect(
+          Parsby::PosRange.new(10, 12).ends_inside_of?(
+            Parsby::PosRange.new(11, 13)
+          )
+        ).to eq true
+
+        expect(
+          Parsby::PosRange.new(11, 13).ends_inside_of?(
+            Parsby::PosRange.new(10, 12)
+          )
+        ).to eq false
+      end
+    end
+
+    describe "#completely_left_of?" do
+      it "is true only when our end comes before the provided range's start" do
+        expect(
+          Parsby::PosRange.new(10, 12).completely_left_of?(
+            Parsby::PosRange.new(14, 15)
+          )
+        ).to eq true
+
+        expect(
+          Parsby::PosRange.new(10, 12).completely_left_of?(
+            Parsby::PosRange.new(11, 13)
+          )
+        ).to eq false
+      end
+    end
+
+    describe "#completely_right_of?" do
+      it "is true only when our start comes after the provided range's end" do
+        expect(
+          Parsby::PosRange.new(14, 15).completely_right_of?(
+            Parsby::PosRange.new(10, 12)
+          )
+        ).to eq true
+
+        expect(
+          Parsby::PosRange.new(11, 13).completely_right_of?(
+            Parsby::PosRange.new(10, 12)
+          )
+        ).to eq false
+      end
+    end
+
+    describe "#completely_inside_of?" do
+      it "is true only when we start inside and end inside" do
+        expect(
+          Parsby::PosRange.new(10, 12).completely_inside_of?(
+            Parsby::PosRange.new(9, 13)
+          )
+        ).to eq true
+
+        expect(
+          Parsby::PosRange.new(10, 12).completely_inside_of?(
+            Parsby::PosRange.new(10, 12)
+          )
+        ).to eq true
+
+        expect(
+          Parsby::PosRange.new(10, 12).completely_inside_of?(
+            Parsby::PosRange.new(11, 13)
+          )
+        ).to eq false
+      end
+    end
+
+    describe "#render_in" do
+      it "renders range in another range" do
+        expect(
+          Parsby::PosRange.new(10, 14).render_in(
+            Parsby::PosRange.new(9, 16)
+          )
+        ).to eq " \\--/"
+      end
+
+      it "ranges of length 0 are rendered |" do
+        expect(
+          Parsby::PosRange.new(10, 10).render_in(
+            Parsby::PosRange.new(9, 16)
+          )
+        ).to eq " |"
+      end
+
+      it "ranges of length 1 are rendered V" do
+        expect(
+          Parsby::PosRange.new(10, 11).render_in(
+            Parsby::PosRange.new(9, 16)
+          )
+        ).to eq " V"
+      end
+
+      it "ranges of length 2 are rendered \\/" do
+        expect(
+          Parsby::PosRange.new(10, 12).render_in(
+            Parsby::PosRange.new(9, 16)
+          )
+        ).to eq " \\/"
+      end
+
+      it "ranges of length 3 are rendered \\-/" do
+        expect(
+          Parsby::PosRange.new(10, 13).render_in(
+            Parsby::PosRange.new(9, 16)
+          )
+        ).to eq " \\-/"
+      end
+
+      it "ranges that start before rendering range with overlap of 2 are rendered -/" do
+        expect(
+          Parsby::PosRange.new(10, 13).render_in(
+            Parsby::PosRange.new(11, 16)
+          )
+        ).to eq "-/"
+      end
+
+      it "ranges that start before rendering range with overlap of 1 are rendered /" do
+        expect(
+          Parsby::PosRange.new(10, 13).render_in(
+            Parsby::PosRange.new(12, 16)
+          )
+        ).to eq "/"
+      end
+
+      it "ranges that start before rendering range with overlap of 0 are rendered <-" do
+        expect(
+          Parsby::PosRange.new(10, 13).render_in(
+            Parsby::PosRange.new(13, 16)
+          )
+        ).to eq "<-"
+      end
+
+      it "ranges that end after rendering range with overlap of 0 are rendered ->" do
+        expect(
+          Parsby::PosRange.new(13, 16).render_in(
+            Parsby::PosRange.new(10, 13)
+          )
+        ).to eq "->"
+      end
+
+      it "ranges that end after rendering range with overlap of 1 are rendered \\" do
+        expect(
+          Parsby::PosRange.new(12, 16).render_in(
+            Parsby::PosRange.new(10, 13)
+          )
+        ).to eq "  \\"
+      end
+
+      it "ranges that end after rendering range with overlap of 2 are rendered \\-" do
+        expect(
+          Parsby::PosRange.new(11, 16).render_in(
+            Parsby::PosRange.new(10, 13)
+          )
+        ).to eq " \\-"
+      end
+    end
+  end
+
   describe Parsby::ExpectationFailed do
     describe "#initialize" do
       it "takes a context as argument" do
