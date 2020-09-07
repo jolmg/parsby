@@ -119,7 +119,7 @@ class Parsby
           decimal,
         )),
         optional(group(
-          lit("e") | lit("E"),
+          ilit("e"),
           optional(sign),
           decimal,
         )),
