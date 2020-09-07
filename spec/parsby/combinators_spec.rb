@@ -129,6 +129,65 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
+  describe "#recursive" do
+    it "provides parser argument itself as argument" do
+      expect((
+        y = nil
+        x = recursive {|p| y = p; pure nil }
+        x.parse "foo"
+        x == y
+      )).to eq true
+    end
+
+    it "simplifies writing recursive parsers" do
+      expect(
+        recursive {|p| lit("(") > (single(p) | empty) < lit(")") }
+          .parse "((()))"
+      ).to eq [[[]]]
+    end
+  end
+
+  describe "#reduce" do
+    it "starts parse with init parser argument; if block parser fails results with result of init" do
+      expect(
+        reduce(lit("foo")) {|r| unparseable }
+          .parse "foo"
+      ).to eq "foo"
+    end
+
+    it "fails when init fails" do
+      expect{
+        reduce(lit("foo")) {|r| unparseable }
+          .parse "bar"
+      }.to raise_error Parsby::ExpectationFailed
+    end
+
+    it "provides result of init to block argument" do
+      expect((
+        x = nil
+        reduce(lit("foo")) {|r| x = r; unparseable }
+          .parse "foo"
+        x
+      )).to eq "foo"
+    end
+
+    it "provides result of parser returned by block to the block" do
+      expect((
+        x = nil
+        reduce(lit("foo")) {|r| x = r; lit("bar") }
+          .parse "foobar"
+        x
+      )).to eq "bar"
+    end
+
+    it "runs block and it's resulting parser until the parser fails, resulting with result of last successful parser" do
+      expect((
+        reduce(lit("foo")) {|r| lit("bar") | lit("baz") }
+          .parse "foobarbaz"
+      )).to eq "baz"
+    end
+  end
+
   describe "#decimal" do
     it "parses decimal numbers" do
       expect(decimal.parse("123")).to eq 123

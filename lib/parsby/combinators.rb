@@ -247,7 +247,7 @@ class Parsby
     #   #=> [[[nil]]]
     #
     # This is analogous to Haskell's fix function.
-    define_combinator :recursive do |&b|
+    define_combinator :recursive, wrap_parser: false do |&b|
       p = lazy { b.call p }
     end
 
