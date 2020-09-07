@@ -7,7 +7,7 @@
 
 for n in $(grep -Phro '^[^#]*(def (self\.)?|define_combinator :)\K\w+' lib | sort -u); do
   printf "%s\t%s\n" \
-    "$(grep -Frn "$n" lib | grep -Ev '#[^{]|\b(def|define_combinator|require)\b' | wc -l)" \
+    "$(grep -Fwrn "$n" lib | grep -Ev '#[^{]|\b(def|define_combinator|require)\b' | wc -l)" \
     "$n"
 done | awk '
   function is_ruby_hook() {
