@@ -571,10 +571,6 @@ class Parsby
     @parser = b
   end
 
-  def self.wrap(*args, &b)
-    Parsby.new(*args) {|c| b.call.parse c }
-  end
-
   attr_accessor :splicing
 
   # Parse a String or IO object.

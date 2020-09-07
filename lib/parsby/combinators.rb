@@ -217,10 +217,6 @@ class Parsby
       left > p < right
     end
 
-    def wrap(p, *args)
-      Parsby.new(*args) {|c| p.parse c }
-    end
-
     # Turns parser into one that doesn't consume input.
     define_combinator :peek, wrap_parser: false do |p|
       Parsby.new {|c| p.peek c }
