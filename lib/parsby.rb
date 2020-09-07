@@ -70,8 +70,15 @@ class Parsby
   end
 
   module Tree
-    attr_accessor :parent
+    attr_accessor :parent, :is_splice_end
     attr_writer :children
+
+    def splice_to_ends!
+      ends = select_paths(&:is_splice_end).each do |path|
+        get(path).is_splice_end = false
+      end
+      splice!(*ends)
+    end
 
     def children
       @children ||= []
@@ -216,10 +223,6 @@ class Parsby
       @label = label
       @is_splice_end = is_splice_end
       super(pos_start, pos_end)
-    end
-
-    def splice_to_ends!
-      splice!(*select_paths(&:is_splice_end))
     end
 
     alias_method :underline, :render_in
