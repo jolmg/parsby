@@ -22,6 +22,7 @@ done | awk '
       || $2 == "recursive" \
       || $2 == "decimal_fraction" \
       || $2 == "left_tree_slice" \
+      || $2 == "all" \
     ;
   }
 
