@@ -644,4 +644,20 @@ RSpec.describe Parsby do
       expect(decimal.fmap {|x| x + 1}.parse("3")).to eq 4
     end
   end
+
+  describe "#then" do
+    it "provides block with result of left parser" do
+      expect((
+        x = nil
+        lit("foo").then {|r| x = r; pure nil }.parse "foo"
+        x
+      )).to eq "foo"
+    end
+
+    it "results in the result of the parser returned from the block" do
+      expect(
+        lit("foo").then {|r| lit("bar") }.parse "foobar"
+      ).to eq "bar"
+    end
+  end
 end

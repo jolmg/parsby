@@ -170,9 +170,27 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
-  describe "#string" do
+  describe "#fmap" do
+    it "allows modification the result of the parser argument" do
+      expect(fmap(decimal) {|r| r + 1}.parse "5").to eq 6
+    end
+  end
+
+  describe "#ilit" do
+    it "parses case-insensitively, keeping the casing of the parsed string" do
+      expect(ilit("fOo").parse("FoO")).to eq "FoO"
+    end
+  end
+
+  describe "#lit" do
     it "parses the lit provided" do
       expect(lit("foo").parse("foo")).to eq "foo"
+    end
+
+    it "is case sensitive" do
+      expect { lit("foo").parse("Foo") }.to raise_error Parsby::ExpectationFailed
+      expect { lit("Foo").parse("foo") }.to raise_error Parsby::ExpectationFailed
+      expect(lit("Foo").parse("Foo")).to eq "Foo"
     end
     
     # XXX: Backtracking should be handled BackedIO, but I've implemented
