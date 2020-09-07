@@ -148,9 +148,33 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
+  describe "#decimal_fraction" do
+    it "parses decimal numbers" do
+      expect(decimal_fraction.parse "10").to eq 10
+    end
+
+    it "understands fractional components" do
+      expect(decimal_fraction.parse "10.55").to eq 10.55
+    end
+
+    it "accepts exponential notation" do
+      expect(decimal_fraction.parse "2.4e3").to eq 2400
+      expect(decimal_fraction.parse "2E3").to eq 2000
+      expect(decimal_fraction.parse "2e+3").to eq 2000
+      expect(decimal_fraction.parse "2e-3").to eq 0.002
+    end
+
+    it "accepts a sign" do
+      expect(decimal_fraction.parse "1").to eq 1
+      expect(decimal_fraction.parse "+1").to eq 1
+      expect(decimal_fraction.parse "-1").to eq -1
+    end
+  end
+
   describe "#decimal_digit" do
     it "parses single decimal digit as a lit" do
       expect(decimal_digit.parse "9").to eq "9"
+      expect(decimal_digit.parse "99").to eq "9"
     end
   end
 
