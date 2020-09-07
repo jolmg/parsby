@@ -29,7 +29,7 @@ grep -REh '^\s*(class|module|def|define_combinator|end)\b' lib | awk '
         first = 0
       }
     }
-    match($0, /^\s*(def|define_combinator)\s*(self\.|:)?([^([:blank:]]+)/, matches)
+    match($0, /^\s*(def|define_combinator)\s*(self\.|:)?([^,([:blank:]]+)/, matches)
     print (matches[2] == "self." ? "." : "#") matches[3]
   }
 ' | grep -v '[#.]included$' | sort
