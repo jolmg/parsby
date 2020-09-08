@@ -9,25 +9,41 @@ class Parsby
   class PosRange
     attr_accessor :start, :end
 
+    # PosRanges are constructed with a starting and ending position. We
+    # consider the starting position to be inside the range, and the ending
+    # position to be outside the range. So, if start is 1 and end is 2,
+    # then only position 1 is inside the range. If start is 1 and end is 1,
+    # then there is no position inside the range.
     def initialize(pos_start, pos_end)
       @start = pos_start
       @end = pos_end
     end
 
+    # Length of range.
     def length
       @end - @start
     end
 
+    # Length of overlap. 0 for non-overlapping ranges.
     def length_in(range)
       (self & range)&.length || 0
     end
 
-    # Intersection of the two ranges.
+    # Intersection of two ranges. Touching ranges result in a range of
+    # length 0.
     def &(range)
-      return nil unless overlaps? range
+      return nil unless overlaps?(range) || touching?(range)
       PosRange.new [@start, range.start].max, [@end, range.end].min
     end
 
+    # True when the end of one is the beginning of the other.
+    def touching?(range)
+      range.end == self.start || self.end == range.start
+    end
+
+    # True when one is not completely left of or right of the other.
+    # Touching ranges do not overlap, even though they have an intersection
+    # range of length 0.
     def overlaps?(range)
       !(completely_left_of?(range) || completely_right_of?(range))
     end
@@ -37,11 +53,11 @@ class Parsby
     end
 
     def completely_right_of?(range)
-      @start >= range.end
+      range.end <= @start
     end
 
     def contains?(pos)
-      @start <= pos && pos <= @end
+      @start <= pos && pos < @end
     end
 
     def starts_inside_of?(range)
@@ -49,7 +65,7 @@ class Parsby
     end
 
     def ends_inside_of?(range)
-      range.contains? @end
+      range.contains?(@end) || range.end == @end
     end
 
     def completely_inside_of?(range)
@@ -57,7 +73,7 @@ class Parsby
     end
 
     def render_in(line_range)
-      return "<-" if completely_left_of? line_range
+      return "<-" if completely_left_of?(line_range) && !starts_inside_of?(line_range)
       return "->" if completely_right_of? line_range
       indentation = " " * [0, start - line_range.start].max
       r = "-" * length_in(line_range)

@@ -66,9 +66,12 @@ RSpec.describe Parsby do
         expect(Parsby::PosRange.new(10, 12).contains?(13)).to eq false
       end
 
-      it "is true when position is at the bounts" do
+      it "is true when position is at left bound" do
         expect(Parsby::PosRange.new(10, 12).contains?(10)).to eq true
-        expect(Parsby::PosRange.new(10, 12).contains?(12)).to eq true
+      end
+
+      it "is false when position is at right bound" do
+        expect(Parsby::PosRange.new(10, 12).contains?(12)).to eq false
       end
     end
 
@@ -126,6 +129,14 @@ RSpec.describe Parsby do
         )).to eq [11, 12]
       end
 
+      it "returns 0-length range when ranges are touching" do
+        expect((
+          r = Parsby::PosRange.new(10, 12) \
+            & Parsby::PosRange.new(12, 13)
+          [r.start, r.end]
+        )).to eq [12, 12]
+      end
+
       it "returns nil when ranges don't overlap" do
         expect(
           Parsby::PosRange.new(10, 12) \
@@ -165,11 +176,17 @@ RSpec.describe Parsby do
             Parsby::PosRange.new(10, 12)
           )
         ).to eq true
+
+        expect(
+          Parsby::PosRange.new(10, 13).starts_inside_of?(
+            Parsby::PosRange.new(10, 13)
+          )
+        ).to eq true
       end
     end
 
     describe "#ends_inside_of?" do
-      it "returns true if provided range contains our start" do
+      it "returns true if provided range contains our end" do
         expect(
           Parsby::PosRange.new(10, 12).ends_inside_of?(
             Parsby::PosRange.new(11, 13)
@@ -181,6 +198,12 @@ RSpec.describe Parsby do
             Parsby::PosRange.new(10, 12)
           )
         ).to eq false
+
+        expect(
+          Parsby::PosRange.new(10, 13).ends_inside_of?(
+            Parsby::PosRange.new(10, 13)
+          )
+        ).to eq true
       end
     end
 
@@ -301,6 +324,13 @@ RSpec.describe Parsby do
             Parsby::PosRange.new(13, 16)
           )
         ).to eq "<-"
+
+        expect(
+          # This doesn't start before rendering range.
+          Parsby::PosRange.new(13, 13).render_in(
+            Parsby::PosRange.new(13, 16)
+          )
+        ).to eq "|"
       end
 
       it "ranges that end after rendering range with overlap of 0 are rendered ->" do
