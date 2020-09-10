@@ -565,10 +565,9 @@ class Parsby
   # Initialize parser with optional label argument, and parsing block. The
   # parsing block is given an IO as argument, and its result is the result
   # when parsing.
-  def initialize(label = nil, splicing: nil, should_splice_self: false, &b)
+  def initialize(label = nil, splicing: nil, &b)
     self.label = label if label
     @splicing = splicing
-    @should_splice_self = should_splice_self
     @parser = b
   end
 
@@ -579,6 +578,7 @@ class Parsby
     ctx = src.is_a?(Context) ? src : Context.new(src)
     parsed_range = ParsedRange.new(ctx.bio.pos, ctx.bio.pos, label, is_splice_end)
     ctx.parsed_ranges << parsed_range if ctx.parsed_ranges
+    parent_parsed_range = ctx.parsed_ranges
     ctx.parsed_ranges = parsed_range
     begin
       r = @parser.call ctx
@@ -598,9 +598,8 @@ class Parsby
         parsed_range.splice_to_ends!
       end
       # Keep the root one for use in ExceptionFailed#message
-      if ctx.parsed_ranges.parent
-        ctx.parsed_ranges = ctx.parsed_ranges.parent
-        parsed_range.splice_self! if should_splice_self
+      if parent_parsed_range
+        ctx.parsed_ranges = parent_parsed_range
       end
     end
   end
@@ -653,11 +652,19 @@ class Parsby
     end
   end
 
-  attr_accessor :should_splice_self, :is_splice_start, :is_splice_end
+  attr_accessor :is_splice_start, :is_splice_end
 
   def ~
-    @should_splice_self = true
-    self
+    Parsby.new do |c|
+      begin
+        parse c
+      ensure
+        c.parsed_ranges.children[0].splice_self!
+        if c.parsed_ranges.parent
+          c.parsed_ranges.splice_self!
+        end
+      end
+    end
   end
 
   def -@
