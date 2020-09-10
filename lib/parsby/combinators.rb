@@ -170,9 +170,15 @@ class Parsby
     # list causes parser to always fail, like how [].any? is false.
     define_combinator :choice do |*ps|
       ps = ps.flatten
-      ~-ps.reduce(unparseable) do |a, p|
-        (a | +p)
+      ~splicer.start do |m|
+        ps.reduce(unparseable) do |a, p|
+          a | m.end(p)
+        end
       end
+    end
+
+    def splicer
+      Parsby::Splicer
     end
 
     # Parses a single char from those contained in the string argument.

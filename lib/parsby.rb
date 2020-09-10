@@ -85,15 +85,40 @@ class Parsby
     end
   end
 
+  class Splicer
+    def self.start(&b)
+      m = new
+      p = b.call m
+      m.start p
+    end
+
+    def start(p)
+      ~Parsby.new { |c|
+        begin
+          p.parse c
+        ensure
+          c.parsed_ranges.children[0].splice_to! self
+        end
+      }
+    end
+
+    def end(p)
+      ~Parsby.new { |c|
+        begin
+          p.parse c
+        ensure
+          c.parsed_ranges.children[0].marker = self
+        end
+      }
+    end
+  end
+
   module Tree
-    attr_accessor :parent, :is_splice_end
+    attr_accessor :parent, :marker
     attr_writer :children
 
-    def splice_to_ends!
-      ends = select_paths(&:is_splice_end).each do |path|
-        get(path).is_splice_end = false
-      end
-      splice!(*ends)
+    def splice_to!(marker)
+      splice!(*select_paths {|n| n.marker == marker })
     end
 
     def children
@@ -649,7 +674,7 @@ class Parsby
   end
 
   def ~
-    Parsby.new do |c|
+    Parsby.new "(~ #{label})" do |c|
       begin
         parse c
       ensure
@@ -657,26 +682,6 @@ class Parsby
         if c.parsed_ranges.parent
           c.parsed_ranges.splice_self!
         end
-      end
-    end
-  end
-
-  def -@
-    ~Parsby.new do |c|
-      begin
-        parse c
-      ensure
-        c.parsed_ranges.children[0].splice_to_ends!
-      end
-    end
-  end
-
-  def +@
-    ~Parsby.new do |c|
-      begin
-        parse c
-      ensure
-        c.parsed_ranges.children[0].is_splice_end = true
       end
     end
   end

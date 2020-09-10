@@ -48,16 +48,18 @@ module Parsby::Example
     end
 
     define_combinator :list_insides do
-      ~-choice(
-        peek(lit(")")) > pure(nil),
-        group(
-          +lazy { sexp },
-          choice(
-            +(spaced(lit(".")) > lazy { sexp }),
-            +optional(whitespace > lazy { list_insides }),
+      ~splicer.start do |m|
+        choice(
+          peek(lit(")")) > pure(nil),
+          group(
+            lazy { m.end sexp },
+            choice(
+              m.end(spaced(lit(".")) > lazy { sexp }),
+              optional(whitespace > lazy { m.end list_insides }),
+            ),
           ),
-        ),
-      )
+        )
+      end
     end
 
     define_combinator :atom do
