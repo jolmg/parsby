@@ -182,13 +182,15 @@ class Parsby
     end
 
     # Parses a single char from those contained in the string argument.
-    define_combinator :char_in, wrap_parser: false, splicing: [] do |s|
-      Parsby.new do |c|
-        char = any_char.parse c
-        unless s.chars.include? char
-          raise ExpectationFailed.new c
+    define_combinator :char_in do |s|
+      ~splicer.start do
+        Parsby.new do |c|
+          char = any_char.parse c
+          unless s.chars.include? char
+            raise ExpectationFailed.new c
+          end
+          char
         end
-        char
       end
     end
 
