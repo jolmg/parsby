@@ -228,16 +228,15 @@ class Parsby
   end
 
   class ParsedRange < PosRange
-    attr_reader :label, :is_splice_end
+    attr_reader :label
     attr_accessor :failed
 
     include Tree
 
     # Initialize failure with starting position, ending position, and
     # label of what was expected.
-    def initialize(pos_start, pos_end, label, is_splice_end = false)
+    def initialize(pos_start, pos_end, label)
       @label = label
-      @is_splice_end = is_splice_end
       super(pos_start, pos_end)
     end
 
@@ -576,7 +575,7 @@ class Parsby
   # Parse a String or IO object.
   def parse(src)
     ctx = src.is_a?(Context) ? src : Context.new(src)
-    parsed_range = ParsedRange.new(ctx.bio.pos, ctx.bio.pos, label, is_splice_end)
+    parsed_range = ParsedRange.new(ctx.bio.pos, ctx.bio.pos, label)
     ctx.parsed_ranges << parsed_range if ctx.parsed_ranges
     parent_parsed_range = ctx.parsed_ranges
     ctx.parsed_ranges = parsed_range
@@ -593,9 +592,6 @@ class Parsby
     ensure
       if splicing
         parsed_range.splice!(*splicing)
-      end
-      if is_splice_start
-        parsed_range.splice_to_ends!
       end
       # Keep the root one for use in ExceptionFailed#message
       if parent_parsed_range
@@ -652,8 +648,6 @@ class Parsby
     end
   end
 
-  attr_accessor :is_splice_start, :is_splice_end
-
   def ~
     Parsby.new do |c|
       begin
@@ -668,13 +662,23 @@ class Parsby
   end
 
   def -@
-    @is_splice_start = true
-    self
+    ~Parsby.new do |c|
+      begin
+        parse c
+      ensure
+        c.parsed_ranges.children[0].splice_to_ends!
+      end
+    end
   end
 
   def +@
-    @is_splice_end = true
-    self
+    ~Parsby.new do |c|
+      begin
+        parse c
+      ensure
+        c.parsed_ranges.children[0].is_splice_end = true
+      end
+    end
   end
 
   # p * n, runs parser p n times, grouping results in an array.
