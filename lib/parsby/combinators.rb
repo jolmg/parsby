@@ -6,7 +6,7 @@ class Parsby
       # The only reason to use this over regular def syntax is to get
       # automatic labels. For combinators defined with this, you'll get
       # labels that resemble the corresponding ruby expression.
-      def define_combinator(name, wrap_parser: true, splicing: nil, &b)
+      def define_combinator(name, wrap_parser: true, &b)
         # This is necessary not only to convert the proc to something
         # that'll verify arity, but also to get super() in b to work.
         define_method(name, &b)
@@ -23,11 +23,8 @@ class Parsby
           # label.
           p = m.bind(self).call(*args, &b2)
           if wrap_parser
-            Parsby.new(label) {|c| p.parse c }.tap do |p2|
-              p2.splicing = splicing if splicing
-            end
+            Parsby.new(label) {|c| p.parse c }
           else
-            p.splicing = splicing if splicing
             p % label
           end
         end
@@ -204,15 +201,15 @@ class Parsby
 
     # Parses string of 1 or more continuous whitespace characters (" ",
     # "\t", "\n", "\r")
-    define_combinator :whitespace_1, splicing: [] do
-      join(many_1(char_in(" \t\n\r")))
+    define_combinator :whitespace_1 do
+      ~splicer.start { join(many_1(char_in(" \t\n\r"))) }
     end
 
     alias_method :ws_1, :whitespace_1
 
     # Expects p to be surrounded by optional whitespace.
-    define_combinator :spaced, splicing: [[0, 0, 1]] do |p|
-      ws > p < ws
+    define_combinator :spaced do |p|
+      ~splicer.start {|m| ws > m.end(p) < ws }
     end
 
     # Convinient substitute of <tt>left > p < right</tt> for when

@@ -589,13 +589,10 @@ class Parsby
   # Initialize parser with optional label argument, and parsing block. The
   # parsing block is given an IO as argument, and its result is the result
   # when parsing.
-  def initialize(label = nil, splicing: nil, &b)
+  def initialize(label = nil, &b)
     self.label = label if label
-    @splicing = splicing
     @parser = b
   end
-
-  attr_accessor :splicing
 
   # Parse a String or IO object.
   def parse(src)
@@ -615,9 +612,6 @@ class Parsby
       ctx.parsed_ranges.end = ctx.bio.pos
       r
     ensure
-      if splicing
-        parsed_range.splice!(*splicing)
-      end
       # Keep the root one for use in ExceptionFailed#message
       if parent_parsed_range
         ctx.parsed_ranges = parent_parsed_range

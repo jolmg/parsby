@@ -39,11 +39,13 @@ module Parsby::Example
       )
     end
 
-    define_combinator :list, wrap_parser: false, splicing: [[1, 0, 0]] do
-      Parsby.new :list do |io|
-        braces = {"(" => ")", "[" => "]"}
-        opening_brace = char_in(braces.keys.join).parse io
-        (spaced(list_insides) < lit(braces[opening_brace])).parse io
+    define_combinator :list do
+      ~splicer.start do |m|
+        Parsby.new :list do |io|
+          braces = {"(" => ")", "[" => "]"}
+          opening_brace = char_in(braces.keys.join).parse io
+          (m.end(spaced(list_insides)) < lit(braces[opening_brace])).parse io
+        end
       end
     end
 
@@ -78,8 +80,8 @@ module Parsby::Example
       )
     end
 
-    define_combinator :symbol, splicing: [] do
-      join(many_1(symbol_char)).fmap(&:to_sym)
+    define_combinator :symbol do
+      ~splicer.start { join(many_1(symbol_char)).fmap(&:to_sym) }
     end
 
     define_combinator :hex_digit do
@@ -102,24 +104,28 @@ module Parsby::Example
       ])
     end
 
-    define_combinator :lisp_string, splicing: [] do
-      between(lit('"'), lit('"'),
-        join(many(choice(
-          any_char.that_fails(lit("\\") | lit('"')),
-          escape_sequence,
-        )))
-      )
+    define_combinator :lisp_string do
+      ~splicer.start do
+        between(lit('"'), lit('"'),
+          join(many(choice(
+            any_char.that_fails(lit("\\") | lit('"')),
+            escape_sequence,
+          )))
+        )
+      end
     end
 
-    define_combinator :number, splicing: [] do
-      group(
-        optional(lit("-") | lit("+")),
-        decimal,
-        optional(empty << lit(".") << optional(decimal)),
-      ).fmap do |(sign, whole_part, (_, fractional_part))|
-        n = whole_part
-        n += (fractional_part || 0).to_f / 10 ** fractional_part.to_s.length
-        sign == "-" ? -n : n
+    define_combinator :number do
+      ~splicer.start do
+        group(
+          optional(lit("-") | lit("+")),
+          decimal,
+          optional(empty << lit(".") << optional(decimal)),
+        ).fmap do |(sign, whole_part, (_, fractional_part))|
+          n = whole_part
+          n += (fractional_part || 0).to_f / 10 ** fractional_part.to_s.length
+          sign == "-" ? -n : n
+        end
       end
     end
   end
