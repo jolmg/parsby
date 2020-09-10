@@ -51,10 +51,10 @@ module Parsby::Example
       ~-choice(
         peek(lit(")")) > pure(nil),
         group(
-          lazy { +sexp },
+          +lazy { sexp },
           choice(
             +(spaced(lit(".")) > lazy { sexp }),
-            optional(whitespace > lazy { +list_insides }),
+            +optional(whitespace > lazy { list_insides }),
           ),
         ),
       )
