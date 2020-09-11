@@ -14,7 +14,7 @@ module Parsby::Example
     end
 
     define_combinator :sexp do
-      choice(abbrev, atom, list)
+      lazy { choice(abbrev, atom, list) }
     end
 
     # Add comments to definition of whitespace. whitespace is defined using
@@ -32,34 +32,33 @@ module Parsby::Example
     # Parses sexps with abbreviations, like '(foo bar) or `(foo ,bar).
     define_combinator :abbrev do
       choice(
-        lit("'") > lazy { sexp }.fmap {|s| [:quote, [s, nil]]},
-        lit("`") > lazy { sexp }.fmap {|s| [:quasiquote, [s, nil]]},
-        lit(",@") > lazy { sexp }.fmap {|s| [:"unquote-splicing", [s, nil]]},
-        lit(",") > lazy { sexp }.fmap {|s| [:unquote, [s, nil]]},
+        lit("'") > sexp.fmap {|s| [:quote, [s, nil]]},
+        lit("`") > sexp.fmap {|s| [:quasiquote, [s, nil]]},
+        lit(",@") > sexp.fmap {|s| [:"unquote-splicing", [s, nil]]},
+        lit(",") > sexp.fmap {|s| [:unquote, [s, nil]]},
       )
     end
 
     define_combinator :list do
+      braces = {"(" => ")", "[" => "]"}
+
       ~splicer.start do |m|
-        Parsby.new :list do |io|
-          braces = {"(" => ")", "[" => "]"}
-          opening_brace = char_in(braces.keys.join).parse io
-          (m.end(spaced(list_insides)) < lit(braces[opening_brace])).parse io
+        m.end(char_in(braces.keys.join)).then do |opening_brace|
+          spaced(list_insides) < m.end(lit(braces[opening_brace]))
         end
       end
     end
 
     define_combinator :list_insides do
       ~splicer.start do |m|
-        choice(
-          peek(lit(")")) > pure(nil),
+        optional(
           group(
-            lazy { m.end sexp },
+            m.end(sexp),
             choice(
-              m.end(spaced(lit(".")) > lazy { sexp }),
-              optional(whitespace > lazy { m.end list_insides }),
+              m.end(spaced(lit(".")) > sexp),
+              whitespace > lazy { m.end list_insides },
             ),
-          ),
+          )
         )
       end
     end
