@@ -69,15 +69,15 @@ class Parsby
     extend ModuleMethods
 
     # Parses the string as literally provided.
-    define_combinator :lit, wrap_parser: false do |e, case_sensitive: true|
-      Parsby.new e.inspect do |c|
+    define_combinator :lit do |e, case_sensitive: true|
+      ~Parsby.new(e.inspect) { |c|
         a = c.bio.read e.length
         if case_sensitive ? a == e : a.to_s.downcase == e.downcase
           a
         else
           raise ExpectationFailed.new c
         end
-      end
+      }
     end
 
     define_combinator :ilit do |e|
