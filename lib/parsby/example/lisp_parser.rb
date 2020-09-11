@@ -65,7 +65,7 @@ module Parsby::Example
     end
 
     define_combinator :atom do
-      number | string | symbol
+      ~choice(number, string, symbol)
     end
 
     define_combinator :symbol_char do
