@@ -93,7 +93,7 @@ class Parsby
     end
 
     def start(p)
-      ~Parsby.new { |c|
+      ~Parsby.new(p.label) { |c|
         begin
           p.parse c
         ensure
@@ -103,7 +103,7 @@ class Parsby
     end
 
     def end(p)
-      ~Parsby.new { |c|
+      ~Parsby.new(p.label) { |c|
         begin
           p.parse c
         ensure
