@@ -65,7 +65,7 @@ module Parsby::Example
     end
 
     define_combinator :atom do
-      number | lisp_string | symbol
+      number | string | symbol
     end
 
     define_combinator :symbol_char do
@@ -104,7 +104,7 @@ module Parsby::Example
       ])
     end
 
-    define_combinator :lisp_string do
+    define_combinator :string do
       ~splicer.start do
         between(lit('"'), lit('"'),
           join(many(choice(
