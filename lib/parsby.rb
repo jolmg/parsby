@@ -210,16 +210,17 @@ class Parsby
     end
 
     def trim_to_just!(*paths)
-      self.children = paths
-        .group_by(&:first)
-        .to_a
-        .reject {|(i, _)| i.nil? }
-        .map do |(child_index, child_paths)|
-          if child_index
-            child_subpaths = child_paths.map {|p| p.drop 1 }
-            children[child_index].trim_to_just!(*child_subpaths)
-          end
+      max_sibling = paths.map(&:first).reject(&:nil?).max
+      self.children = if max_sibling.nil?
+        []
+      else
+        children[0..max_sibling].each.with_index do |child, i|
+          subpaths = paths
+            .select {|p| p.first == i}
+            .map {|p| p.drop 1 }
+          child.trim_to_just!(*subpaths)
         end
+      end
       self
     end
 

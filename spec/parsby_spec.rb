@@ -387,10 +387,15 @@ RSpec.describe Parsby do
           line 2:
             bar bar box
                     \\-/ * failure: lit("bar")
-                    |   * failure: spaced(lit("bar"))
-            -------/    * failure: (spaced(lit("bar")) * 3)
-            <-          * failure: (lit("foo") > (spaced(lit("bar")) * 3))
-            <-          * failure: ((lit("foo") > (spaced(lit("bar")) * 3)) < eof)
+                    |     * failure: spaced(lit("bar"))
+                \\--/     *| success: spaced(lit("bar"))
+            ---/        *|| success: spaced(lit("bar"))
+                        \\\\|
+            -------/      * failure: (spaced(lit("bar")) * 3)
+            <-           *| success: lit("foo")
+                         \\|
+            <-            * failure: (lit("foo") > (spaced(lit("bar")) * 3))
+            <-            * failure: ((lit("foo") > (spaced(lit("bar")) * 3)) < eof)
         ERROR
       end
     end
@@ -631,8 +636,16 @@ RSpec.describe Parsby do
         expect(
           std_tree.children[1]
             .trim_to_just!([1, 2], [2])
-            .select {true}.map(&:whole_name)
-        ).to eq %w(root.a1 root.a1.b1 root.a1.b1.c2 root.a1.b2)
+            .select {true}.map {|n| n.whole_name + "\n"}.join
+        ).to eq <<~EOF
+          root.a1
+          root.a1.b0
+          root.a1.b1
+          root.a1.b1.c0
+          root.a1.b1.c1
+          root.a1.b1.c2
+          root.a1.b2
+        EOF
       end
     end
 
