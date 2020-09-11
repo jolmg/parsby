@@ -93,7 +93,7 @@ class Parsby
     end
 
     def start(p)
-      ~Parsby.new(p.label) { |c|
+      ~Parsby.new("splicer.start(#{p.label})") { |c|
         begin
           p.parse c
         ensure
@@ -103,7 +103,7 @@ class Parsby
     end
 
     def end(p)
-      ~Parsby.new(p.label) { |c|
+      ~Parsby.new("splicer.end(#{p.label})") { |c|
         begin
           p.parse c
         ensure
