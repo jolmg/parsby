@@ -220,12 +220,16 @@ class Parsby
       self.children = if max_sibling.nil?
         []
       else
-        children[0..max_sibling].each.with_index do |child, i|
-          subpaths = paths
-            .select {|p| p.first == i}
-            .map {|p| p.drop 1 }
-          child.trim_to_just!(*subpaths)
-        end
+        children[0..max_sibling]
+          .map.with_index {|c, i| [c, i] }
+          .reject {|(c, i)| c.failed && i != max_sibling }
+          .each do |(child, i)|
+            subpaths = paths
+              .select {|p| p.first == i}
+              .map {|p| p.drop 1 }
+            child.trim_to_just!(*subpaths)
+          end
+          .map(&:first)
       end
       self
     end

@@ -13,7 +13,7 @@ module Parsby::Example
       many(spaced(sexp)) < eof
     end
 
-    define_combinator :sexp do
+    define_combinator :sexp, wrap_parser: false do
       lazy { choice(abbrev, atom, list) }
     end
 
@@ -56,7 +56,7 @@ module Parsby::Example
         group(
           m.end(sexp),
           choice(
-            m.end(spaced(lit("."))) > m.end(sexp),
+            spaced(m.end(lit("."))) > m.end(sexp),
             whitespace > lazy { list_insides(m) },
           ),
         )
