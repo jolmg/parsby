@@ -108,18 +108,23 @@ class Parsby
         begin
           p.parse c
         ensure
-          c.parsed_ranges.children[0].marker = self
+          c.parsed_ranges.children[0].markers << self
         end
       }
     end
   end
 
   module Tree
-    attr_accessor :parent, :marker
+    attr_accessor :parent
+    attr_reader :markers
     attr_writer :children
 
+    def markers
+      @markers ||= []
+    end
+
     def splice_to!(marker)
-      splice!(*select_paths {|n| n.marker == marker })
+      splice!(*select_paths {|n| n.markers.include? marker })
     end
 
     def children
