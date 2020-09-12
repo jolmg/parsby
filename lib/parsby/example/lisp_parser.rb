@@ -46,23 +46,21 @@ module Parsby::Example
 
       ~splicer.start do |m|
         m.end(char_in(braces.keys.join)).then do |opening_brace|
-          spaced(list_insides) < m.end(lit(braces[opening_brace]))
+          spaced(list_insides(m)) < m.end(lit(braces[opening_brace]))
         end
       end
     end
 
-    define_combinator :list_insides do
-      ~splicer.start do |m|
-        optional(
-          group(
-            m.end(sexp),
-            choice(
-              m.end(spaced(lit(".")) > sexp),
-              whitespace > lazy { m.end list_insides },
-            ),
-          )
+    define_combinator :list_insides do |m|
+      optional(
+        group(
+          m.end(sexp),
+          choice(
+            m.end(spaced(lit("."))) > m.end(sexp),
+            whitespace > lazy { list_insides(m) },
+          ),
         )
-      end
+      )
     end
 
     define_combinator :atom do
