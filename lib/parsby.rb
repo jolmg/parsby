@@ -86,9 +86,10 @@ class Parsby
   end
 
   class Splicer
-    def self.start(&b)
+    def self.start(label = nil, &b)
       m = new
       p = b.call m
+      p % label if label
       m.start p
     end
 
