@@ -31,12 +31,14 @@ module Parsby::Example
 
     # Parses sexps with abbreviations, like '(foo bar) or `(foo ,bar).
     define_combinator :abbrev do
-      choice(
-        lit("'") > sexp.fmap {|s| [:quote, [s, nil]]},
-        lit("`") > sexp.fmap {|s| [:quasiquote, [s, nil]]},
-        lit(",@") > sexp.fmap {|s| [:"unquote-splicing", [s, nil]]},
-        lit(",") > sexp.fmap {|s| [:unquote, [s, nil]]},
-      )
+      ~splicer.start do
+        choice(
+          lit("'") > sexp.fmap {|s| [:quote, [s, nil]]},
+          lit("`") > sexp.fmap {|s| [:quasiquote, [s, nil]]},
+          lit(",@") > sexp.fmap {|s| [:"unquote-splicing", [s, nil]]},
+          lit(",") > sexp.fmap {|s| [:unquote, [s, nil]]},
+        )
+      end
     end
 
     define_combinator :list do
