@@ -123,7 +123,7 @@ module Parsby::Example
         group(
           optional(lit("-") | lit("+")),
           decimal,
-          optional(empty << lit(".") << optional(decimal)),
+          optional(group(lit("."), optional(decimal))),
         ).fmap do |(sign, whole_part, (_, fractional_part))|
           n = whole_part
           n += (fractional_part || 0).to_f / 10 ** fractional_part.to_s.length
