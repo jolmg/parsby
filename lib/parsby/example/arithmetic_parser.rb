@@ -10,8 +10,8 @@ module Parsby::Example
     end
 
     def self.define_binary_op(name, op)
-      define_combinator name do |left, right|
-        group(left, spaced(ilit(op)), right)
+      define_combinator name do |left_subexpr, right_subexpr|
+        group(left_subexpr, spaced(ilit(op)), right_subexpr)
       end
     end
 
