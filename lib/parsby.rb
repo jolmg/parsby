@@ -215,19 +215,19 @@ class Parsby
       dup.splice!(*paths)
     end
 
-    def trim_to_just!(*paths)
+    def trim_to_just!(*paths, &rejecting)
       max_sibling = paths.map(&:first).reject(&:nil?).max
       self.children = if max_sibling.nil?
         []
       else
         children[0..max_sibling]
           .map.with_index {|c, i| [c, i] }
-          .reject {|(c, i)| c.failed && i != max_sibling }
+          .reject {|(c, i)| rejecting.call c, i, max_sibling if rejecting }
           .each do |(child, i)|
             subpaths = paths
               .select {|p| p.first == i}
               .map {|p| p.drop 1 }
-            child.trim_to_just!(*subpaths)
+            child.trim_to_just!(*subpaths, &rejecting)
           end
           .map(&:first)
       end
@@ -300,7 +300,9 @@ class Parsby
           range.start == parsed_range.start && range != parsed_range
         end
         relevant_paths = [parsed_range, *other_ranges].map(&:path)
-        parsed_range.dup.root.trim_to_just!(*relevant_paths)
+        parsed_range.dup.root.trim_to_just!(*relevant_paths) do |c, i, max_sibling|
+          c.failed && i != max_sibling
+        end
       end
     end
 
