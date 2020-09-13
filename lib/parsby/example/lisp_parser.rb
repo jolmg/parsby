@@ -64,7 +64,11 @@ module Parsby::Example
     end
 
     define_combinator :atom do
-      ~choice(number, string, symbol)
+      ~choice(number, string, self.nil, symbol)
+    end
+
+    define_combinator :nil do
+      ilit("nil") > pure(nil)
     end
 
     define_combinator :symbol_char do
