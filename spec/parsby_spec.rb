@@ -386,7 +386,7 @@ RSpec.describe Parsby do
         ).to eq <<~ERROR
           line 2:
             bar bar box
-                    \\-/ * failure: lit("bar")
+                    \\-/   * failure: lit("bar")
                     |     * failure: spaced(lit("bar"))
                 \\--/     *| success: spaced(lit("bar"))
             ---/        *|| success: spaced(lit("bar"))
