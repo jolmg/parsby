@@ -291,54 +291,83 @@ class Parsby
 
     INDENTATION = 2
 
+    def message_hunk(failure_tree)
+    end
+
+    def failure_tree
+      @failure_tree ||= begin
+        other_ranges = ctx.parsed_ranges.flatten.select do |range|
+          range.start == parsed_range.start && range != parsed_range
+        end
+        parsed_range.dup.root.trim_to_just!(*[parsed_range, *other_ranges].map(&:path))
+      end
+    end
+
+    def parsed_range
+      @parsed_range ||= ctx.furthest_parsed_range
+    end
+
+    def hunk_prelude
+      <<~EOF
+        line #{ctx.bio.line_number}:
+        #{" " * INDENTATION}#{ctx.bio.current_line}
+      EOF
+    end
+
+    def hunk_graph
+      line_range = ctx.bio.current_line_range
+      line_length = ctx.bio.current_line.length
+      tree_lines = []
+      max_tree_slice_length = failure_tree.flatten.map {|t| t.right_tree_slice.length }.max
+      prev_slice_length = nil
+      failure_tree.each do |range|
+        line = ""
+        line << " " * INDENTATION
+        line << range.underline(line_range)
+        line << " " * (line_length + INDENTATION - line.length)
+        this_slice_length = range.right_tree_slice.length
+        # If previous slice was a parent with multiple children (current
+        # slice being the first child), we'll want to draw the forking
+        # line.
+        if prev_slice_length && this_slice_length > prev_slice_length
+          # Current line already has the correct width to start drawing the
+          # tree. Copy it and substitute the rendered range with spaces.
+          fork_line = line.gsub(/./, " ")
+          fork_line << " "
+          i = 0
+          fork_line << range.right_tree_slice.rjust(max_tree_slice_length).gsub(/[*|]/) do |c|
+            i += 1
+            if i <= this_slice_length - prev_slice_length
+              "\\"
+            else
+              c 
+            end
+          end
+          fork_line << "\n"
+        else
+          fork_line = ""
+        end
+        prev_slice_length = this_slice_length
+        line << " #{range.right_tree_slice.rjust(max_tree_slice_length)}"
+        line << " #{range.failed ? "failure" : "success"}: #{range.label}"
+        line << "\n"
+        tree_lines << fork_line << line
+      end
+      tree_lines.reverse.join
+    end
+
+    def hunk_at(pos)
+      ctx.bio.with_saved_pos do
+        ctx.bio.seek pos
+        hunk_prelude + hunk_graph
+      end
+    end
+
     # The message of the exception. It's the current line, with a kind-of
     # backtrace showing the failed expectations with a visualization of
     # their range in the current line.
     def message
-      parsed_range = ctx.furthest_parsed_range
-      other_ranges = ctx.parsed_ranges.flatten.select do |range|
-        range.start == parsed_range.start && range != parsed_range
-      end
-      failure_tree = parsed_range.dup.root.trim_to_just!(*[parsed_range, *other_ranges].map(&:path))
-      ctx.bio.with_saved_pos do
-        ctx.bio.seek parsed_range.start
-        r = "line #{ctx.bio.line_number}:\n"
-        r << "#{" " * INDENTATION}#{ctx.bio.current_line}\n"
-        line_range = ctx.bio.current_line_range
-        tree_lines = []
-        max_tree_slice_length = failure_tree.flatten.map {|t| t.right_tree_slice.length }.max
-        prev_slice_length = nil
-        failure_tree.each do |range|
-          line = ""
-          line << " " * INDENTATION
-          line << range.underline(line_range)
-          line << " " * (ctx.bio.current_line.length + INDENTATION - line.length)
-          this_slice_length = range.right_tree_slice.length
-          if prev_slice_length && this_slice_length > prev_slice_length
-            fork_line = line.gsub(/./, " ")
-            fork_line << " "
-            i = 0
-            fork_line << range.right_tree_slice.rjust(max_tree_slice_length).gsub(/[*|]/) do |c|
-              i += 1
-              if i <= this_slice_length - prev_slice_length
-                "\\"
-              else
-                c 
-              end
-            end
-            fork_line << "\n"
-          else
-            fork_line = ""
-          end
-          prev_slice_length = this_slice_length
-          line << " #{range.right_tree_slice.rjust(max_tree_slice_length)}"
-          line << " #{range.failed ? "failure" : "success"}: #{range.label}"
-          line << "\n"
-          tree_lines << fork_line << line
-        end
-        r << tree_lines.reverse.join
-        r
-      end
+      hunk_at parsed_range.start
     end
   end
 
