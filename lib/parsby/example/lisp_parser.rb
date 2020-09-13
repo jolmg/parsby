@@ -13,7 +13,7 @@ module Parsby::Example
       many(spaced(sexp)) < eof
     end
 
-    define_combinator :sexp, wrap_parser: false do
+    define_combinator :sexp, wrap: false do
       lazy { choice(abbrev, atom, list) }
     end
 

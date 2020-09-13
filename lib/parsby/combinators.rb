@@ -6,7 +6,7 @@ class Parsby
       # The only reason to use this over regular def syntax is to get
       # automatic labels. For combinators defined with this, you'll get
       # labels that resemble the corresponding ruby expression.
-      def define_combinator(name, wrap_parser: true, &b)
+      def define_combinator(name, wrap: true, &b)
         # This is necessary not only to convert the proc to something
         # that'll verify arity, but also to get super() in b to work.
         define_method(name, &b)
@@ -22,7 +22,7 @@ class Parsby
           # Wrap in new parser so we don't overwrite another automatic
           # label.
           p = m.bind(self).call(*args, &b2)
-          if wrap_parser
+          if wrap
             Parsby.new(label) {|c| p.parse c }
           else
             p % label
@@ -69,7 +69,7 @@ class Parsby
     extend ModuleMethods
 
     # Parses the string as literally provided.
-    define_combinator :lit, wrap_parser: false do |e, case_sensitive: true|
+    define_combinator :lit, wrap: false do |e, case_sensitive: true|
       Parsby.new(e.inspect) { |c|
         a = c.bio.read e.length
         if case_sensitive ? a == e : a.to_s.downcase == e.downcase
@@ -90,7 +90,7 @@ class Parsby
     end
 
     # Uses =~ for matching. Only compares one char.
-    define_combinator :char_matching, wrap_parser: false do |r|
+    define_combinator :char_matching, wrap: false do |r|
       Parsby.new r.inspect do |c|
         char = any_char.parse c
         unless char =~ r
@@ -159,7 +159,7 @@ class Parsby
     # Parser that always fails without consuming input. We use it for at
     # least <tt>choice</tt>, for when it's supplied an empty list. It
     # corresponds with mzero in Haskell's Parsec.
-    define_combinator :unparseable, wrap_parser: false do
+    define_combinator :unparseable, wrap: false do
       Parsby.new {|c| raise ExpectationFailed.new c }
     end
 
@@ -219,19 +219,19 @@ class Parsby
     end
 
     # Turns parser into one that doesn't consume input.
-    define_combinator :peek, wrap_parser: false do |p|
+    define_combinator :peek, wrap: false do |p|
       Parsby.new {|c| p.peek c }
     end
 
     # Parser that returns provided value without consuming any input.
-    define_combinator :pure, wrap_parser: false do |x|
+    define_combinator :pure, wrap: false do |x|
       Parsby.new { x }
     end
 
     # Delays construction of parser until parsing-time. This allows one to
     # construct recursive parsers, which would otherwise result in a
     # stack-overflow in construction-time.
-    define_combinator :lazy, wrap_parser: false do |&b|
+    define_combinator :lazy, wrap: false do |&b|
       # Can't have a better label, because we can't know what the parser is
       # until parsing time.
       Parsby.new {|c| b.call.parse c }
@@ -248,7 +248,7 @@ class Parsby
     #   #=> [[[nil]]]
     #
     # This is analogous to Haskell's fix function.
-    define_combinator :recursive, wrap_parser: false do |&b|
+    define_combinator :recursive, wrap: false do |&b|
       p = lazy { b.call p }
     end
 
@@ -262,7 +262,7 @@ class Parsby
     #
     # This combinator is meant to make shift-reduce parsers for LR
     # grammars.
-    define_combinator :reduce, wrap_parser: false do |init, &b|
+    define_combinator :reduce, wrap: false do |init, &b|
       init.then do |accum|
         Parsby.new do |c|
           begin
@@ -308,7 +308,7 @@ class Parsby
 
     # Runs parser until it fails and returns an array of the results. Because
     # it can return an empty array, this parser can never fail.
-    define_combinator :many, wrap_parser: false do |p|
+    define_combinator :many, wrap: false do |p|
       Parsby.new do |c|
         rs = []
         while true
@@ -351,7 +351,7 @@ class Parsby
     end
 
     # Parses any char. Only fails on EOF.
-    define_combinator :any_char, wrap_parser: false do
+    define_combinator :any_char, wrap: false do
       Parsby.new do |c|
         if c.bio.eof?
           raise ExpectationFailed.new c
@@ -361,7 +361,7 @@ class Parsby
     end
 
     # Matches EOF, fails otherwise. Returns nil.
-    define_combinator :eof, wrap_parser: false do
+    define_combinator :eof, wrap: false do
       Parsby.new :eof do |c|
         unless c.bio.eof?
           raise ExpectationFailed.new c
