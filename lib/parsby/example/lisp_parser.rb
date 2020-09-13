@@ -51,13 +51,13 @@ module Parsby::Example
       end
     end
 
-    define_combinator :list_insides do |m|
+    define_combinator :list_insides do |splicing_marker|
       optional(
         group(
-          m.end(sexp),
+          splicing_marker.end(sexp),
           choice(
-            spaced(m.end(lit("."))) > m.end(sexp),
-            whitespace > lazy { list_insides(m) },
+            spaced(splicing_marker.end(lit("."))) > splicing_marker.end(sexp),
+            whitespace > lazy { list_insides(splicing_marker) },
           ),
         )
       )
