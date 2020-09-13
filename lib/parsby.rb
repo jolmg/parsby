@@ -299,7 +299,8 @@ class Parsby
         other_ranges = ctx.parsed_ranges.flatten.select do |range|
           range.start == parsed_range.start && range != parsed_range
         end
-        parsed_range.dup.root.trim_to_just!(*[parsed_range, *other_ranges].map(&:path))
+        relevant_paths = [parsed_range, *other_ranges].map(&:path)
+        parsed_range.dup.root.trim_to_just!(*relevant_paths)
       end
     end
 
