@@ -421,15 +421,6 @@ RSpec.describe Parsby::Combinators do
     end
   end
 
-  describe "#parsby" do
-    it "is the same as Parsby.new" do
-      expect(parsby("foo") { "bar" })
-        .to be_a(Parsby)
-        .and satisfy {|p| p.label == "foo" }
-        .and satisfy {|p| p.parse("") == "bar" }
-    end
-  end
-
   describe "#pure" do
     it "results in provided value without consuming input" do
       expect(pure("foo").parse "bar").to eq "foo"
