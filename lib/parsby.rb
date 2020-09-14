@@ -301,7 +301,7 @@ class Parsby
         end
         relevant_paths = [parsed_range, *other_ranges].map(&:path)
         parsed_range.dup.root.trim_to_just!(*relevant_paths) do |c, i, max_sibling|
-          c.failed && i != max_sibling
+          c.failed && i != max_sibling && c.start != parsed_range.start
         end
       end
     end
