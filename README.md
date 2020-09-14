@@ -192,11 +192,12 @@ of where a particular parser began parsing, where it ended, whether it
 succeeded or failed, and the label of the parser.
 
 It might be worth mentioning that when debugging a parser from an
-`ExpectationFailed` error, the backtrace isn't really useful. That's
-because the backtrace points to the code involved in parsing, not the code
-involved in constructing the parsers, which succeeded, but is where the
-problem typically lies. The tree-looking exception message above is meant
-to somewhat substitute the utility of the backtrace in these cases.
+unexpected `ExpectationFailed` error, the backtrace isn't really useful.
+That's because the backtrace points to the code involved in parsing, not
+the code involved in constructing the parsers, which succeeded, but is
+where the problem typically lies. The tree-looking exception message above
+is meant to somewhat substitute the utility of the backtrace in these
+cases.
 
 Relating to that, the right-most text are the labels of the corresponding
 parsers. I find that labels that resemble the source code are quite useful,
