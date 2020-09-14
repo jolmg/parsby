@@ -94,17 +94,17 @@ class Parsby
     end
 
     def start(p)
-      ~Parsby.new("splicer.start(#{p.label})") { |c|
+      Parsby.new("splicer.start(#{p.label})") { |c|
         begin
           p.parse c
         ensure
-          c.parsed_ranges.children[0].splice_to! self
+          c.parsed_ranges.splice_to! self
         end
       }
     end
 
     def end(p)
-      ~Parsby.new("splicer.end(#{p.label})") { |c|
+      Parsby.new("splicer.end(#{p.label})") { |c|
         begin
           p.parse c
         ensure

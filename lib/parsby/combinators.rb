@@ -165,9 +165,10 @@ class Parsby
 
     # Tries each provided parser until one succeeds. Providing an empty
     # list causes parser to always fail, like how [].any? is false.
-    define_combinator :choice do |*ps|
+    define_combinator :choice, wrap: false do |*ps|
       ps = ps.flatten
-      ~splicer.start do |m|
+
+      splicer.start do |m|
         ps.reduce(unparseable) do |a, p|
           a | m.end(p)
         end
