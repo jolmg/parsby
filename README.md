@@ -55,50 +55,8 @@ between(lit("<"), lit(">"), lit("foo")).parse "<foo>"
 #=> "foo"
 ```
 
-`lit` is a combinator that takes a string and returns a parser for that
-string.
-
-For example, here is the parser for a [JSON array][]:
-
-```ruby
-def array
-  between(lit("["), ws > lit("]"), sep_by(lit(","), spaced(lazy { value })))
-end
-```
-
-Here's a [JSON number][]:
-
-```ruby
-def number 
-  sign = lit("-") | lit("+")
-  group(
-    optional(sign),
-    decimal,
-    optional(group(
-      lit("."),
-      decimal,
-    )),
-    optional(group(
-      lit("e") | lit("E"),
-      optional(sign),
-      decimal,
-    )),
-  ).fmap do |(sign, whole, (_, fractional), (_, exponent_sign, exponent))|
-    n = whole
-    n += fractional.to_f / 10 ** fractional.to_s.length if fractional
-    n *= -1 if sign == "-"
-    if exponent
-      e = exponent
-      e *= -1 if exponent_sign == "-"
-      n *= 10 ** e
-    end
-    n
-  end
-end
-```
-
-[JSON array]: lib/parsby/example/json_parser.rb
-[JSON number]: lib/parsby/example/json_parser.rb
+`lit` is a combinator that takes a string and returns a parser for
+`lit`erally that string.
 
 ## `Parsby.new`
 
