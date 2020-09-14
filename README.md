@@ -157,7 +157,7 @@ between(lit("<"), lit(">"), lit("foo")).label.to_s
 => "<unknown>"
 ```
 
-## ExpectationFailed
+## `ExpectationFailed`
 
 Here's an example of an error, when parsing fails:
 
