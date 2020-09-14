@@ -14,7 +14,7 @@ module Parsby::Example
     end
 
     define_combinator :sexp, wrap: false do
-      lazy { choice(abbrev, atom, list) }
+      splicer.start {|m| lazy { choice(m.end(abbrev), m.end(atom), m.end(list)) } }
     end
 
     # Add comments to definition of whitespace. whitespace is defined using
@@ -67,8 +67,8 @@ module Parsby::Example
       ~choice(number, string, self.nil, symbol)
     end
 
-    define_combinator :nil do
-      ilit("nil") > pure(nil)
+    define_combinator :nil, wrap: false do
+      splicer.start { ilit("nil") > pure(nil) }
     end
 
     define_combinator :symbol_char do
