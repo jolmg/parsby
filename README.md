@@ -83,6 +83,11 @@ That's the `lit` combinator mentioned before. It takes a string argument
 for what it `e`xpects to parse, and returns what was `a`ctually parsed if
 it matches the expectation.
 
+The block parameter `c` is a `Parsby::Context`. `c.bio` holds a
+`Parsby::BackedIO`. The `parse` method of `Parsby` objects accepts ideally
+any `IO` (and `String`s, which it turns into `StringIO`) and then wraps
+them with `BackedIO` to give the `IO` the ability to backtrack.
+
 ## Defining combinators
 
 If you look at the examples in this source, you'll notice that all combinators are defined with `define_combinator`. Strictly speaking, it's not necessary to use that to define combinators. You can do it with variable assignment or `def` syntax. Nevertheless, `define_combinator` is preferred because it automates the assignment of a label to the combinator. Consider these examples:
@@ -282,6 +287,48 @@ Parsby::ExpectationFailed: line 1:
 Any `IO` ought to work (unit tests currently have only checked pipes,
 though). When you pass a string to `#parse` it wraps it with `StringIO`
 before using it.
+
+## Recursive parsers with `lazy`
+
+If we try to define a recursive parser using combinators like so:
+
+```ruby
+define_combinator :value do
+  list | lit("foo")
+end
+
+define_combinator :list do
+  between(lit("["), lit("]"), sep_by(lit(","), spaced(value)))
+end
+
+value
+#=> SystemStackError: stack level too deep
+```
+
+We get a stack overflow.
+
+This isn't a problem in Haskell because the language evaluates lazily by
+default. This allows it to define recursive parsers without even thinking
+about it.
+
+In Ruby's case, we need to be explicit about our laziness. For that,
+there's `lazy`. We just need to wrap one of the expressions in the
+recursive loop with it. It could be the `value` call in `list`; it could be
+`list` call in `value`; it could be the whole of `value`. It really doesn't
+matter.
+
+```ruby
+define_combinator :value do
+  lazy { list | lit("foo") }
+end
+
+define_combinator :list do
+  between(lit("["), lit("]"), sep_by(lit(","), spaced(value)))
+end
+
+value.parse "[[[[foo, foo]]]]"
+#=> [[[["foo", "foo"]]]]
+```
 
 ## Comparing with Haskell's Parsec
 
