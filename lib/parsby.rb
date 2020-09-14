@@ -686,11 +686,7 @@ class Parsby
 
   # x < y runs parser x then y and returns x.
   def <(p)
-    Parsby.new "(#{label} < #{p.label})" do |c|
-      r = parse c
-      p.parse c
-      r
-    end
+    self.then {|r| p.then { pure r } } % "(#{label} < #{p.label})"
   end
 
   # This is useful for the difference in precedence. With - you can do
@@ -704,10 +700,7 @@ class Parsby
 
   # x > y runs parser x then y and returns y.
   def >(p)
-    Parsby.new "(#{label} > #{p.label})" do |c|
-      parse c
-      p.parse c
-    end
+    self.then { p } % "(#{label} > #{p.label})"
   end
 
   def ~
