@@ -12,29 +12,29 @@ module Parsby::Example
       csv.parse io
     end
 
-    def csv
+    define_combinator :csv do
       many(record) < eof
     end
 
-    def record
+    define_combinator :record do
       sep_by(lit(","), cell) < (eol | eof)
     end
 
-    def cell
+    define_combinator :cell do
       quoted_cell | non_quoted_cell
     end
 
-    def quoted_cell
+    define_combinator :quoted_cell do
       non_quote = join(many(any_char.that_fail(lit('"'))))
       inner = sep_by(lit('""'), non_quote).fmap {|r| r.join '"' }
       lit('"') > inner < lit('"')
     end
 
-    def non_quoted_cell
+    define_combinator :non_quoted_cell do
       join(many(any_char.that_fail(lit(",") | lit("\"") | eol)))
     end
 
-    def eol
+    define_combinator :eol do
       lit("\r\n") | lit("\n")
     end
   end
