@@ -201,10 +201,15 @@ before using it.
 
 ## Comparing with Haskell's Parsec
 
+Although there's more to this library than its similarities with Parsec,
+they are pretty similar:
+
 ```ruby
 # Parsby                                 # Parsec
                                          #
 foo.then {|x| bar x }                    # foo >>= \x -> bar x
+                                         #
+foo | bar                                # foo <|> bar
                                          #
 foobar = Parsby.new do |c|               # foobar = do
   x = foo.parse c                        #   x <- foo
@@ -221,6 +226,16 @@ group(                                   #
   z,                                     #
 ).fmap do |(wr, (xr, yr), zr)|           #
   Foo.new(wr, Bar.new(xr, yr), zr)       # Foo <$> w <*> (Bar <$> x <*> y) <*> z
+end                                      #
+                                         #
+                                         # -- Means the same, but this
+                                         # -- raises an error in Haskell
+                                         # -- because it requires an
+                                         # -- infinite type [[[[...]]]]
+recursive do |p|                         # fix $ \p ->
+  between(lit("("), lit(")"),            #  between (string "(") (string ")") $
+    single(p) | pure([])                 #    ((:[]) <$> p) <|> pure []
+  end                                    #
 end                                      #
 ```
 
