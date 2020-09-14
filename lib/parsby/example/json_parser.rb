@@ -9,15 +9,15 @@ module Parsby::Example
       (spaced(value) < eof).parse io
     end
 
-    def value
+    define_combinator :value do
       null | bool | number | string | array | object
     end
 
-    def null
+    define_combinator :null do
       lit("null") > pure(nil)
     end
 
-    def bool
+    define_combinator :bool do
       choice(
         lit("true") > pure(true),
         lit("false") > pure(false),
@@ -28,7 +28,7 @@ module Parsby::Example
     # we leave this definition here since this module is supposed to be an
     # example of using Parsby, and this works well for showing how to use
     # `group` and `fmap`.
-    def number 
+    define_combinator :number  do
       sign = lit("-") | lit("+")
       group(
         optional(sign),
@@ -55,7 +55,7 @@ module Parsby::Example
       end
     end
 
-    def string
+    define_combinator :string do
       between(lit('"'), lit('"'),
         join(many(choice(
           any_char.that_fails(lit('"') | lit("\\")),
@@ -74,11 +74,11 @@ module Parsby::Example
       )
     end
 
-    def array
+    define_combinator :array do
       between(lit("["), ws > lit("]"), sep_by(lit(","), spaced(lazy { value })))
     end
 
-    def object
+    define_combinator :object do
       between(lit("{"), ws > lit("}"),
         sep_by(lit(","),
           spaced(group(
