@@ -7,10 +7,16 @@ class Parsby
       # automatic labels. For combinators defined with this, you'll get
       # labels that resemble the corresponding ruby expression.
       def define_combinator(name, wrap: true, &b)
-        # This is necessary not only to convert the proc to something
-        # that'll verify arity, but also to get super() in b to work.
+        # Convert block to method. This is necessary not only to convert
+        # the proc to something that'll verify arity, but also to get
+        # super() in b to work.
         define_method(name, &b)
-        m = instance_method name
+        m = if defined? instance_method
+          instance_method name
+        else
+          # self is probably main
+          method(name).unbind
+        end
 
         # Lambda used to access private module method from instance method.
         inspectable_labels_lambda = lambda {|x| inspectable_labels(x) }

@@ -31,6 +31,7 @@ def reload!
     .each(&method(:load)) # Load everything only after having removed everything.
 
   include Parsby::Combinators
+  extend Parsby::Combinators::ModuleMethods
   nil
 end
 
