@@ -150,10 +150,10 @@ Parsby::ExpectationFailed: line 1:
   |                                  * failure: sexp
 ```
 
-As can be seen by the exception message above, Parsby manages a tree
-structure representing parsers and their subparsers, with the information
-of where a particular parser began parsing, where it ended, whether it
-succeeded or failed, and the label of the parser.
+As can be seen, Parsby manages a tree structure representing parsers and
+their subparsers, with the information of where a particular parser began
+parsing, where it ended, whether it succeeded or failed, and the label of
+the parser.
 
 It might be worth mentioning that when debugging a parser from an
 unexpected `ExpectationFailed` error, the backtrace isn't really useful.
