@@ -193,6 +193,38 @@ just like the snippets of code that appear right-most in backtraces. It's
 because of this that I consider the use of `define_combinator` more
 preferable than using `def` and explicitely assigning labels.
 
+## `splicer` combinator
+
+As displayed by the exception message above, Parsby manages a tree
+structure representing parsers and their subparsers, with the information
+of where a particular parser began parsing, where it ended, whether it
+succeeded or failed, and the label of the parser.
+
+If you look at the source of the example lisp parser, you might note that
+there are a lot more parsers in between those shown in the graph. `sexp` is
+not a direct child of `list`, for example, despite it appearing as so.
+There are at least 6 ancestors/descendant parsers between `list` and
+`sexp`. It'd be very much pointless to show them all. They convey little
+additional information and their labels are very verbose. The reason why
+they don't appear is because the `splicer` combinator is used to make the
+tree look a little cleaner.
+
+The name comes from JS's `Array.prototype.splice`, to which you can give a
+starting position, and a count specifying the end, and it'll remove the
+specified elements from an Array. We use `splicer` likewise, only it works
+on parse trees. To show an example, here's a simplified definition of
+`choice`:
+
+```ruby
+define_combinator :choice do |*ps|
+  ps = ps.flatten
+
+  ps.reduce(unparseable) do |a, p|
+    a | p
+  end
+end
+```
+
 ## Parsing from a string, a file, a pipe, a socket, ...
 
 Any `IO` ought to work (unit tests currently have only checked pipes,
