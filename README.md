@@ -68,7 +68,7 @@ Let's look at a slightly simplified pre-existing use:
 
 ```ruby
 def lit(e, case_sensitive: true)
-  Parsby.new(e.inspect) do |c|
+  Parsby.new do |c|
     a = c.bio.read e.length
     if case_sensitive ? a == e : a.to_s.downcase == e.downcase
       a
