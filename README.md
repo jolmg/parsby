@@ -162,12 +162,19 @@ between(lit("<"), lit(">"), lit("foo")).label.to_s
 Here's an example of an error, when parsing fails:
 
 ```
-pry(main)> Parsby::Example::LispParser.sexp.parse "(foo (foo bar) 2.3 . . nil)"     
+pry(main)> Parsby::Example::LispParser.sexp.parse "(foo `(foo ,bar) 2.3 . . nil)"    
 Parsby::ExpectationFailed: line 1:
   (foo `(foo ,bar) 2.3 . . nil)
                          |           * failure: char_in("([")
                          |           * failure: list
-                         |           * failure: choice(abbrev, atom, list)
+                         |          *| failure: symbol
+                         |         *|| failure: nil
+                         |        *||| failure: string
+                         |       *|||| failure: number
+                                 \\\||
+                         |          *| failure: atom
+                         |         *|| failure: abbrev
+                                   \\|
                          |           * failure: sexp
                        V            *| success: lit(".")
                    \-/             *|| success: sexp
@@ -176,7 +183,6 @@ Parsby::ExpectationFailed: line 1:
   V                             *||||| success: char_in("([")
                                 \\\\\|
   |                                  * failure: list
-  |                                  * failure: choice(abbrev, atom, list)
   |                                  * failure: sexp
 ```
 
