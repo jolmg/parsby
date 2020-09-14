@@ -180,6 +180,11 @@ Parsby::ExpectationFailed: line 1:
   |                                  * failure: sexp
 ```
 
+As can be seen by the exception message above, Parsby manages a tree
+structure representing parsers and their subparsers, with the information
+of where a particular parser began parsing, where it ended, whether it
+succeeded or failed, and the label of the parser.
+
 It might be worth mentioning that when debugging a parser from an
 `ExpectationFailed` error, the backtrace isn't really useful. That's
 because the backtrace points to the code involved in parsing, not the code
@@ -189,24 +194,23 @@ to somewhat substitute the utility of the backtrace in these cases.
 
 Relating to that, the right-most text are the labels of the corresponding
 parsers. I find that labels that resemble the source code are quite useful,
-just like the snippets of code that appear right-most in backtraces. It's
-because of this that I consider the use of `define_combinator` more
-preferable than using `def` and explicitely assigning labels.
+just like the code location descriptions that appear right-most in
+backtraces. It's because of this that I consider the use of
+`define_combinator` more preferable than using `def` and explicitely
+assigning labels.
 
-## `splicer` combinator
-
-As displayed by the exception message above, Parsby manages a tree
-structure representing parsers and their subparsers, with the information
-of where a particular parser began parsing, where it ended, whether it
-succeeded or failed, and the label of the parser.
+### Cleaning up the parse tree for the trace
 
 If you look at the source of the example lisp parser, you might note that
-there are a lot more parsers in between those shown in the graph. `sexp` is
-not a direct child of `list`, for example, despite it appearing as so.
-There are at least 6 ancestors/descendant parsers between `list` and
+there are a lot more parsers in between those shown in the tree above.
+`sexp` is not a direct child of `list`, for example, despite it appearing
+as so. There are at least 6 ancestors/descendant parsers between `list` and
 `sexp`. It'd be very much pointless to show them all. They convey little
-additional information and their labels are very verbose. The reason why
-they don't appear is because the `splicer` combinator is used to make the
+additional information and their labels are very verbose.
+
+### `splicer.start` combinator
+
+The reason why they don't appear is because `splicer` is used to make the
 tree look a little cleaner.
 
 The name comes from JS's `Array.prototype.splice`, to which you can give a
@@ -223,6 +227,83 @@ define_combinator :choice do |*ps|
     a | p
   end
 end
+```
+
+Let's fail it:
+
+```
+pry(main)> choice(lit("foo"), lit("bar"), lit("baz")).parse "qux"                                   
+Parsby::ExpectationFailed: line 1:
+  qux
+  \-/    * failure: lit("baz")
+  \-/   *| failure: lit("bar")
+  \-/  *|| failure: lit("foo")
+  |   *||| failure: unparseable
+      \|||
+  |    *|| failure: (unparseable | lit("foo"))
+       \||
+  |     *| failure: ((unparseable | lit("foo")) | lit("bar"))
+        \|
+  |      * failure: (((unparseable | lit("foo")) | lit("bar")) | lit("baz"))
+  |      * failure: choice(lit("foo"), lit("bar"), lit("baz"))
+```
+
+Those parser intermediaries that use `|` aren't really making things any
+clearer. Let's use `splicer` to remove those:
+
+```ruby
+    define_combinator :choice do |*ps|
+      ps = ps.flatten
+
+      splicer.start do |m|
+        ps.reduce(unparseable) do |a, p|
+          a | m.end(p)
+        end
+      end
+    end
+```
+
+Let's fail it, again:
+
+```
+pry(main)> choice(lit("foo"), lit("bar"), lit("baz")).parse "qux"                                  
+Parsby::ExpectationFailed: line 1:
+  qux
+  \-/   * failure: lit("baz")
+  \-/  *| failure: lit("bar")
+  \-/ *|| failure: lit("foo")
+      \\|
+  |     * failure: splicer.start((((unparseable | splicer.end(lit("foo"))) | splicer.end(lit("bar"))) | splicer.end(lit("baz"))))
+  |     * failure: choice(lit("foo"), lit("bar"), lit("baz"))
+```
+
+Now, the only issue left is that `define_combinator` wraps the result of
+the parser in another parser. Let's disable that wrapping by passing `wrap:
+false` to it:
+
+```ruby
+    define_combinator :choice, wrap: false do |*ps|
+      ps = ps.flatten
+
+      splicer.start do |m|
+        ps.reduce(unparseable) do |a, p|
+          a | m.end(p)
+        end
+      end
+    end
+```
+
+Let's fail it, again:
+
+```
+pry(main)> choice(lit("foo"), lit("bar"), lit("baz")).parse "qux"                                  
+Parsby::ExpectationFailed: line 1:
+  qux
+  \-/   * failure: lit("baz")
+  \-/  *| failure: lit("bar")
+  \-/ *|| failure: lit("foo")
+      \\|
+  |     * failure: choice(lit("foo"), lit("bar"), lit("baz"))
 ```
 
 ## Parsing from a string, a file, a pipe, a socket, ...
