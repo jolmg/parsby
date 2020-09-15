@@ -29,21 +29,24 @@ Or install it yourself as:
 
     $ gem install parsby
 
-## Introduction
+## Examples
 
-If you're already familiar with this type of library, you might prefer to
-skip to [Comparing with Haskell's Parsec](#comparing-with-haskells-parsec),
-and/or check-out the example parsers:
+If you'd like to jump right into example parsers that use this library,
+there's a few in this source:
 
  - [CSV (RFC 4180 compliant)](lib/parsby/example/csv_parser.rb)
  - [JSON](lib/parsby/example/json_parser.rb)
  - [Lisp](lib/parsby/example/lisp_parser.rb)
- - [Arithmetic](lib/parsby/example/arithmetic_parser.rb)
+ - [Arithmetic expressions](lib/parsby/example/arithmetic_parser.rb)
 
-Carrying on, this is a library used to define parsers by declaratively
-describing a syntax using what's commonly referred to as combinators.
-Parser combinators are functions that take parsers as inputs and/or return
-parsers as outputs, i.e. they *combine* parsers into new parsers.
+Each example is about 100 lines long. A couple of screenfuls.
+
+## Introduction
+
+This is a library used to define parsers by declaratively describing a
+syntax using what's commonly referred to as combinators. Parser combinators
+are functions that take parsers as inputs and/or return parsers as outputs,
+i.e. they *combine* parsers into new parsers.
 
 As an example, `between` is a combinator with 3 parameters: a parser for
 what's to the left, one for what's to the right, and lastly one for what's
@@ -51,8 +54,8 @@ in-between them, and it returns a parser that, after parsing, returns the
 result of the in-between parser:
 
 ```ruby
-between(lit("<"), lit(">"), lit("foo")).parse "<foo>"
-#=> "foo"
+between(lit("<"), lit(">"), decimal).parse "<100>"
+#=> 100
 ```
 
 `lit` is a combinator that takes a string and returns a parser for
