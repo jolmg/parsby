@@ -63,12 +63,6 @@ between(lit("<"), lit(">"), decimal).parse "<100>"
 `lit` is a combinator that takes a string and returns a parser for
 `lit`erally that string.
 
-## Parsing from a string, a file, a pipe, a socket, ...
-
-Any `IO` ought to work (unit tests currently have only checked pipes,
-though). When you pass a string to `Parsby#parse` it wraps it with
-`StringIO` before using it.
-
 ## Defining combinators
 
 If you look at the examples in this source, you'll notice that all
@@ -118,10 +112,10 @@ Now, normally one ought to be able to define parsers using just
 combinators, but there are times when one might need more control. For
 those times, the most raw way to define a parser is using `Parsby.new`.
 
-Let's look at a slightly simplified pre-existing use:
+Here's `lit` as an example:
 
 ```ruby
-def lit(e, case_sensitive: true)
+define_combinator :lit, wrap: false do |e, case_sensitive: true|
   Parsby.new do |c|
     a = c.bio.read e.length
     if case_sensitive ? a == e : a.to_s.downcase == e.downcase
@@ -133,9 +127,8 @@ def lit(e, case_sensitive: true)
 end
 ```
 
-That's the `lit` combinator mentioned before. It takes a string argument
-for what it `e`xpects to parse, and returns what was `a`ctually parsed if
-it matches the expectation.
+It takes a string argument for what it `e`xpects to parse, and returns what
+was `a`ctually parsed if it matches the expectation.
 
 The block parameter `c` is a `Parsby::Context`. `c.bio` holds a
 `Parsby::BackedIO`. The `parse` method of `Parsby` objects accepts ideally
@@ -151,7 +144,7 @@ module FoobarParser
   include Parsby::Combinators
   extend self
 
-  # Entrypoint for reader to know where to start looking
+  # Entrypoint nicety
   def parse(s)
     foobar.parse s
   end
@@ -253,7 +246,7 @@ Relating to that, the right-most text are the labels of the corresponding
 parsers. I find that labels that resemble the source code are quite useful,
 just like the code location descriptions that appear right-most in
 backtraces. It's because of this that I consider the use of
-`define_combinator` more preferable than using `def` and explicitely
+`define_combinator` more preferable than using `def` and explicitly
 assigning labels.
 
 ### Cleaning up the parse tree for the trace
@@ -542,7 +535,14 @@ expr.parse "5 - 4 - 3"
 `reduce` starts parsing with its argument, in this case `hpe`, then passes
 the result to the block, which uses it for the resolved left operand.
 `reduce` then parses with the parser returned by the block and passes the
-result again to the block, and so on and so forth until parsing fails.
+result again to the block, and so on and so forth until parsing fails,
+returning the result of the last successful parse.
+
+## Parsing from a string, a file, a pipe, a socket, ...
+
+Any `IO` ought to work (unit tests currently have only checked pipes,
+though). When you pass a string to `Parsby#parse` it wraps it with
+`StringIO` before using it.
 
 ## Comparing with Haskell's Parsec
 
