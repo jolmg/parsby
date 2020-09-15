@@ -96,7 +96,12 @@ them with `BackedIO` to give the `IO` the ability to backtrack.
 
 ## Defining combinators
 
-If you look at the examples in this source, you'll notice that all combinators are defined with `define_combinator`. Strictly speaking, it's not necessary to use that to define combinators. You can do it with variable assignment or `def` syntax. Nevertheless, `define_combinator` is preferred because it automates the assignment of a label to the combinator. Consider these examples:
+If you look at the examples in this source, you'll notice that all
+combinators are defined with `define_combinator`. Strictly speaking, it's
+not necessary to use that to define combinators. You can do it with
+variable assignment or `def` syntax. Nevertheless, `define_combinator` is
+preferred because it automates the assignment of a label to the combinator.
+Consider these examples:
 
 ```ruby
 define_combinator :between do |left, right, p|
