@@ -126,6 +126,69 @@ between(lit("<"), lit(">"), lit("foo")).label.to_s
 => "<unknown>"
 ```
 
+## Defining parsers as modules
+
+The typical pattern I use is something like this:
+
+```ruby
+module FoobarParser
+  include Parsby::Combinators
+  extend self
+
+  # Entrypoint for reader to know where to start looking
+  def parse(s)
+    foobar.parse s
+  end
+
+  define_combinator :foobar do
+    foo + bar
+  end
+
+  define_combinator :foo do
+    lit("foo")
+  end
+
+  define_combinator :bar do
+    lit("bar")
+  end
+end
+```
+
+From that, you can use it directly as:
+
+```ruby
+FoobarParser.parse "foobar"
+FoobarParser.foo.parse "foo"
+```
+
+Being able to use subparsers directly is useful for when you want to e.g.
+parse JSON array, instead of any JSON value.
+
+Writing the parser as a module like that also makes it easy to make a new
+parser based on it:
+
+```ruby
+module FoobarbazParser
+  include FoobarParser
+  extend self
+
+  def parse(s)
+    foobarbaz.parse s
+  end
+
+  define_combinator :foobarbaz do
+    foobar + baz
+  end
+
+  define_combinator :baz do
+    lit("baz")
+  end
+end
+```
+
+You can also define such a module to hold your own project's combinators to
+use in multiple parsers.
+
 ## `ExpectationFailed`
 
 Here's an example of an error, when parsing fails:
