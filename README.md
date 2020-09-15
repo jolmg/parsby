@@ -43,8 +43,6 @@ there's a few in this source:
  - [Lisp](lib/parsby/example/lisp_parser.rb)
  - [Arithmetic expressions](lib/parsby/example/arithmetic_parser.rb)
 
-Each example is about 100 lines long. A couple of screenfuls.
-
 ## Introduction
 
 This is a library used to define parsers by declaratively describing a
