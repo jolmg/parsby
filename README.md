@@ -333,14 +333,19 @@ value.parse "[[[[foo, foo]]]]"
 ## Comparing with Haskell's Parsec
 
 Although there's more to this library than its similarities with Parsec,
-they are pretty similar:
+it's useful to see those similarities if you're already familiar with
+Parsec:
 
 ```ruby
-# Parsby                                 # Parsec
+# Parsby                                 # -- Parsec
                                          #
-foo.then {|x| bar x }                    # foo >>= \x -> bar x
+lit("foo")                               # string "foo"
                                          #
 foo | bar                                # foo <|> bar
+                                         #
+pure "foo"                               # pure "foo"
+                                         #
+foo.then {|x| bar x }                    # foo >>= \x -> bar x
                                          #
 foobar = Parsby.new do |c|               # foobar = do
   x = foo.parse c                        #   x <- foo
@@ -350,6 +355,8 @@ end                                      #
 lit("(") > foo < lit(")")                # string "(" *> foo <* string ")"
                                          #
 lit("5").fmap {|n| n.to_i + 1 }          # fmap (\n -> read n + 1) (string "5")
+                                         #
+group(x, y, z)                           # (,,) <$> x <*> y <*> z
                                          #
 group(                                   #
   w,                                     #
