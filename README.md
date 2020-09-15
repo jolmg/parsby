@@ -101,7 +101,7 @@ combinators are defined with `define_combinator`. Strictly speaking, it's
 not necessary to use that to define combinators. You can do it with
 variable assignment or `def` syntax. Nevertheless, `define_combinator` is
 preferred because it automates the assignment of a label to the combinator.
-Consider these examples:
+Consider this example:
 
 ```ruby
 define_combinator :between do |left, right, p|
