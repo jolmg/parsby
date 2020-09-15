@@ -3,14 +3,15 @@
 Parser combinator library for Ruby, based on Haskell's Parsec.
 
  - [Installation](#installation)
+ - [Examples](#examples)
  - [Introduction](#introduction)
- - [`Parsby.new`](#parsbynew)
+ - [Parsing from a string, a file, a pipe, a socket, ...](#parsing-from-a-string-a-file-a-pipe-a-socket-)
  - [Defining combinators](#defining-combinators)
+ - [`Parsby.new`](#parsbynew)
  - [Defining parsers as modules](#defining-parsers-as-modules)
  - [`ExpectationFailed`](#expectationfailed)
    - [Cleaning up the parse tree for the trace](#cleaning-up-the-parse-tree-for-the-trace)
    - [`splicer.start` combinator](#splicerstart-combinator)
- - [Parsing from a string, a file, a pipe, a socket, ...](#parsing-from-a-string-a-file-a-pipe-a-socket-)
  - [Recursive parsers with `lazy`](#recursive-parsers-with-lazy)
  - [Parsing left-recursive languages with `reduce` combinator](#parsing-leftrecursive-languages-with-reduce-combinator)
  - [Comparing with Haskell's Parsec](#comparing-with-haskells-parsec)
@@ -64,35 +65,11 @@ between(lit("<"), lit(">"), decimal).parse "<100>"
 `lit` is a combinator that takes a string and returns a parser for
 `lit`erally that string.
 
-## `Parsby.new`
+## Parsing from a string, a file, a pipe, a socket, ...
 
-Now, normally one ought to be able to define parsers using just
-combinators, but there are times when one might need more control. For
-those times, the most raw way to define a parser is using `Parsby.new`.
-
-Let's look at a slightly simplified pre-existing use:
-
-```ruby
-def lit(e, case_sensitive: true)
-  Parsby.new do |c|
-    a = c.bio.read e.length
-    if case_sensitive ? a == e : a.to_s.downcase == e.downcase
-      a
-    else
-      raise ExpectationFailed.new c
-    end
-  end
-end
-```
-
-That's the `lit` combinator mentioned before. It takes a string argument
-for what it `e`xpects to parse, and returns what was `a`ctually parsed if
-it matches the expectation.
-
-The block parameter `c` is a `Parsby::Context`. `c.bio` holds a
-`Parsby::BackedIO`. The `parse` method of `Parsby` objects accepts ideally
-any `IO` (and `String`s, which it turns into `StringIO`) and then wraps
-them with `BackedIO` to give the `IO` the ability to backtrack.
+Any `IO` ought to work (unit tests currently have only checked pipes,
+though). When you pass a string to `Parsby#parse` it wraps it with
+`StringIO` before using it.
 
 ## Defining combinators
 
@@ -137,6 +114,36 @@ between(lit("<"), lit(">"), lit("foo")).label.to_s
 => "<unknown>"
 ```
 
+## `Parsby.new`
+
+Now, normally one ought to be able to define parsers using just
+combinators, but there are times when one might need more control. For
+those times, the most raw way to define a parser is using `Parsby.new`.
+
+Let's look at a slightly simplified pre-existing use:
+
+```ruby
+def lit(e, case_sensitive: true)
+  Parsby.new do |c|
+    a = c.bio.read e.length
+    if case_sensitive ? a == e : a.to_s.downcase == e.downcase
+      a
+    else
+      raise ExpectationFailed.new c
+    end
+  end
+end
+```
+
+That's the `lit` combinator mentioned before. It takes a string argument
+for what it `e`xpects to parse, and returns what was `a`ctually parsed if
+it matches the expectation.
+
+The block parameter `c` is a `Parsby::Context`. `c.bio` holds a
+`Parsby::BackedIO`. The `parse` method of `Parsby` objects accepts ideally
+any `IO` (and `String`s, which it turns into `StringIO`) and then wraps
+them with `BackedIO` to give the `IO` the ability to backtrack.
+
 ## Defining parsers as modules
 
 The typical pattern I use is something like this:
@@ -169,7 +176,9 @@ From that, you can use it directly as:
 
 ```ruby
 FoobarParser.parse "foobar"
+#=> "foobar"
 FoobarParser.foo.parse "foo"
+#=> "foo"
 ```
 
 Being able to use subparsers directly is useful for when you want to e.g.
@@ -355,12 +364,6 @@ Parsby::ExpectationFailed: line 1:
       \\|
   |     * failure: choice(lit("foo"), lit("bar"), lit("baz"))
 ```
-
-## Parsing from a string, a file, a pipe, a socket, ...
-
-Any `IO` ought to work (unit tests currently have only checked pipes,
-though). When you pass a string to `#parse` it wraps it with `StringIO`
-before using it.
 
 ## Recursive parsers with `lazy`
 
