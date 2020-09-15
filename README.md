@@ -102,8 +102,8 @@ between(lit("<"), lit(">"), lit("foo")).label
 ```
 
 If we use `def` instead of `define_combinator`, then the label would be
-that assigned by the outermost combinator. In the following case, it would
-be that assigned by `<`.
+that of its definition. In the following case, it would be that assigned by
+`<`.
 
 ```ruby
 def between(left, right, p)
