@@ -6,10 +6,13 @@ Parser combinator library for Ruby, based on Haskell's Parsec.
  - [Introduction](#introduction)
  - [`Parsby.new`](#parsbynew)
  - [Defining combinators](#defining-combinators)
+ - [Defining parsers as modules](#defining-parsers-as-modules)
  - [`ExpectationFailed`](#expectationfailed)
    - [Cleaning up the parse tree for the trace](#cleaning-up-the-parse-tree-for-the-trace)
    - [`splicer.start` combinator](#splicerstart-combinator)
  - [Parsing from a string, a file, a pipe, a socket, ...](#parsing-from-a-string-a-file-a-pipe-a-socket-)
+ - [Recursive parsers with `lazy`](#recursive-parsers-with-lazy)
+ - [Parsing left-recursive languages with `reduce` combinator](#parsing-leftrecursive-languages-with-reduce-combinator)
  - [Comparing with Haskell's Parsec](#comparing-with-haskells-parsec)
  - [Development](#development)
 
