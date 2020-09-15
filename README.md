@@ -330,6 +330,145 @@ value.parse "[[[[foo, foo]]]]"
 #=> [[[["foo", "foo"]]]]
 ```
 
+## Parsing left-recursive languages with `reduce` combinator
+
+Here's a little arithmetic parser:
+
+```ruby
+define_combinator :div_op {|left, right| group(left, spaced(lit("/")), right) }
+define_combinator :mul_op {|left, right| group(left, spaced(lit("*")), right) }
+define_combinator :add_op {|left, right| group(left, spaced(lit("+")), right) }
+define_combinator :sub_op {|left, right| group(left, spaced(lit("-")), right) }
+
+def scope(x, &b)
+  b.call x
+end
+
+define_combinator :expr do
+  lazy do
+    e = decimal
+
+    # hpe -- higher precedence level expression
+    # spe -- same precedence level expression
+
+    e = scope e do |hpe|
+      recursive do |spe|
+        choice(
+          mul_op(hpe, spe),
+          div_op(hpe, spe),
+          hpe,
+        )
+      end
+    end
+
+    e = scope e do |hpe|
+      recursive do |spe|
+        choice(
+          add_op(hpe, spe),
+          sub_op(hpe, spe),
+          hpe,
+        )
+      end
+    end
+  end
+end
+
+expr.parse "5 - 4 - 3"
+#=> [5, "-", [4, "-", 3]]
+```
+
+Now, that's incorrectly right-associative because we made the
+precedence-level parsers right-recursive. See how the block parameter of
+`recursive` is used for the right operands and not the left ones?
+
+Let's fix that by switching the parsers used for the operands:
+
+```ruby
+define_combinator :expr do
+  lazy do
+    e = decimal
+
+    # hpe -- higher precedence level expression
+    # spe -- same precedence level expression
+
+    e = scope e do |hpe|
+      recursive do |spe|
+        choice(
+          mul_op(spe, hpe),
+          div_op(spe, hpe),
+          hpe,
+        )
+      end
+    end
+
+    e = scope e do |hpe|
+      recursive do |spe|
+        choice(
+          add_op(spe, hpe),
+          sub_op(spe, hpe),
+          hpe,
+        )
+      end
+    end
+  end
+end
+
+expr.parse "5 - 4 - 3"
+# ...
+```
+
+If you ran this, it might take a while, but eventually you'll have a bunch
+of `SystemStackError: stack level too deep` errors.
+
+What's happening is that e.g. while trying to check whether the expression
+is a subtraction, it needs to first resolve the left operand, and as part
+of that it needs to check whether *that's* a subtraction, and so on and so
+forth. In other words, this causes infinite recursion. It can't even read a
+single character of the input because of this.
+
+Our problem is that we're parsing top-down. We're trying to understand what
+the whole thing is before looking at the parts. We need to parse bottom-up.
+Successfully parse a small piece, then figure out what the whole thing is
+as we keep reading. To do that while keeping our definitions declarative,
+we can use the `reduce` combinator (in combination with `pure`):
+
+```ruby
+define_combinator :expr do
+  lazy do
+    e = decimal
+
+    # hpe -- higher precedence level expression
+    # spe -- same precedence level expression
+
+    e = scope e do |hpe|
+      reduce hpe do |left_result|
+        choice(
+          mul_op(pure(left_result), hpe),
+          div_op(pure(left_result), hpe),
+        )
+      end
+    end
+
+    e = scope e do |hpe|
+      reduce hpe do |left_result|
+        choice(
+          add_op(pure(left_result), hpe),
+          sub_op(pure(left_result), hpe),
+        )
+      end
+    end
+  end
+end
+
+expr.parse "5 - 4 - 3"
+#=> [[5, "-", 4], "-", 3]
+```
+
+`reduce` starts parsing with its argument, in this case `hpe`, then passes
+the result to the block, which uses it for the resolved left operand.
+`reduce` then parses with the parser returned by the block and passes the
+result again to the block, and so on and so forth until parsing fails.
+
 ## Comparing with Haskell's Parsec
 
 Although there's more to this library than its similarities with Parsec,
