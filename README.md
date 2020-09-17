@@ -5,7 +5,6 @@ Parser combinator library for Ruby, based on Haskell's Parsec.
  - [Installation](#installation)
  - [Examples](#examples)
  - [Introduction](#introduction)
- - [Parsing from a string, a file, a pipe, a socket, ...](#parsing-from-a-string-a-file-a-pipe-a-socket-)
  - [Defining combinators](#defining-combinators)
  - [`Parsby.new`](#parsbynew)
  - [Defining parsers as modules](#defining-parsers-as-modules)
@@ -14,6 +13,7 @@ Parser combinator library for Ruby, based on Haskell's Parsec.
    - [`splicer.start` combinator](#splicerstart-combinator)
  - [Recursive parsers with `lazy`](#recursive-parsers-with-lazy)
  - [Parsing left-recursive languages with `reduce` combinator](#parsing-leftrecursive-languages-with-reduce-combinator)
+ - [Parsing from a string, a file, a pipe, a socket, ...](#parsing-from-a-string-a-file-a-pipe-a-socket-)
  - [Comparing with Haskell's Parsec](#comparing-with-haskells-parsec)
  - [Development](#development)
 
@@ -400,7 +400,8 @@ value.parse "[[[[foo, foo]]]]"
 
 ## Parsing left-recursive languages with `reduce` combinator
 
-Here's a little arithmetic parser:
+Here's a little arithmetic parser based on the
+`Parsby::Example::ArithmeticParser`:
 
 ```ruby
 define_combinator :div_op {|left, right| group(left, spaced(lit("/")), right) }
@@ -538,6 +539,9 @@ the result to the block, which uses it for the resolved left operand.
 result again to the block, and so on and so forth until parsing fails,
 returning the result of the last successful parse.
 
+In effect, we're parsing left operands bottom-up and right operands
+top-down.
+
 ## Parsing from a string, a file, a pipe, a socket, ...
 
 Any `IO` ought to work (unit tests currently have only checked pipes,
@@ -546,9 +550,7 @@ though). When you pass a string to `Parsby#parse` it wraps it with
 
 ## Comparing with Haskell's Parsec
 
-Although there's more to this library than its similarities with Parsec,
-it's useful to see those similarities if you're already familiar with
-Parsec:
+If you're already familiar with Parsec, here are some similarities:
 
 ```ruby
 # Parsby                                 # -- Parsec
