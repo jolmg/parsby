@@ -108,7 +108,7 @@ class Parsby
 
     # Parses a decimal number as matched by \d+.
     define_combinator :decimal do
-      many_1(decimal_digit).fmap {|ds| ds.join.to_i } % token("number")
+      many_1(decimal_digit).fmap {|ds| ds.join.to_i }
     end
 
     # This is taken from the Json subparser for numbers.
@@ -374,11 +374,6 @@ class Parsby
           raise ExpectationFailed.new c
         end
       end
-    end
-
-    # Makes a token with the given name.
-    def token(name)
-      Parsby::Token.new name
     end
   end
 end

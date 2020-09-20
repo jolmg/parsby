@@ -374,31 +374,6 @@ class Parsby
     end
   end
 
-  class Token
-    attr_reader :name
-
-    # Makes a token with the given name.
-    def initialize(name)
-      @name = name
-    end
-
-    # Renders token name by surrounding it in angle brackets.
-    def to_s
-      "<#{name}>"
-    end
-
-    # Compare tokens
-    def ==(t)
-      t.is_a?(self.class) && t.name == name
-    end
-
-    # Flipped version of Parsby#%, so you can specify the token of a parser
-    # at the beginning of a parser expression.
-    def %(p)
-      p % self
-    end
-  end
-
   class Backup < StringIO
     def with_saved_pos(&b)
       saved = pos
@@ -620,14 +595,10 @@ class Parsby
 
   # The parser's label. It's an "unknown" token by default.
   def label
-    @label || Token.new("unknown")
+    @label || "unknown"
   end
 
-  # Assign label to parser. If given a symbol, it'll be turned into a
-  # Parsby::Token.
-  def label=(name)
-    @label = name.is_a?(Symbol) ? Token.new(name) : name
-  end
+  attr_writer :label
 
   # Initialize parser with optional label argument, and parsing block. The
   # parsing block is given an IO as argument, and its result is the result

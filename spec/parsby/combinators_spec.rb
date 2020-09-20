@@ -487,10 +487,4 @@ RSpec.describe Parsby::Combinators do
       expect { eof.parse("x") }.to raise_error Parsby::ExpectationFailed
     end
   end
-
-  describe "#token" do
-    it "builds a token with the given name" do
-      expect(token "foo").to be_a(Parsby::Token).and satisfy {|t| t.name == "foo"}
-    end
-  end
 end

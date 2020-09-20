@@ -728,33 +728,6 @@ RSpec.describe Parsby do
     end
   end
 
-  describe Parsby::Token do
-    describe "#to_s" do
-      it "wraps name in angle brackets" do
-        expect(Parsby::Token.new("foo").to_s).to eq "<foo>"
-      end
-    end
-
-    describe "#initialize" do
-      it "takes name as argument" do
-        expect(Parsby::Token.new("foo").name).to eq "foo"
-      end
-    end
-
-    describe "#==" do
-      it "compares tokens" do
-        expect(Parsby::Token.new("foo")).to eq Parsby::Token.new("foo")
-      end
-    end
-
-    describe "#%" do
-      it "is the flipped version of Parsby's" do
-        expect((Parsby::Token.new("foo") % lit("foo")).label.to_s)
-          .to eq "<foo>"
-      end
-    end
-  end
-
   describe Parsby::BackedIO do
     let(:pipe) { IO.pipe }
     let(:r) { pipe[0] }
@@ -994,8 +967,7 @@ RSpec.describe Parsby do
     end
 
     it "when label is not provided, it's an unknown token" do
-      expect(Parsby.new.label.class).to eq Parsby::Token
-      expect(Parsby.new.label.name).to eq "unknown"
+      expect(Parsby.new.label).to eq "unknown"
     end
 
     it "takes block that provides a BackedIO as argument, and which result is the result of #parse" do
@@ -1030,16 +1002,13 @@ RSpec.describe Parsby do
   describe "#label=" do
     it "assigns strings as is" do
       expect(Parsby.new.tap {|p| p.label = "foo"}.label.to_s).to eq "foo"
-    end
-
-    it "turns it into a token if it's a symbol" do
-      expect(Parsby.new.tap {|p| p.label = :foo}.label.to_s).to eq "<foo>"
+      expect(Parsby.new.tap {|p| p.label = :foo}.label.to_s).to eq "foo"
     end
   end
 
   describe "#label" do
     it "defaults to unknown token" do
-      expect(Parsby.new.label.to_s).to eq "<unknown>"
+      expect(Parsby.new.label).to eq "unknown"
     end
   end
 
