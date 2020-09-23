@@ -5,6 +5,7 @@ Parser combinator library for Ruby, based on Haskell's Parsec.
  - [Installation](#installation)
  - [Examples](#examples)
  - [Introduction](#introduction)
+ - [Some commonly used combinators](#some-commonly-used-combinators)
  - [Defining combinators](#defining-combinators)
  - [`Parsby.new`](#parsbynew)
  - [Defining parsers as modules](#defining-parsers-as-modules)
@@ -60,8 +61,89 @@ between(lit("<"), lit(">"), decimal).parse "<100>"
 #=> 100
 ```
 
-`lit` is a combinator that takes a string and returns a parser for
-`lit`erally that string.
+## Some commonly used combinators
+
+```ruby
+  # Parse argument string literally
+  lit("foo").parse "foo"
+  #=> "foo"
+
+  # Case insensitive lit
+  ilit("Foo").parse "fOo"
+  #=> "fOo"
+
+  # Parse foo or bar
+  (lit("foo") | lit("bar")).parse "bar"
+  #=> "bar"
+
+  # Like `|`, parse one of foo or bar. `choice` is better when you have
+  # many choices to chose from. You can pass it any number of parsers or
+  # array of parsers.
+  choice(lit("foo"), lit("bar")).parse "bar"
+  #=> "bar"
+
+  # Parses each argument in succesion and groups them in an array.
+  group(lit("foo"), lit("bar")).parse "foobar"
+  #=> ["foo", "bar"]
+
+  # Parse foo and bar, returning bar.
+  (lit("foo") > lit("bar")).parse "foobar"
+  #=> "bar"
+
+  # Parse foo and bar, returning foo.
+  (lit("foo") < lit("bar")).parse "foobar"
+  #=> "foo"
+
+  # Parse foo and transform result according to block.
+  lit("foo").fmap {|x| x.upcase }.parse "foo"
+  #=> "FOO"
+
+  # Parse a character from the choices in a string
+  char_in(" \t\r\n").parse "\t"
+  #=> "\t"
+
+  # Make parser optional
+  group(optional(lit("foo")), lit("bar")).parse "bar"
+  #=> [nil, "bar"]
+
+  # Use parser zero or more times, grouping results in array. many_1, does
+  # the same, but requires parsing at least once.
+  many(lit("foo")).parse "foofoo"
+  #=> ["foo", "foo"]
+
+  # Parse many, but each separated by something.
+  sep_by(lit(","), lit("foo")).parse "foo,foo"
+  #=> ["foo", "foo"]
+
+  # `whitespace` (alias `ws`) is zero or more whitespace characters.
+  # `whitespace_1` (alias `ws_1`) is one or more whitespace characters.
+  # `spaced` allows a parser to be surrounded by optional whitespace.
+  # `whitespace_1` is the base definition. If you extend it to e.g. add the
+  # parsing of comments, the other combinators will also recognize that
+  # change.
+  (whitespace > lit("foo")).parse "   foo"
+  #=> "foo"
+  group(lit("foo"), ws_1 > lit("bar")).parse "foo   bar"
+  #=> ["foo", "bar"]
+  spaced(lit("foo")).parse "   foo    "
+  #=> "foo"
+
+  # Parse any one character
+  any_char.parse "f"
+  #=> "f"
+
+  # Require eof at end of parse
+  (lit("foo") < eof).parse "foobar"
+  #=> Parsby::ExpectationFailed
+
+  # join(p) is the same as p.fmap {|xs| xs.join}
+  join(sep_by(lit(","), lit("foo") | lit("bar"))).parse "foo,bar"
+  #=> "foobar"
+
+  # p1 + p2 is the same as group(p1, p2).fmap {|(r1, r2)| r1 + r2 }
+  lit("foo") + (ws > lit("bar")).parse "foo bar"
+  #=> "foobar"
+```
 
 ## Defining combinators
 
