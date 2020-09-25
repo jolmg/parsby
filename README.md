@@ -177,6 +177,9 @@ between(lit("<"), lit(">"), lit("foo")).label
 #=> 'between(lit("<"), lit(">"), lit("foo"))'
 ```
 
+Having labels that resemble the source code is helpful for [the error
+messages](#expectationfailed).
+
 If we use `def` instead of `define_combinator`, then the label would be
 that of its definition. In the following case, it would be that assigned by
 `<`.
