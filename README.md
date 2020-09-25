@@ -103,9 +103,12 @@ between(lit("<"), lit(">"), decimal).parse "<100>"
   lit("foo").fmap {|x| x.upcase }.parse "foo"
   #=> "FOO"
 
-  # Parse a character from the choices in a string
+  # Parse a character from the choices in a set of strings or ranges
   char_in(" \t\r\n").parse "\t"
   #=> "\t"
+  typical_identifier_characters = ['a'..'z', 'A'..'Z', 0..9, "_"]
+  join(many(char_in("!?", typical_identifier_characters))).parse "foo23? bar"
+  #=> "foo23?"
 
   # Make parser optional
   group(optional(lit("foo")), lit("bar")).parse "bar"
