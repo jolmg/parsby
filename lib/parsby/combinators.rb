@@ -185,9 +185,8 @@ class Parsby
       Parsby::Splicer
     end
 
-    # Accepts any number of strings or ranges optionally arbitrarily nested
-    # in arrays and parses a single char from the char options in the
-    # resulting joined string.
+    # Parses a single char from the char options provided as string and
+    # range arguments optionally arbitrarily nested in arrays.
     #
     #   join(many(char_in('a'..'z', 0..9))).parse "foo23 bar"
     #   #=> "foo23"
