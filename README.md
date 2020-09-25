@@ -266,7 +266,7 @@ FoobarParser.foo.parse "foo"
 ```
 
 Being able to use subparsers directly is useful for when you want to e.g.
-parse JSON array, instead of any JSON value.
+parse a JSON array, instead of any JSON value.
 
 Writing the parser as a module like that also makes it easy to make a new
 parser based on it:
