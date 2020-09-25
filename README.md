@@ -199,7 +199,7 @@ def between(left, right, p)
 end
 
 between(lit("<"), lit(">"), lit("foo")).label.to_s
-=> "<unknown>"
+=> "unknown"
 ```
 
 ## Defining parsers as modules
