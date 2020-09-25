@@ -657,7 +657,9 @@ class Parsby
 
   # x < y runs parser x then y and returns x.
   def <(p)
-    self.then {|r| p.then { pure r } } % "(#{label} < #{p.label})"
+    ~splicer.start do |m|
+      m.end(self).then {|r| m.end(p).then { pure r } }
+    end % "(#{label} < #{p.label})"
   end
 
   # x > y runs parser x then y and returns y.

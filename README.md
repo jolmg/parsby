@@ -72,6 +72,11 @@ between(lit("<"), lit(">"), decimal).parse "<100>"
   ilit("Foo").parse "fOo"
   #=> "fOo"
 
+  # Make any value into a parser that results in that value without
+  # consuming input.
+  pure("foo").parse ""
+  #=> "foo"
+
   # Parse foo or bar
   (lit("foo") | lit("bar")).parse "bar"
   #=> "bar"
@@ -94,7 +99,7 @@ between(lit("<"), lit(">"), decimal).parse "<100>"
   (lit("foo") < lit("bar")).parse "foobar"
   #=> "foo"
 
-  # Parse foo and transform result according to block.
+  # Parse transform result according to block.
   lit("foo").fmap {|x| x.upcase }.parse "foo"
   #=> "FOO"
 
@@ -111,7 +116,8 @@ between(lit("<"), lit(">"), decimal).parse "<100>"
   many(lit("foo")).parse "foofoo"
   #=> ["foo", "foo"]
 
-  # Parse many, but each separated by something.
+  # Parse many, but each separated by something. sep_by_1 requires at least
+  # one element.
   sep_by(lit(","), lit("foo")).parse "foo,foo"
   #=> ["foo", "foo"]
 
@@ -129,12 +135,17 @@ between(lit("<"), lit(">"), decimal).parse "<100>"
   #=> "foo"
 
   # Parse any one character
-  any_char.parse "f"
+  any_char.parse "foo"
   #=> "f"
 
   # Require eof at end of parse
   (lit("foo") < eof).parse "foobar"
-  #=> Parsby::ExpectationFailed
+  #=> Parsby::ExpectationFailed: line 1:
+    foobar
+       |    * failure: eof
+    \-/    *| success: lit("foo")
+           \|
+    |       * failure: (lit("foo") < eof)
 
   # join(p) is the same as p.fmap {|xs| xs.join}
   join(sep_by(lit(","), lit("foo") | lit("bar"))).parse "foo,bar"
