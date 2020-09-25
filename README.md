@@ -7,13 +7,13 @@ Parser combinator library for Ruby, based on Haskell's Parsec.
  - [Introduction](#introduction)
  - [Some commonly used combinators](#some-commonly-used-combinators)
  - [Defining combinators](#defining-combinators)
- - [`Parsby.new`](#parsbynew)
  - [Defining parsers as modules](#defining-parsers-as-modules)
  - [`ExpectationFailed`](#expectationfailed)
    - [Cleaning up the parse tree for the trace](#cleaning-up-the-parse-tree-for-the-trace)
    - [`splicer.start` combinator](#splicerstart-combinator)
  - [Recursive parsers with `lazy`](#recursive-parsers-with-lazy)
  - [Parsing left-recursive languages with `reduce` combinator](#parsing-leftrecursive-languages-with-reduce-combinator)
+ - [`Parsby.new`](#parsbynew)
  - [Parsing from a string, a file, a pipe, a socket, ...](#parsing-from-a-string-a-file-a-pipe-a-socket-)
  - [Comparing with Haskell's Parsec](#comparing-with-haskells-parsec)
  - [Development](#development)
@@ -198,35 +198,6 @@ end
 between(lit("<"), lit(">"), lit("foo")).label.to_s
 => "<unknown>"
 ```
-
-## `Parsby.new`
-
-Now, normally one ought to be able to define parsers using just
-combinators, but there are times when one might need more control. For
-those times, the most raw way to define a parser is using `Parsby.new`.
-
-Here's `lit` as an example:
-
-```ruby
-define_combinator :lit, wrap: false do |e, case_sensitive: true|
-  Parsby.new do |c|
-    a = c.bio.read e.length
-    if case_sensitive ? a == e : a.to_s.downcase == e.downcase
-      a
-    else
-      raise ExpectationFailed.new c
-    end
-  end
-end
-```
-
-It takes a string argument for what it `e`xpects to parse, and returns what
-was `a`ctually parsed if it matches the expectation.
-
-The block parameter `c` is a `Parsby::Context`. `c.bio` holds a
-`Parsby::BackedIO`. The `parse` method of `Parsby` objects accepts ideally
-any `IO` (and `String`s, which it turns into `StringIO`) and then wraps
-them with `BackedIO` to give the `IO` the ability to backtrack.
 
 ## Defining parsers as modules
 
@@ -634,6 +605,35 @@ returning the result of the last successful parse.
 
 In effect, we're parsing left operands bottom-up and right operands
 top-down.
+
+## `Parsby.new`
+
+Normally one ought to be able to define parsers using just combinators, but
+there are times when one might need more control. For those times, the most
+raw way to define a parser is using `Parsby.new`.
+
+Here's `lit` as an example:
+
+```ruby
+define_combinator :lit, wrap: false do |e, case_sensitive: true|
+  Parsby.new do |c|
+    a = c.bio.read e.length
+    if case_sensitive ? a == e : a.to_s.downcase == e.downcase
+      a
+    else
+      raise ExpectationFailed.new c
+    end
+  end
+end
+```
+
+It takes a string argument for what it `e`xpects to parse, and returns what
+was `a`ctually parsed if it matches the expectation.
+
+The block parameter `c` is a `Parsby::Context`. `c.bio` holds a
+`Parsby::BackedIO`. The `parse` method of `Parsby` objects accepts ideally
+any `IO` (and `String`s, which it turns into `StringIO`) and then wraps
+them with `BackedIO` to give the `IO` the ability to backtrack.
 
 ## Parsing from a string, a file, a pipe, a socket, ...
 
