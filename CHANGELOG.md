@@ -1,5 +1,11 @@
 ## CHANGELOG
 
+### v1.1.1
+
+##### bugs and minor things
+
+- Add year and name to LICENSE
+
 ### v1.1.0
 
 ##### feature additions
