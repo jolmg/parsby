@@ -11,4 +11,5 @@
 .rspec_status
 
 /README.md.html
+/CHANGELOG.md.html
 /*.gem

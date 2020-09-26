@@ -5,14 +5,14 @@ Parser combinator library for Ruby, based on Haskell's Parsec.
  - [Installation](#installation)
  - [Examples](#examples)
  - [Introduction](#introduction)
+ - [Some commonly used combinators](#some-commonly-used-combinators)
  - [Defining combinators](#defining-combinators)
- - [`Parsby.new`](#parsbynew)
  - [Defining parsers as modules](#defining-parsers-as-modules)
  - [`ExpectationFailed`](#expectationfailed)
    - [Cleaning up the parse tree for the trace](#cleaning-up-the-parse-tree-for-the-trace)
-   - [`splicer.start` combinator](#splicerstart-combinator)
  - [Recursive parsers with `lazy`](#recursive-parsers-with-lazy)
  - [Parsing left-recursive languages with `reduce` combinator](#parsing-leftrecursive-languages-with-reduce-combinator)
+ - [`Parsby.new`](#parsbynew)
  - [Parsing from a string, a file, a pipe, a socket, ...](#parsing-from-a-string-a-file-a-pipe-a-socket-)
  - [Comparing with Haskell's Parsec](#comparing-with-haskells-parsec)
  - [Development](#development)
@@ -60,12 +60,118 @@ between(lit("<"), lit(">"), decimal).parse "<100>"
 #=> 100
 ```
 
-`lit` is a combinator that takes a string and returns a parser for
-`lit`erally that string.
+## Some commonly used combinators
+
+```ruby
+# Parse argument string literally
+lit("foo").parse "foo"
+#=> "foo"
+
+# Case insensitive lit
+ilit("Foo").parse "fOo"
+#=> "fOo"
+
+# Make any value into a parser that results in that value without
+# consuming input.
+pure("foo").parse ""
+#=> "foo"
+
+# Parse foo or bar
+(lit("foo") | lit("bar")).parse "bar"
+#=> "bar"
+
+# Like `|`, parse one of foo or bar. `choice` is better when you have
+# many choices to chose from. You can pass it any number of parsers or
+# array of parsers.
+choice(lit("foo"), lit("bar")).parse "bar"
+#=> "bar"
+
+# Parse with each argument in succesion and group the results in an
+# array.
+group(lit("foo"), lit("bar")).parse "foobar"
+#=> ["foo", "bar"]
+
+# Parse foo and bar, returning bar.
+(lit("foo") > lit("bar")).parse "foobar"
+#=> "bar"
+
+# Parse foo and bar, returning foo.
+(lit("foo") < lit("bar")).parse "foobar"
+#=> "foo"
+
+# Make parser optional
+group(optional(lit("foo")), lit("bar")).parse "bar"
+#=> [nil, "bar"]
+
+# Use parser zero or more times, grouping results in array. many_1, does
+# the same, but requires parsing at least once.
+many(lit("foo")).parse "foofoo"
+#=> ["foo", "foo"]
+
+# Parse many, but each separated by something. sep_by_1 requires at least
+# one element to be parsed.
+sep_by(lit(","), lit("foo")).parse "foo,foo"
+#=> ["foo", "foo"]
+
+# `whitespace` (alias `ws`) is zero or more whitespace characters.
+# `whitespace_1` (alias `ws_1`) is one or more whitespace characters.
+# `spaced` allows a parser to be surrounded by optional whitespace.
+# `whitespace_1` is the base definition. If you extend it to e.g. add the
+# parsing of comments, the other combinators will also recognize that
+# change.
+(whitespace > lit("foo")).parse "   foo"
+#=> "foo"
+group(lit("foo"), ws_1 > lit("bar")).parse "foo   bar"
+#=> ["foo", "bar"]
+spaced(lit("foo")).parse "   foo    "
+#=> "foo"
+
+# Parse transform result according to block.
+lit("foo").fmap {|x| x.upcase }.parse "foo"
+#=> "FOO"
+
+# join(p) is the same as p.fmap {|xs| xs.join }
+join(sep_by(lit(","), lit("foo") | lit("bar"))).parse "foo,bar"
+#=> "foobar"
+
+# Parse a character from the choices in a set of strings or ranges
+char_in(" \t\r\n").parse "\t"
+#=> "\t"
+typical_identifier_characters = ['a'..'z', 'A'..'Z', 0..9, "_"]
+join(many(char_in("!?", typical_identifier_characters))).parse "foo23? bar"
+#=> "foo23?"
+
+# Parse any one character
+any_char.parse "foo"
+#=> "f"
+
+# Require end of input at end of parse.
+(lit("foo") < eof).parse "foobar"
+#=> Parsby::ExpectationFailed: line 1:
+  foobar
+     |    * failure: eof
+  \-/    *| success: lit("foo")
+         \|
+  |       * failure: (lit("foo") < eof)
+
+# Parse only when other parser fails.
+join(many(any_char.that_fails(whitespace_1))).parse "foo bar"
+#=> "foo"
+
+# single(p) is the same as p.fmap {|x| [x] }
+single(lit("foo")).parse "foo"
+#=> ["foo"]
+
+# p1 + p2 is the same as group(p1, p2).fmap {|(r1, r2)| r1 + r2 }
+(lit("foo") + (ws > lit("bar"))).parse "foo bar"
+#=> "foobar"
+(single(lit("foo")) + many(ws > lit("bar"))).parse "foo bar bar"
+#=> ["foo", "bar", "bar"]
+```
 
 ## Defining combinators
 
-If you look at the examples in this source, you'll notice that all
+If you look at the examples in this source, you'll notice that almost all
 combinators are defined with `define_combinator`. Strictly speaking, it's
 not necessary to use that to define combinators. You can do it with
 variable assignment or `def` syntax. Nevertheless, `define_combinator` is
@@ -81,6 +187,9 @@ between(lit("<"), lit(">"), lit("foo")).label
 #=> 'between(lit("<"), lit(">"), lit("foo"))'
 ```
 
+Having labels that resemble the source code is helpful for [the error
+messages](#expectationfailed).
+
 If we use `def` instead of `define_combinator`, then the label would be
 that of its definition. In the following case, it would be that assigned by
 `<`.
@@ -91,7 +200,7 @@ def between(left, right, p)
 end
 
 between(lit("<"), lit(">"), lit("foo")).label
-=> '((lit("<") > lit("foo")) < lit(">"))'
+#=> '((lit("<") > lit("foo")) < lit(">"))'
 ```
 
 If we're to wrap that parser in a new one, then the label would be simply
@@ -103,37 +212,8 @@ def between(left, right, p)
 end
 
 between(lit("<"), lit(">"), lit("foo")).label.to_s
-=> "<unknown>"
+#=> "unknown"
 ```
-
-## `Parsby.new`
-
-Now, normally one ought to be able to define parsers using just
-combinators, but there are times when one might need more control. For
-those times, the most raw way to define a parser is using `Parsby.new`.
-
-Here's `lit` as an example:
-
-```ruby
-define_combinator :lit, wrap: false do |e, case_sensitive: true|
-  Parsby.new do |c|
-    a = c.bio.read e.length
-    if case_sensitive ? a == e : a.to_s.downcase == e.downcase
-      a
-    else
-      raise ExpectationFailed.new c
-    end
-  end
-end
-```
-
-It takes a string argument for what it `e`xpects to parse, and returns what
-was `a`ctually parsed if it matches the expectation.
-
-The block parameter `c` is a `Parsby::Context`. `c.bio` holds a
-`Parsby::BackedIO`. The `parse` method of `Parsby` objects accepts ideally
-any `IO` (and `String`s, which it turns into `StringIO`) and then wraps
-them with `BackedIO` to give the `IO` the ability to backtrack.
 
 ## Defining parsers as modules
 
@@ -173,7 +253,7 @@ FoobarParser.foo.parse "foo"
 ```
 
 Being able to use subparsers directly is useful for when you want to e.g.
-parse JSON array, instead of any JSON value.
+parse a JSON array, instead of any JSON value.
 
 Writing the parser as a module like that also makes it easy to make a new
 parser based on it:
@@ -258,16 +338,9 @@ as so. There are at least 6 ancestors/descendant parsers between `list` and
 `sexp`. It'd be very much pointless to show them all. They convey little
 additional information and their labels are very verbose.
 
-### `splicer.start` combinator
-
-The reason why they don't appear is because `splicer` is used to make the
-tree look a little cleaner.
-
-The name comes from JS's `Array.prototype.splice`, to which you can give a
-starting position, and a count specifying the end, and it'll remove the
-specified elements from an Array. We use `splicer` likewise, only it works
-on parse trees. To show an example, here's a simplified definition of
-`choice`:
+The reason why they don't appear is because the `splicer.start` combinator
+is used to make the tree look a little cleaner. To show an example of how
+it works, here's a simplified definition of `choice`:
 
 ```ruby
 define_combinator :choice do |*ps|
@@ -313,7 +386,8 @@ clearer. Let's use `splicer` to remove those:
     end
 ```
 
-Let's fail it, again:
+This makes the `p` parsers appear as direct children of the `splicer.start`
+parser in the trace. Let's fail it, again:
 
 ```
 pry(main)> choice(lit("foo"), lit("bar"), lit("baz")).parse "qux"                                  
@@ -327,9 +401,10 @@ Parsby::ExpectationFailed: line 1:
   |     * failure: choice(lit("foo"), lit("bar"), lit("baz"))
 ```
 
-Now, the only issue left is that `define_combinator` wraps the result of
-the parser in another parser. Let's disable that wrapping by passing `wrap:
-false` to it:
+Now, the only issue left is that `define_combinator` wraps the resulting
+parser in another parser. It does this so you can see the label assigned to
+the combinator and to its definition separately. Let's disable that
+wrapping by passing `wrap: false` to it:
 
 ```ruby
     define_combinator :choice, wrap: false do |*ps|
@@ -343,6 +418,7 @@ false` to it:
     end
 ```
 
+That causes it to overwrite the label to the resulting parser of the block.
 Let's fail it, again:
 
 ```
@@ -541,6 +617,35 @@ returning the result of the last successful parse.
 
 In effect, we're parsing left operands bottom-up and right operands
 top-down.
+
+## `Parsby.new`
+
+Normally one ought to be able to define parsers using just combinators, but
+there are times when one might need more control. For those times, the most
+raw way to define a parser is using `Parsby.new`.
+
+Here's `lit` as an example:
+
+```ruby
+define_combinator :lit, wrap: false do |e, case_sensitive: true|
+  Parsby.new do |c|
+    a = c.bio.read e.length
+    if case_sensitive ? a == e : a.to_s.downcase == e.downcase
+      a
+    else
+      raise ExpectationFailed.new c
+    end
+  end
+end
+```
+
+It takes a string argument for what it `e`xpects to parse, and returns what
+was `a`ctually parsed if it matches the expectation.
+
+The block parameter `c` is a `Parsby::Context`. `c.bio` holds a
+`Parsby::BackedIO`. The `parse` method of `Parsby` objects accepts ideally
+any `IO` (and `String`s, which it turns into `StringIO`) and then wraps
+them with `BackedIO` to give the `IO` the ability to backtrack.
 
 ## Parsing from a string, a file, a pipe, a socket, ...
 

@@ -185,12 +185,32 @@ class Parsby
       Parsby::Splicer
     end
 
-    # Parses a single char from those contained in the string argument.
-    define_combinator :char_in do |s|
+    # Parses a single char from the char options provided as string and
+    # range arguments optionally arbitrarily nested in arrays.
+    #
+    #   join(many(char_in('a'..'z', 0..9))).parse "foo23 bar"
+    #   #=> "foo23"
+    #
+    #   char_options = ['a'..'z', "!@#$%^"]
+    #   join(many(char_in(0..9, char_options))).parse "foo23!@ bar"
+    #   #=> "foo23!@"
+    #
+    define_combinator :char_in do |*strings|
+      string = strings
+        .flatten
+        .map do |s|
+          if s.is_a?(Range)
+            s.to_a.join
+          else
+            s
+          end
+        end
+        .join
+
       ~splicer.start do
         Parsby.new do |c|
           char = any_char.parse c
-          unless s.chars.include? char
+          unless string.chars.include? char
             raise ExpectationFailed.new c
           end
           char
