@@ -1,3 +1,4 @@
+require "stringio"
 require "parsby/version"
 require "parsby/combinators"
 
