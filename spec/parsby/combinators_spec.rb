@@ -487,4 +487,22 @@ RSpec.describe Parsby::Combinators do
       expect { eof.parse("x") }.to raise_error Parsby::ExpectationFailed
     end
   end
+
+  describe "#coroutine" do
+    it "parses a group defined by a block" do
+      test_parser = coroutine do |parse|
+        a_or_b = parse.call choice(lit("a"),lit("b"))
+
+        if a_or_b == "a"
+          parse.call lit("c")
+        else
+          parse.call lit("d")
+        end
+      end
+
+      expect(test_parser.parse("ac")).to eq "c"
+      expect(test_parser.parse("bd")).to eq "d"
+      expect { test_parser.parse("ad") }.to raise_error Parsby::ExpectationFailed
+    end
+  end
 end
