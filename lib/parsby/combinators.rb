@@ -395,5 +395,18 @@ class Parsby
         end
       end
     end
+
+    # Takes a block which can run multiple parsers
+    # and use control flow to adapt itself.
+    define_combinator :coroutine do |&block|
+      Parsby.new do |target|
+
+        parse = Proc.new do |parsby|
+          parsby.parser.call target
+        end
+
+        block.call(parse)
+      end
+    end
   end
 end

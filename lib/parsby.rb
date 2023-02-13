@@ -609,6 +609,10 @@ class Parsby
     @parser = b
   end
 
+  def parser
+    @parser
+  end
+
   # Parse a String or IO object.
   def parse(src)
     ctx = src.is_a?(Context) ? src : Context.new(src)
