@@ -13,8 +13,11 @@ def to_constant_representation(path)
 end
 
 def reload!
-  Dir["lib/**/*"]
-    .map {|p| Pathname.new(p).relative_path_from(Pathname.new("lib/")) }
+  Dir["#{Dir.pwd}/lib/**/*"]
+    .each do |p|
+      $LOADED_FEATURES.delete p
+    end
+    .map {|p| Pathname.new(p).relative_path_from(Pathname.new("#{Dir.pwd}/lib/")) }
     .select {|p| p.to_s =~ /\.rb\z/ && p.to_s != "parsby/version.rb" }
     .reverse
     .each do |p|
@@ -24,9 +27,6 @@ def reload!
       unless const =~ /::/ || !Object.const_defined?(const)
         Object.send(:remove_const, const)
       end
-    end
-    .each do |p|
-      $LOADED_FEATURES.delete p
     end
 
   require "parsby"
