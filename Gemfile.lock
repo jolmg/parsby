@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    parsby (1.0.0)
+    parsby (1.1.1)
 
 GEM
   remote: https://rubygems.org/
@@ -33,7 +33,7 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.17)
   parsby!
-  pry
+  pry (~> 0)
   rake (~> 10.0)
   rspec (~> 3.0)
 
