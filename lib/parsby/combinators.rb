@@ -21,13 +21,13 @@ class Parsby
         # Lambda used to access private module method from instance method.
         inspectable_labels_lambda = lambda {|x| inspectable_labels(x) }
 
-        define_method name do |*args, &b2|
-          inspected_args = inspectable_labels_lambda.call(args).map(&:inspect)
+        define_method name do |*args, **kwargs, &b2|
+          inspected_args = inspectable_labels_lambda.call(args + [**kwargs]).map(&:inspect)
           label = name.to_s
           label += "(#{inspected_args.join(", ")})" unless inspected_args.empty?
           # Wrap in new parser so we don't overwrite another automatic
           # label.
-          p = m.bind(self).call(*args, &b2)
+          p = m.bind(self).call(*args, **kwargs, &b2)
           if wrap
             Parsby.new(label) {|c| p.parse c }
           else

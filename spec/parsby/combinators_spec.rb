@@ -53,7 +53,7 @@ RSpec.describe Parsby::Combinators do
             end
             mod.foo([3, "foobar", lit("bar")], baz: lit("baz")).label
           end
-        ).to eq 'foo([3, "foobar", lit("bar")], {:baz=>lit("baz")})'
+        ).to eq 'foo([3, "foobar", lit("bar")], {baz: lit("baz")})'
       end
 
       it "works with super()" do
@@ -98,7 +98,7 @@ RSpec.describe Parsby::Combinators do
             :inspectable_labels,
             [3, { foo: lit("foo") }]
           ).inspect
-        ).to eq '[3, {:foo=>lit("foo")}]'
+        ).to eq '[3, {foo: lit("foo")}]'
       end
     end
   end
